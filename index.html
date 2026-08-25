@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direcciones DIA VERDE</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6f4;color:#18351f}
+header{background:#176b37;color:#fff;padding:22px}
+h1{margin:0;font-size:25px}
+.sub{margin-top:6px;font-size:14px;opacity:.9}
+main{max-width:1100px;margin:auto;padding:20px}
+.card{background:#fff;padding:18px;border-radius:14px;box-shadow:0 2px 8px #0001;margin-bottom:16px}
+label{display:block;font-weight:bold;margin-bottom:8px}
+select{width:100%;min-height:48px;border:1px solid #cbd8ce;border-radius:9px;padding:10px;font-size:16px;background:#fff}
+.info{margin-top:10px;color:#657267;font-size:13px}
+button{margin-top:12px;border:0;background:#e8f2eb;color:#176b37;padding:10px 14px;border-radius:8px;font-weight:bold;cursor:pointer}
+#map{height:430px;border-radius:12px;margin-top:14px}
+.result h2{margin:0 0 4px}
+.count{color:#657267;font-size:13px;margin-bottom:14px}
+.list{display:grid;gap:9px}
+.address{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid #e0e8e1;border-radius:10px}
+.address strong{font-size:15px}
+.address small{display:block;color:#657267;margin-top:4px}
+.maps{background:#176b37;color:#fff;text-decoration:none;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:bold;white-space:nowrap}
+.empty,.loading{text-align:center;color:#657267;padding:35px}
+.error{background:#ffe9e9;color:#9b2020;padding:15px;border-radius:10px}
+@media(max-width:600px){.address{flex-direction:column;align-items:stretch}.maps{text-align:center}#map{height:360px}}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>📍 Direcciones DIA VERDE</h1>
+  <div class="sub">Seleccioná una zona para ver su mapa y sus direcciones</div>
+</header>
+
+<main>
+<section class="card">
+  <label for="zone">Seleccionar zona</label>
+  <select id="zone"><option value="">— Elegí una zona —</option></select>
+  <div class="info">El mapa corresponde al polígono de la zona. Las direcciones se actualizan desde Google Sheets.</div>
+  <button id="refresh">🔄 Actualizar ahora</button>
+</section>
+
+<section class="card">
+  <h2 id="title">Mapa de la zona</h2>
+  <div id="map"></div>
+</section>
+
+<section class="card result">
+  <h2 id="resultTitle">Direcciones</h2>
+  <div class="count" id="count">Seleccioná una zona para comenzar.</div>
+  <div class="list" id="list"><div class="empty">Elegí una zona del menú.</div></div>
+</section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SHEET_ID="1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
+const GID="1911460821";
+
+let data=[];
+let zonasGeo=[];
+let selectedZone="";
+let activeLayer=null;
+
+const zone=document.getElementById("zone");
+const title=document.getElementById("title");
+const resultTitle=document.getElementById("resultTitle");
+const count=document.getElementById("count");
+const list=document.getElementById("list");
+const refresh=document.getElementById("refresh");
+
+const map=L.map("map").setView([-34.7777,-58.3809],13);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+function esc(text){
+  return String(text ?? "").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+function normalizar(texto){
+  return String(texto ?? "").trim().toLowerCase();
+}
+
+function cargarMapa(){
+  fetch("zonas.geojson?t="+Date.now())
+    .then(r=>{
+      if(!r.ok) throw new Error("No se pudo cargar zonas.geojson");
+      return r.json();
+    })
+    .then(g=>{
+      zonasGeo=g.features || [];
+      zone.innerHTML='<option value="">— Elegí una zona —</option>';
+      zonasGeo.forEach(f=>{
+        const o=document.createElement("option");
+        o.value=f.properties.name;
+        o.textContent=f.properties.name;
+        zone.appendChild(o);
+      });
+    })
+    .catch(err=>{
+      console.error(err);
+      document.getElementById("map").innerHTML=
+        '<div class="error">No se pudo cargar el mapa de zonas.</div>';
+    });
+}
+
+function cargarDatos(){
+  list.innerHTML='<div class="loading">Cargando direcciones...</div>';
+  const callback="handleSheets_"+Date.now();
+
+  window[callback]=response=>{
+    try{
+      const rows=(response.table.rows||[]).map(row=>
+        (row.c||[]).map(cell=>cell && cell.v!=null ? String(cell.v) : "")
+      );
+
+      data=[];
+
+      rows.forEach(row=>{
+        agregar(row,0,1,2,"Llavallol");
+        agregar(row,3,4,5,"Banfield");
+        agregar(row,6,7,8,"Temperley");
+        agregar(row,9,10,null,"Turdera");
+        agregar(row,11,12,13,"Lomas");
+      });
+
+      if(selectedZone) render();
+      else list.innerHTML='<div class="empty">Elegí una zona del menú.</div>';
+    }catch(e){
+      list.innerHTML='<div class="error"><strong>Error al cargar las direcciones</strong><br><br>'+esc(e.message)+'</div>';
+    }finally{
+      delete window[callback];
+      const s=document.getElementById(callback);
+      if(s)s.remove();
+    }
+  };
+
+  const script=document.createElement("script");
+  script.id=callback;
+  script.src=
+    "https://docs.google.com/spreadsheets/d/"+SHEET_ID+
+    "/gviz/tq?tqx=responseHandler:"+callback+
+    "&gid="+GID+"&t="+Date.now();
+  script.onerror=()=>{
+    list.innerHTML='<div class="error"><strong>No se pudo conectar con Google Sheets.</strong></div>';
+    delete window[callback];
+    script.remove();
+  };
+  document.body.appendChild(script);
+}
+
+function agregar(row,calleCol,numeroCol,zonaCol,localidad){
+  const calle=(row[calleCol]||"").trim();
+  const numero=(row[numeroCol]||"").trim();
+  if(!calle && !numero)return;
+
+  let zona=zonaCol!==null ? (row[zonaCol]||"").trim() : "";
+  if(normalizar(localidad)==="turdera") zona="Turdera";
+
+  data.push({localidad,calle,numero,zona});
+}
+
+function zonaParaSheets(nombre){
+  const n=normalizar(nombre);
+
+  const equivalencias={
+    "lavallol norte":"llavallol norte",
+    "lavallol sur":"llavallol sur",
+    "banfied 3":"banfield 3",
+    "temperley este cerrito":"temperley este cerrito",
+    "temperley este 30 de septiembre":"temperley este 30 de septiembre"
+  };
+
+  return equivalencias[n] || n;
+}
+
+function coincideZona(item,selected){
+  if(normalizar(selected)==="turdera")
+    return normalizar(item.localidad)==="turdera";
+
+  const s=normalizar(selected);
+
+  const localidad=normalizar(item.localidad);
+  const zona=normalizar(item.zona);
+
+  if(s===localidad+" — "+zona)return true;
+
+  /* Permite pequeñas diferencias de escritura entre Sheets y KMZ */
+  const compact=s.replace("lavallol","llavallol").replace("banfied","banfield");
+  const itemCompact=(localidad+" — "+zona)
+    .replace("lavallol","llavallol")
+    .replace("banfied","banfield");
+
+  return compact===itemCompact;
+}
+
+function mostrarMapa(nombre){
+  if(activeLayer){
+    map.removeLayer(activeLayer);
+    activeLayer=null;
+  }
+
+  const feature=zonasGeo.find(f=>f.properties.name===nombre);
+  if(!feature)return;
+
+  activeLayer=L.geoJSON(feature,{
+    style:{
+      weight:3,
+      fillOpacity:.25
+    }
+  }).addTo(map);
+
+  const bounds=activeLayer.getBounds();
+  if(bounds.isValid()) map.fitBounds(bounds,{padding:[25,25]});
+
+  title.textContent="🗺️ "+nombre;
+}
+
+function render(){
+  selectedZone=zone.value;
+
+  if(!selectedZone){
+    resultTitle.textContent="Direcciones";
+    count.textContent="Seleccioná una zona para comenzar.";
+    list.innerHTML='<div class="empty">Elegí una zona del menú.</div>';
+    if(activeLayer){map.removeLayer(activeLayer);activeLayer=null;}
+    title.textContent="Mapa de la zona";
+    return;
+  }
+
+  mostrarMapa(selectedZone);
+
+  const direcciones=data.filter(item=>coincideZona(item,selectedZone));
+
+  resultTitle.textContent=selectedZone;
+  count.textContent=direcciones.length+
+    (direcciones.length===1?" dirección":" direcciones");
+
+  if(!direcciones.length){
+    list.innerHTML='<div class="empty">No hay direcciones cargadas para esta zona.</div>';
+    return;
+  }
+
+  list.innerHTML=direcciones.map(item=>{
+    const direccion=`${item.calle} ${item.numero}, ${item.localidad}, Buenos Aires, Argentina`;
+    const mapsURL="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(direccion);
+
+    return `
+      <div class="address">
+        <div>
+          <strong>${esc(item.calle)} ${item.numero ? esc(item.numero):""}</strong>
+          <small>${esc(item.localidad)}</small>
+        </div>
+        <a class="maps" href="${mapsURL}" target="_blank" rel="noopener noreferrer">📍 Abrir Maps</a>
+      </div>`;
+  }).join("");
+}
+
+zone.addEventListener("change",render);
+refresh.addEventListener("click",cargarDatos);
+
+cargarMapa();
+cargarDatos();
+setInterval(cargarDatos,5*60*1000);
+</script>
+</body>
+</html>
