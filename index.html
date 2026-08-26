@@ -641,9 +641,7 @@ footer span{
 
 </head>
 
-
 <body>
-
 
 <header>
 
@@ -667,7 +665,6 @@ Dirección Municipal de Logística Ambiental
 
 </div>
 
-
 <div class="status">
 
 <div class="status-icon">
@@ -676,9 +673,7 @@ Dirección Municipal de Logística Ambiental
 
 <div>
 
-<strong>
-Estado del sistema
-</strong>
+<strong>Estado del sistema</strong>
 
 <br>
 
@@ -695,16 +690,12 @@ Conectando...
 </header>
 
 
-
 <main>
 
 <div class="layout">
 
 
-<!-- ================= SIDEBAR ================= -->
-
 <aside class="card sidebar">
-
 
 <div>
 
@@ -712,11 +703,9 @@ Conectando...
 Zona
 </div>
 
-
 <label for="zone">
 Seleccioná una zona
 </label>
-
 
 <select id="zone">
 
@@ -726,7 +715,6 @@ Seleccioná una zona
 
 </select>
 
-
 <button
 class="refresh"
 id="refresh"
@@ -734,12 +722,9 @@ id="refresh"
 ↻ &nbsp; Actualizar ahora
 </button>
 
-
 <div class="info-box">
 
-<strong>
-ⓘ Información
-</strong>
+<strong>ⓘ Información</strong>
 
 <br>
 
@@ -752,13 +737,11 @@ Las direcciones se actualizan automáticamente desde Google Sheets.
 </div>
 
 
-
 <div class="stats">
 
 <div class="section-label">
 Información
 </div>
-
 
 <div class="stat">
 
@@ -804,7 +787,6 @@ Zonas
 </div>
 
 
-
 <div class="update">
 
 <strong>
@@ -819,18 +801,13 @@ Esperando datos...
 
 </div>
 
-
 </aside>
-
 
 
 <section>
 
 
-<!-- ================= MAPA ================= -->
-
 <div class="card map-card">
-
 
 <div class="card-title">
 
@@ -861,7 +838,6 @@ id="zoneBadge"
 style="display:none"
 ></div>
 
-
 <div id="map"></div>
 
 </div>
@@ -869,14 +845,9 @@ style="display:none"
 </div>
 
 
-
-<!-- ================= DIRECCIONES ================= -->
-
 <div class="card results">
 
-
 <div class="results-head">
-
 
 <div
 class="card-title"
@@ -909,9 +880,7 @@ id="count"
 0 direcciones
 </div>
 
-
 </div>
-
 
 
 <input
@@ -929,24 +898,19 @@ id="list"
 >
 
 <div class="empty">
-
 Elegí una zona del menú.
-
 </div>
 
 </div>
-
 
 </div>
 
 
 </section>
 
-
 </div>
 
 </main>
-
 
 
 <footer>
@@ -970,27 +934,22 @@ Dirección Municipal de Logística Ambiental
 </footer>
 
 
-
-<!-- ================= MODAL ================= -->
+<!-- ================= MODAL EVIDENCIA ================= -->
 
 <div
 class="modal-backdrop"
 id="evidenceBackdrop"
 >
 
-
 <div class="evidence-modal">
-
 
 <h3>
 📷 Registrar evidencia
 </h3>
 
-
 <p id="evidenceAddress">
 Dirección
 </p>
-
 
 <img
 id="evidencePreview"
@@ -998,19 +957,13 @@ class="evidence-preview"
 alt="Vista previa"
 >
 
-
 <div
 class="gps-box"
 id="gpsBox"
 >
-
 Primero sacá la fotografía.
-
-Luego la aplicación obtendrá automáticamente
-la ubicación GPS.
-
+Luego se obtendrá automáticamente la ubicación GPS.
 </div>
-
 
 <input
 id="cameraInput"
@@ -1020,9 +973,7 @@ capture="environment"
 style="display:none"
 >
 
-
 <div class="modal-actions">
-
 
 <button
 class="cancel-btn"
@@ -1031,14 +982,12 @@ id="cancelEvidence"
 Cancelar
 </button>
 
-
 <button
 class="send-btn"
 id="takeEvidence"
 >
 📷 Tomar fotografía
 </button>
-
 
 <button
 class="send-btn"
@@ -1048,21 +997,17 @@ disabled
 ✓ Registrar
 </button>
 
-
-</div>
-
-
 </div>
 
 </div>
 
+</div>
 
 
 <div
 class="toast"
 id="toast"
 ></div>
-
 
 
 <script
@@ -1076,18 +1021,12 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
    CONFIGURACIÓN
 ===================================================== */
 
-
 const SHEET_ID =
 "1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
-
 
 const GID =
 "1911460821";
 
-
-/*
- * NUEVA URL DEL APPS SCRIPT
- */
 
 const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
@@ -1295,7 +1234,7 @@ toast.classList.remove(
 
 
 /* =====================================================
-   CARGAR MAPA
+   MAPA GEOJSON
 ===================================================== */
 
 function cargarMapa(){
@@ -1351,14 +1290,11 @@ document.createElement(
 "option"
 );
 
-
 option.value =
 nombre;
 
-
 option.textContent =
 nombre;
-
 
 zone.appendChild(
 option
@@ -1375,11 +1311,9 @@ error => {
 
 console.error(error);
 
-
 document.getElementById(
 "map"
 ).innerHTML =
-
 '<div class="error">' +
 'No se pudo cargar el mapa de zonas.' +
 '</div>';
@@ -1391,7 +1325,7 @@ document.getElementById(
 
 
 /* =====================================================
-   CARGAR DIRECCIONES
+   GOOGLE SHEETS - DIRECCIONES
 ===================================================== */
 
 function cargarDatos(){
@@ -1432,10 +1366,7 @@ data = [];
 rows.forEach(
 row => {
 
-
-/*
- * LLAVALLOL
- */
+/* LLAVALLOL */
 
 agregar(
 row,
@@ -1446,9 +1377,7 @@ row,
 );
 
 
-/*
- * BANFIELD
- */
+/* BANFIELD */
 
 agregar(
 row,
@@ -1459,9 +1388,7 @@ row,
 );
 
 
-/*
- * TEMPERLEY
- */
+/* TEMPERLEY */
 
 agregar(
 row,
@@ -1472,11 +1399,7 @@ row,
 );
 
 
-/*
- * TURDERA
- *
- * UNA SOLA ZONA
- */
+/* TURDERA */
 
 agregar(
 row,
@@ -1487,9 +1410,7 @@ null,
 );
 
 
-/*
- * LOMAS
- */
+/* LOMAS */
 
 agregar(
 row,
@@ -1513,12 +1434,12 @@ actualizarHora();
 
 
 /*
- * Después de cargar las direcciones
- * consultamos el histórico del día.
+ * IMPORTANTE:
+ * después de cargar direcciones
+ * cargamos el histórico del día.
  */
 
 cargarEvidenciasHoy();
-
 
 }
 catch(error){
@@ -1527,6 +1448,7 @@ console.error(error);
 
 statusText.textContent =
 "Error al cargar";
+
 
 list.innerHTML =
 '<div class="error">' +
@@ -1540,10 +1462,7 @@ delete window[callback];
 
 
 const script =
-document.getElementById(
-callback
-);
-
+document.getElementById(callback);
 
 if(script)
 script.remove();
@@ -1552,9 +1471,7 @@ script.remove();
 
 
 const script =
-document.createElement(
-"script"
-);
+document.createElement("script");
 
 
 script.id =
@@ -1578,12 +1495,10 @@ script.onerror =
 statusText.textContent =
 "Error de conexión";
 
-
 list.innerHTML =
 '<div class="error">' +
 'No se pudo conectar con Google Sheets.' +
 '</div>';
-
 
 delete window[callback];
 
@@ -1614,7 +1529,6 @@ localidad
 const calle =
 (row[calleCol] || "").trim();
 
-
 const numero =
 (row[numeroCol] || "").trim();
 
@@ -1633,10 +1547,6 @@ zona =
 
 }
 
-
-/*
- * TURDERA
- */
 
 if(
 normalizar(localidad) ===
@@ -1669,14 +1579,10 @@ zona
 
 
 /* =====================================================
-   CARGAR EVIDENCIAS DE HOY
+   HISTÓRICO - EVIDENCIAS DE HOY
 ===================================================== */
 
 function cargarEvidenciasHoy(){
-
-statusText.textContent =
-"Consultando evidencias de hoy...";
-
 
 fetch(
 APPS_SCRIPT_URL +
@@ -1703,9 +1609,7 @@ return response.json();
 .then(
 resultado => {
 
-if(
-!resultado.ok
-){
+if(!resultado.ok){
 
 throw new Error(
 resultado.error ||
@@ -1731,14 +1635,6 @@ if(selectedZone){
 render();
 
 }
-else{
-
-list.innerHTML =
-'<div class="empty">' +
-'Elegí una zona del menú.' +
-'</div>';
-
-}
 
 }
 )
@@ -1748,10 +1644,15 @@ error => {
 
 console.error(error);
 
+console.log(
+"El histórico no pudo consultarse:",
+error
+);
+
 
 /*
- * No bloqueamos la aplicación si
- * el histórico no responde.
+ * No impedimos que se vean
+ * las direcciones.
  */
 
 evidenciasHoy = [];
@@ -1794,7 +1695,7 @@ normalizar(direccion)
 
 
 /* =====================================================
-   ¿ESTÁ REALIZADA HOY?
+   COMPROBAR SI FUE REALIZADA HOY
 ===================================================== */
 
 function estaRealizadaHoy(
@@ -1847,7 +1748,7 @@ clave
 
 
 /* =====================================================
-   MAPEO ZONAS
+   ZONAS DEL SHEET
 ===================================================== */
 
 function claveZonaSheets(
@@ -1858,60 +1759,24 @@ const s =
 normalizar(nombre);
 
 
-const mapa = {
+/*
+ * IMPORTANTE:
+ *
+ * No transformamos Banfield 3
+ * en "Banfield — Banfield 3".
+ *
+ * La comparación se hace
+ * directamente con el valor
+ * existente en la columna zona.
+ */
 
-"llavallol norte":
-"llavallol — norte",
-
-"llavallol sur":
-"llavallol — sur",
-
-"banfield 3":
-"banfield — banfield 3",
-
-"banfied 3":
-"banfield — banfield 3",
-
-"banfield este":
-"banfield — este",
-
-"banfield oeste":
-"banfield — oeste",
-
-"temperley este cerrito":
-"temperley — este cerrito",
-
-"temperley este 30 de septiembre":
-"temperley — este 30 de septiembre",
-
-"temperley oeste":
-"temperley — oeste",
-
-"lomas este":
-"lomas — este",
-
-"lomas - microcentro":
-"lomas — microcentro",
-
-"lomas - frias/garibaldi":
-"lomas — frias/garibaldi",
-
-"lomas - p libertad":
-"lomas — p libertad",
-
-"lomas - las heras":
-"lomas — las heras"
-
-};
-
-
-return mapa[s] || s;
+return s;
 
 }
 
 
 /* =====================================================
-   COINCIDENCIA ZONA
+   COINCIDENCIA DE ZONA
 ===================================================== */
 
 function coincideZona(
@@ -1919,55 +1784,67 @@ item,
 selected
 ){
 
+const seleccion =
+normalizar(selected);
+
+
 /*
  * TURDERA
  */
 
 if(
-normalizar(selected) ===
+seleccion ===
 "turdera"
 ){
 
 return (
-
 normalizar(
 item.localidad
 )
-
 ===
-
 "turdera"
-
 );
 
 }
 
 
-const localidad =
-normalizar(
-item.localidad
-);
+/*
+ * Para el resto:
+ *
+ * comparamos la zona directamente.
+ */
 
-
-const zona =
+const zonaItem =
 normalizar(
 item.zona
 );
 
 
-const objetivo =
-claveZonaSheets(
-selected
+if(
+zonaItem ===
+seleccion
+){
+
+return true;
+
+}
+
+
+/*
+ * Algunas zonas pueden tener
+ * localidad incluida.
+ */
+
+const completo =
+normalizar(
+item.localidad +
+" " +
+item.zona
 );
 
 
-return (
-
-objetivo ===
-localidad +
-" — " +
-zona
-
+return completo.includes(
+seleccion
 );
 
 }
@@ -1996,8 +1873,11 @@ null;
 const feature =
 zonasGeo.find(
 f =>
-f.properties.name ===
-nombre
+normalizar(
+f.properties.name
+)
+===
+normalizar(nombre)
 );
 
 
@@ -2055,7 +1935,7 @@ zoneBadge.style.display =
 
 
 /* =====================================================
-   RENDER DIRECCIONES
+   MOSTRAR DIRECCIONES
 ===================================================== */
 
 function render(){
@@ -2069,26 +1949,20 @@ if(!selectedZone){
 search.disabled =
 true;
 
-
 search.value =
 "";
-
 
 zoneBadge.style.display =
 "none";
 
-
 resultTitle.textContent =
 "Direcciones";
-
 
 resultSubtitle.textContent =
 "Direcciones de la zona seleccionada";
 
-
 count.textContent =
 "0 direcciones";
-
 
 list.innerHTML =
 '<div class="empty">' +
@@ -2106,14 +1980,6 @@ activeLayer =
 null;
 
 }
-
-
-title.textContent =
-"Mapa de la zona";
-
-
-mapSubtitle.textContent =
-"Seleccioná una zona para visualizar su área.";
 
 
 return;
@@ -2189,7 +2055,7 @@ if(!direcciones.length){
 
 list.innerHTML =
 '<div class="empty">' +
-'No se encontraron direcciones.' +
+'No se encontraron direcciones para esta zona.' +
 '</div>';
 
 return;
@@ -2204,11 +2070,20 @@ direcciones.slice(
 );
 
 
+/*
+ * ACÁ ESTÁ EL BOTÓN DE EVIDENCIA
+ *
+ * Cada dirección genera:
+ *
+ * 📍 Abrir en mapa
+ * 📷 Registrar evidencia
+ *
+ */
+
 list.innerHTML =
 currentVisibleDirections
 .map(
 (item,index) => {
-
 
 const direccion =
 `${item.calle} ${item.numero || ""}`;
@@ -2234,7 +2109,6 @@ return `
 
 <div class="address-left">
 
-
 <div class="pin">
 
 ${
@@ -2255,8 +2129,10 @@ realizado
 ${esc(item.calle)}
 
 ${item.numero
-? " " + esc(item.numero)
-: ""}
+?
+" " + esc(item.numero)
+:
+""}
 
 </strong>
 
@@ -2279,7 +2155,6 @@ realizado
 
 </div>
 
-
 </div>
 
 
@@ -2292,20 +2167,13 @@ href="${mapsURL}"
 target="_blank"
 rel="noopener noreferrer"
 >
-
-📍 Maps
-
+📍 Abrir en mapa
 </a>
 
 
 <button
-class="evidence-btn ${
-realizado
-?
-"done"
-:
-""
-}"
+type="button"
+class="evidence-btn ${realizado ? "done" : ""}"
 data-evidence-index="${index}"
 >
 
@@ -2337,9 +2205,7 @@ if(direcciones.length > 100){
 list.innerHTML +=
 
 '<div class="empty">' +
-
 'Mostrando las primeras 100 direcciones.' +
-
 '</div>';
 
 }
@@ -2348,7 +2214,7 @@ list.innerHTML +=
 
 
 /* =====================================================
-   ABRIR MODAL
+   ABRIR EVIDENCIA
 ===================================================== */
 
 function abrirEvidencia(
@@ -2362,10 +2228,8 @@ item;
 evidenciaBase64 =
 "";
 
-
 evidenciaLat =
 "";
-
 
 evidenciaLng =
 "";
@@ -2403,7 +2267,7 @@ evidenceBackdrop.classList.add(
 
 
 /* =====================================================
-   CERRAR MODAL
+   CERRAR EVIDENCIA
 ===================================================== */
 
 function cerrarEvidencia(){
@@ -2416,18 +2280,14 @@ evidenceBackdrop.classList.remove(
 evidenciaActual =
 null;
 
-
 evidenciaBase64 =
 "";
-
 
 evidenciaLat =
 "";
 
-
 evidenciaLng =
 "";
-
 
 cameraInput.value =
 "";
@@ -2436,7 +2296,7 @@ cameraInput.value =
 
 
 /* =====================================================
-   COMPRIMIR IMAGEN
+   COMPRIMIR FOTO
 ===================================================== */
 
 function comprimirImagen(
@@ -2463,7 +2323,6 @@ img.onload =
 let width =
 img.width;
 
-
 let height =
 img.height;
 
@@ -2472,15 +2331,12 @@ const maxWidth =
 1400;
 
 
-if(
-width > maxWidth
-){
+if(width > maxWidth){
 
 height =
 height *
 maxWidth /
 width;
-
 
 width =
 maxWidth;
@@ -2496,7 +2352,6 @@ document.createElement(
 
 canvas.width =
 width;
-
 
 canvas.height =
 height;
@@ -2552,7 +2407,7 @@ file
 
 
 /* =====================================================
-   PREPARAR EVIDENCIA
+   PREPARAR FOTO
 ===================================================== */
 
 async function prepararEvidencia(
@@ -2589,7 +2444,6 @@ position => {
 
 evidenciaLat =
 position.coords.latitude;
-
 
 evidenciaLng =
 position.coords.longitude;
@@ -2723,41 +2577,30 @@ second:"2-digit"
 const datos = {
 
 fecha:
-
 fecha,
 
 hora:
-
 hora,
 
 zona:
-
 selectedZone,
 
 direccion:
-
 `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
 
 latitud:
-
 evidenciaLat,
 
 longitud:
-
 evidenciaLng,
 
 foto:
-
 evidenciaBase64
 
 };
 
 
 try{
-
-/*
- * Enviamos al Apps Script.
- */
 
 await fetch(
 APPS_SCRIPT_URL,
@@ -2776,16 +2619,6 @@ datos
 );
 
 
-/*
- * Importante:
- *
- * No marcamos la dirección
- * definitivamente acá.
- *
- * Volvemos a consultar
- * el Histórico.
- */
-
 cerrarEvidencia();
 
 
@@ -2795,13 +2628,17 @@ mostrarToast(
 
 
 /*
- * Esperamos un momento para que
- * Google Sheets registre la fila.
+ * Esperamos a que Sheets registre
+ * la nueva fila y volvemos a consultar.
  */
 
 setTimeout(
-cargarEvidenciasHoy,
-1800
+() => {
+
+cargarEvidenciasHoy();
+
+},
+2000
 );
 
 }
@@ -2811,7 +2648,7 @@ console.error(error);
 
 
 alert(
-"No se pudo enviar la evidencia. Intentá nuevamente."
+"No se pudo enviar la evidencia."
 );
 
 }
@@ -2831,7 +2668,7 @@ sendEvidence.textContent =
 
 
 /* =====================================================
-   CLICK EN DIRECCIÓN
+   CLICK EN BOTÓN DE EVIDENCIA
 ===================================================== */
 
 list.addEventListener(
@@ -2840,7 +2677,7 @@ event => {
 
 const button =
 event.target.closest(
-"[data-evidence-index]"
+".evidence-btn"
 );
 
 
@@ -2894,7 +2731,7 @@ cameraInput.files[0]
 
 
 /* =====================================================
-   BOTONES MODAL
+   BOTONES
 ===================================================== */
 
 takeEvidence.addEventListener(
@@ -2937,7 +2774,7 @@ cerrarEvidencia();
 
 
 /* =====================================================
-   EVENTOS PRINCIPALES
+   EVENTOS
 ===================================================== */
 
 zone.addEventListener(
@@ -2972,12 +2809,7 @@ cargarDatos();
 
 
 /*
- * Actualización automática.
- *
- * Cada 5 minutos consulta:
- *
- * 1. Direcciones
- * 2. Evidencias de HOY
+ * Actualización cada 5 minutos.
  */
 
 setInterval(
@@ -2991,17 +2823,15 @@ cargarDatos();
 
 
 /*
- * Al volver a abrir la pestaña
- * actualizamos el estado.
+ * Cuando volvemos a la pestaña,
+ * actualizamos las evidencias.
  */
 
 document.addEventListener(
 "visibilitychange",
 () => {
 
-if(
-!document.hidden
-){
+if(!document.hidden){
 
 cargarEvidenciasHoy();
 
