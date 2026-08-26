@@ -2,181 +2,369 @@
 <html lang="es">
 
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Direcciones DIA VERDE</title>
 
+
 <link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 
+
 <style>
+
+/* =====================================================
+   GENERAL
+   ===================================================== */
 
 *{
     box-sizing:border-box;
 }
 
+
 body{
+
     margin:0;
-    font-family:Arial,Helvetica,sans-serif;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     background:#f3f6f4;
+
     color:#18351f;
+
 }
+
+
+/* =====================================================
+   HEADER
+   ===================================================== */
 
 header{
+
     background:#176b37;
+
     color:white;
+
     padding:22px;
+
 }
+
 
 h1{
+
     margin:0;
+
     font-size:25px;
+
 }
+
 
 .sub{
+
     margin-top:6px;
+
     font-size:14px;
+
     opacity:.9;
+
 }
+
+
+/* =====================================================
+   CONTENIDO
+   ===================================================== */
 
 main{
+
     max-width:1100px;
+
     margin:auto;
+
     padding:20px;
+
 }
+
 
 .card{
+
     background:white;
+
     padding:18px;
+
     border-radius:14px;
-    box-shadow:0 2px 8px #0001;
+
+    box-shadow:
+        0 2px 8px #0001;
+
     margin-bottom:16px;
+
 }
+
+
+/* =====================================================
+   SELECTOR
+   ===================================================== */
 
 label{
+
     display:block;
+
     font-weight:bold;
+
     margin-bottom:8px;
+
 }
+
 
 select{
+
     width:100%;
+
     min-height:48px;
-    border:1px solid #cbd8ce;
+
+    border:
+        1px solid
+        #cbd8ce;
+
     border-radius:9px;
+
     padding:10px;
+
     font-size:16px;
+
     background:white;
+
     cursor:pointer;
+
 }
+
 
 .info{
+
     margin-top:10px;
+
     color:#657267;
+
     font-size:13px;
+
 }
+
 
 button{
+
     margin-top:12px;
+
     border:0;
+
     background:#e8f2eb;
+
     color:#176b37;
+
     padding:10px 14px;
+
     border-radius:8px;
+
     font-weight:bold;
+
     cursor:pointer;
+
 }
+
 
 button:hover{
+
     background:#dcebe1;
+
 }
+
+
+/* =====================================================
+   MAPA
+   ===================================================== */
 
 #map{
+
     height:430px;
+
     border-radius:12px;
+
     margin-top:14px;
+
 }
+
+
+/* =====================================================
+   RESULTADOS
+   ===================================================== */
 
 .result h2{
-    margin:0 0 4px;
+
+    margin:
+        0 0 4px;
+
 }
+
 
 .count{
+
     color:#657267;
+
     font-size:13px;
+
     margin-bottom:14px;
+
 }
+
 
 .list{
+
     display:grid;
+
     gap:9px;
+
 }
+
+
+/* =====================================================
+   DIRECCIÓN
+   ===================================================== */
 
 .address{
+
     display:flex;
+
     align-items:center;
+
     justify-content:space-between;
+
     gap:10px;
+
     padding:12px;
-    border:1px solid #e0e8e1;
+
+    border:
+        1px solid
+        #e0e8e1;
+
     border-radius:10px;
+
+    background:white;
+
 }
+
 
 .address strong{
+
     font-size:15px;
+
 }
+
 
 .address small{
+
     display:block;
+
     color:#657267;
+
     margin-top:4px;
+
 }
+
+
+/* =====================================================
+   GOOGLE MAPS
+   ===================================================== */
 
 .maps{
+
     background:#176b37;
+
     color:white;
+
     text-decoration:none;
+
     padding:9px 12px;
+
     border-radius:8px;
+
     font-size:13px;
+
     font-weight:bold;
+
     white-space:nowrap;
+
 }
 
+
 .maps:hover{
+
     background:#0f5129;
+
 }
+
+
+/* =====================================================
+   MENSAJES
+   ===================================================== */
 
 .empty,
 .loading{
+
     text-align:center;
+
     color:#657267;
+
     padding:35px;
+
 }
 
+
 .error{
+
     background:#ffe9e9;
+
     color:#9b2020;
+
     padding:15px;
+
     border-radius:10px;
+
 }
+
+
+/* =====================================================
+   CELULAR
+   ===================================================== */
 
 @media(max-width:600px){
 
     .address{
+
         flex-direction:column;
+
         align-items:stretch;
+
     }
+
 
     .maps{
+
         text-align:center;
+
     }
 
+
     #map{
+
         height:360px;
+
     }
 
 }
@@ -189,14 +377,21 @@ button:hover{
 <body>
 
 
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
 <header>
 
 <h1>
 📍 Direcciones DIA VERDE
 </h1>
 
+
 <div class="sub">
+
 Seleccioná una zona para ver su mapa y sus direcciones
+
 </div>
 
 </header>
@@ -212,15 +407,20 @@ Seleccioná una zona para ver su mapa y sus direcciones
 
 <section class="card">
 
+
 <label for="zone">
+
 Seleccionar zona
+
 </label>
 
 
 <select id="zone">
 
 <option value="">
+
 — Elegí una zona —
+
 </option>
 
 </select>
@@ -240,6 +440,7 @@ Las direcciones se actualizan desde Google Sheets.
 
 </button>
 
+
 </section>
 
 
@@ -250,12 +451,16 @@ Las direcciones se actualizan desde Google Sheets.
 
 <section class="card">
 
+
 <h2 id="title">
+
 Mapa de la zona
+
 </h2>
 
 
 <div id="map"></div>
+
 
 </section>
 
@@ -267,8 +472,11 @@ Mapa de la zona
 
 <section class="card result">
 
+
 <h2 id="resultTitle">
+
 Direcciones
+
 </h2>
 
 
@@ -289,6 +497,7 @@ Elegí una zona del menú.
 
 </div>
 
+
 </section>
 
 
@@ -301,6 +510,7 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
 
 
+
 <script>
 
 
@@ -308,67 +518,113 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
    GOOGLE SHEETS
    ===================================================== */
 
+
 const SHEET_ID =
+
 "1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
 
+
 const GID =
+
 "1911460821";
+
 
 
 /* =====================================================
    VARIABLES
    ===================================================== */
 
-let data=[];
 
-let zonasGeo=[];
+let data = [];
 
-let selectedZone="";
+let zonasGeo = [];
 
-let activeLayer=null;
+let selectedZone = "";
+
+let activeLayer = null;
+
 
 
 /* =====================================================
    ELEMENTOS
    ===================================================== */
 
+
 const zone =
-document.getElementById("zone");
+
+document.getElementById(
+    "zone"
+);
+
 
 const title =
-document.getElementById("title");
+
+document.getElementById(
+    "title"
+);
+
 
 const resultTitle =
-document.getElementById("resultTitle");
+
+document.getElementById(
+    "resultTitle"
+);
+
 
 const count =
-document.getElementById("count");
+
+document.getElementById(
+    "count"
+);
+
 
 const list =
-document.getElementById("list");
+
+document.getElementById(
+    "list"
+);
+
 
 const refresh =
-document.getElementById("refresh");
+
+document.getElementById(
+    "refresh"
+);
+
 
 
 /* =====================================================
    MAPA
    ===================================================== */
 
+
 const map =
+
 L.map("map").setView(
-    [-34.7777,-58.3809],
+
+    [
+        -34.7777,
+        -58.3809
+    ],
+
     13
+
 );
 
 
 L.tileLayer(
+
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
     {
+
         maxZoom:19,
+
         attribution:
         "&copy; OpenStreetMap contributors"
+
     }
+
 ).addTo(map);
 
 
@@ -377,161 +633,237 @@ L.tileLayer(
    ESCAPAR HTML
    ===================================================== */
 
+
 function esc(text){
 
-    return String(text ?? "")
-    .replace(/[&<>"']/g,function(m){
+    return String(
+        text ?? ""
+    )
 
-        return {
+    .replace(
+        /[&<>"']/g,
 
-            "&":"&amp;",
-            "<":"&lt;",
-            ">":"&gt;",
-            '"':"&quot;",
-            "'":"&#039;"
+        function(m){
 
-        }[m];
+            return {
 
-    });
+                "&":"&amp;",
+
+                "<":"&lt;",
+
+                ">":"&gt;",
+
+                '"':"&quot;",
+
+                "'":"&#039;"
+
+            }[m];
+
+        }
+
+    );
 
 }
 
 
 
 /* =====================================================
-   NORMALIZAR
+   NORMALIZAR TEXTO
    ===================================================== */
+
 
 function normalizar(texto){
 
-    return String(texto ?? "")
+    return String(
+        texto ?? ""
+    )
+
     .trim()
+
     .toLowerCase()
+
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"");
+
+    .replace(
+        /[\u0300-\u036f]/g,
+        ""
+    );
 
 }
 
 
 
 /* =====================================================
-   MAPA GEOJSON
+   CARGAR MAPA
    ===================================================== */
+
 
 function cargarMapa(){
 
     fetch(
-        "zonas.geojson?t="+Date.now()
+        "zonas.geojson?t="
+        +
+        Date.now()
     )
 
-    .then(response=>{
+    .then(
 
-        if(!response.ok){
+        response => {
 
-            throw new Error(
-                "No se pudo cargar zonas.geojson"
+            if(!response.ok){
+
+                throw new Error(
+                    "No se pudo cargar zonas.geojson"
+                );
+
+            }
+
+            return response.json();
+
+        }
+
+    )
+
+    .then(
+
+        geojson => {
+
+            zonasGeo =
+            geojson.features || [];
+
+
+            zone.innerHTML =
+
+            '<option value="">' +
+
+            '— Elegí una zona —' +
+
+            '</option>';
+
+
+            zonasGeo.forEach(
+
+                feature => {
+
+                    const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                    option.value =
+                    feature.properties.name;
+
+
+                    option.textContent =
+                    feature.properties.name;
+
+
+                    zone.appendChild(
+                        option
+                    );
+
+                }
+
             );
 
         }
 
-        return response.json();
+    )
 
-    })
+    .catch(
 
-    .then(geojson=>{
+        error => {
 
-        zonasGeo =
-        geojson.features || [];
-
-
-        /*
-         El selector utiliza los nombres
-         EXACTOS del KMZ.
-        */
-
-        zone.innerHTML =
-        '<option value="">' +
-        '— Elegí una zona —' +
-        '</option>';
+            console.error(
+                error
+            );
 
 
-        zonasGeo.forEach(feature=>{
+            document.getElementById(
+                "map"
+            ).innerHTML =
 
-            const option =
-            document.createElement("option");
+            '<div class="error">' +
 
+            'No se pudo cargar el mapa de zonas.' +
 
-            option.value =
-            feature.properties.name;
+            '<br><br>' +
 
+            esc(
+                error.message
+            ) +
 
-            option.textContent =
-            feature.properties.name;
+            '</div>';
 
+        }
 
-            zone.appendChild(option);
-
-        });
-
-    })
-
-    .catch(error=>{
-
-        console.error(error);
-
-        document.getElementById("map").innerHTML =
-
-        '<div class="error">' +
-
-        'No se pudo cargar el mapa de zonas.' +
-
-        '<br><br>' +
-
-        esc(error.message) +
-
-        '</div>';
-
-    });
+    );
 
 }
 
 
 
 /* =====================================================
-   GOOGLE SHEETS
+   CARGAR GOOGLE SHEETS
    ===================================================== */
+
 
 function cargarDatos(){
 
     list.innerHTML =
+
     '<div class="loading">' +
+
     'Cargando direcciones...' +
+
     '</div>';
 
 
     const callback =
-    "handleSheets_"+Date.now();
+
+    "handleSheets_"
+    +
+    Date.now();
 
 
     window[callback] =
+
     function(response){
 
         try{
 
             const rows =
 
-            (response.table.rows || [])
-            .map(row =>
+            (
+                response.table.rows
+                ||
+                []
+            )
 
-                (row.c || [])
-                .map(cell =>
+            .map(
 
-                    cell &&
+                row =>
+
+                (
+                    row.c
+                    ||
+                    []
+                )
+
+                .map(
+
+                    cell =>
+
+                    cell
+                    &&
                     cell.v != null
 
                     ?
 
-                    String(cell.v)
+                    String(
+                        cell.v
+                    )
 
                     :
 
@@ -542,96 +874,142 @@ function cargarDatos(){
             );
 
 
-            data=[];
+            data = [];
 
 
             /*
-             Llavallol
+             ==========================================
+             LLAVALLOL
              A = Calle
-             B = N°
+             B = Número
              C = Zona
+             ==========================================
             */
 
-            rows.forEach(row=>{
+            rows.forEach(
 
-                agregar(
-                    row,
-                    0,
-                    1,
-                    2,
-                    "Llavallol"
-                );
+                row => {
 
 
-                /*
-                 Banfield
-                 D = Calle
-                 E = N°
-                 F = Zona
-                */
+                    agregar(
 
-                agregar(
-                    row,
-                    3,
-                    4,
-                    5,
-                    "Banfield"
-                );
+                        row,
 
+                        0,
 
-                /*
-                 Temperley
-                 G = Calle
-                 H = N°
-                 I = Zona
-                */
+                        1,
 
-                agregar(
-                    row,
-                    6,
-                    7,
-                    8,
-                    "Temperley"
-                );
+                        2,
+
+                        "Llavallol"
+
+                    );
 
 
-                /*
-                 Turdera
-                 J = Calle
-                 K = N°
-                 SIN ZONA
-                */
+                    /*
+                     ==================================
+                     BANFIELD
+                     D = Calle
+                     E = Número
+                     F = Zona
+                     ==================================
+                    */
 
-                agregar(
-                    row,
-                    9,
-                    10,
-                    null,
-                    "Turdera"
-                );
+                    agregar(
+
+                        row,
+
+                        3,
+
+                        4,
+
+                        5,
+
+                        "Banfield"
+
+                    );
 
 
-                /*
-                 Lomas
-                 L = Calle
-                 M = N°
-                 N = Zona
-                */
+                    /*
+                     ==================================
+                     TEMPERLEY
+                     G = Calle
+                     H = Número
+                     I = Zona
+                     ==================================
+                    */
 
-                agregar(
-                    row,
-                    11,
-                    12,
-                    13,
-                    "Lomas"
-                );
+                    agregar(
 
-            });
+                        row,
+
+                        6,
+
+                        7,
+
+                        8,
+
+                        "Temperley"
+
+                    );
+
+
+                    /*
+                     ==================================
+                     TURDERA
+                     J = Calle
+                     K = Número
+
+                     SIN ZONA
+                     ==================================
+                    */
+
+                    agregar(
+
+                        row,
+
+                        9,
+
+                        10,
+
+                        null,
+
+                        "Turdera"
+
+                    );
+
+
+                    /*
+                     ==================================
+                     LOMAS
+                     L = Calle
+                     M = Número
+                     N = Zona
+                     ==================================
+                    */
+
+                    agregar(
+
+                        row,
+
+                        11,
+
+                        12,
+
+                        13,
+
+                        "Lomas"
+
+                    );
+
+                }
+
+            );
 
 
             /*
-             Si había una zona seleccionada,
-             volver a mostrarla.
+             Volver a mostrar zona
+             seleccionada.
             */
 
             if(selectedZone){
@@ -643,8 +1021,11 @@ function cargarDatos(){
             else{
 
                 list.innerHTML =
+
                 '<div class="empty">' +
+
                 'Elegí una zona del menú.' +
+
                 '</div>';
 
             }
@@ -653,7 +1034,10 @@ function cargarDatos(){
 
         catch(error){
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             list.innerHTML =
 
@@ -667,7 +1051,9 @@ function cargarDatos(){
 
             '<br><br>' +
 
-            esc(error.message) +
+            esc(
+                error.message
+            ) +
 
             '</div>';
 
@@ -676,11 +1062,16 @@ function cargarDatos(){
 
         finally{
 
-            delete window[callback];
+            delete window[
+                callback
+            ];
 
 
             const script =
-            document.getElementById(callback);
+
+            document.getElementById(
+                callback
+            );
 
 
             if(script){
@@ -695,7 +1086,10 @@ function cargarDatos(){
 
 
     const script =
-    document.createElement("script");
+
+    document.createElement(
+        "script"
+    );
 
 
     script.id =
@@ -704,26 +1098,43 @@ function cargarDatos(){
 
     script.src =
 
-    "https://docs.google.com/spreadsheets/d/" +
+    "https://docs.google.com/spreadsheets/d/"
 
-    SHEET_ID +
+    +
 
-    "/gviz/tq" +
+    SHEET_ID
 
-    "?tqx=responseHandler:" +
+    +
 
-    callback +
+    "/gviz/tq"
 
-    "&gid=" +
+    +
 
-    GID +
+    "?tqx=responseHandler:"
 
-    "&t=" +
+    +
+
+    callback
+
+    +
+
+    "&gid="
+
+    +
+
+    GID
+
+    +
+
+    "&t="
+
+    +
 
     Date.now();
 
 
     script.onerror =
+
     function(){
 
         list.innerHTML =
@@ -739,14 +1150,19 @@ function cargarDatos(){
         '</div>';
 
 
-        delete window[callback];
+        delete window[
+            callback
+        ];
+
 
         script.remove();
 
     };
 
 
-    document.body.appendChild(script);
+    document.body.appendChild(
+        script
+    );
 
 }
 
@@ -755,6 +1171,7 @@ function cargarDatos(){
 /* =====================================================
    AGREGAR DIRECCIÓN
    ===================================================== */
+
 
 function agregar(
 
@@ -774,8 +1191,8 @@ function agregar(
 
     (
 
-        row[calleCol] ||
-
+        row[calleCol]
+        ||
         ""
 
     ).trim();
@@ -785,20 +1202,21 @@ function agregar(
 
     (
 
-        row[numeroCol] ||
-
+        row[numeroCol]
+        ||
         ""
 
     ).trim();
 
 
     /*
-     Ignorar filas vacías.
+     Ignorar fila vacía.
     */
 
     if(
 
-        !calle &&
+        !calle
+        &&
         !numero
 
     ){
@@ -808,17 +1226,23 @@ function agregar(
     }
 
 
-    let zona="";
+    let zona = "";
 
 
-    if(zonaCol !== null){
+    /*
+     Obtener zona.
+    */
+
+    if(
+        zonaCol !== null
+    ){
 
         zona =
 
         (
 
-            row[zonaCol] ||
-
+            row[zonaCol]
+            ||
             ""
 
         ).trim();
@@ -827,21 +1251,32 @@ function agregar(
 
 
     /*
-     TURDERA ES UNA SOLA ZONA
+     TURDERA:
+
+     Siempre una sola zona.
     */
 
     if(
 
-        normalizar(localidad)
+        normalizar(
+            localidad
+        )
+
         ===
+
         "turdera"
 
     ){
 
-        zona="Turdera";
+        zona =
+        "Turdera";
 
     }
 
+
+    /*
+     Guardar.
+    */
 
     data.push({
 
@@ -864,30 +1299,42 @@ function agregar(
 
 
 /* =====================================================
-   EQUIVALENCIAS KMZ ↔ GOOGLE SHEETS
+   EQUIVALENCIAS
+   KMZ → GOOGLE SHEETS
    ===================================================== */
 
-function equivalenciaZona(nombreKMZ){
+
+function equivalenciaZona(
+    nombreKMZ
+){
 
     const n =
-    normalizar(nombreKMZ);
+
+    normalizar(
+        nombreKMZ
+    );
 
 
     /*
-     ==================================================
-     LAVALLOL
-     ==================================================
+     ==========================================
+     LLAVALLOL
+     ==========================================
     */
 
     if(
-        n === "lavallol norte"
+
+        n ===
+        "lavallol norte"
+
     ){
 
         return {
 
-            localidad:"Llavallol",
+            localidad:
+            "Llavallol",
 
-            zona:"Norte"
+            zona:
+            "Norte"
 
         };
 
@@ -895,92 +1342,141 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "lavallol sur"
+
+        n ===
+        "lavallol sur"
+
     ){
 
         return {
 
-            localidad:"Llavallol",
+            localidad:
+            "Llavallol",
 
-            zona:"Sur"
+            zona:
+            "Sur"
 
         };
 
     }
 
 
+
     /*
-     ==================================================
-     BANFIELD
-     ==================================================
+     ==========================================
+     BANFIELD ESTE
+     ==========================================
     */
 
     if(
-        n === "banfield este"
+
+        n ===
+        "banfield este"
+
     ){
 
         return {
 
-            localidad:"Banfield",
+            localidad:
+            "Banfield",
 
-            zona:"Este"
+            zona:
+            "Este"
 
         };
 
     }
 
-
-    if(
-        n === "banfield oeste"
-    ){
-
-        return {
-
-            localidad:"Banfield",
-
-            zona:"Oeste"
-
-        };
-
-    }
 
 
     /*
-     Banfied 3
-     */
+     ==========================================
+     BANFIELD OESTE
+     ==========================================
+    */
 
     if(
-        n === "banfield 3"
+
+        n ===
+        "banfield oeste"
+
+    ){
+
+        return {
+
+            localidad:
+            "Banfield",
+
+            zona:
+            "Oeste"
+
+        };
+
+    }
+
+
+
+    /*
+     ==========================================
+     BANFIELD 3
+
+     IMPORTANTE:
+
+     En Sheets figura:
+
+     Banfield
+     Banfield 3
+
+     NO "3"
+     ==========================================
+    */
+
+    if(
+
+        n ===
+        "banfield 3"
+
         ||
-        n === "banfield 3"
+
+        n ===
+        "banfied 3"
+
     ){
 
         return {
 
-            localidad:"Banfield",
+            localidad:
+            "Banfield",
 
-            zona:"Banfield 3"
+            zona:
+            "Banfield 3"
 
         };
 
     }
+
 
 
     /*
-     ==================================================
+     ==========================================
      TEMPERLEY
-     ==================================================
+     ==========================================
     */
 
     if(
-        n === "temperley este cerrito"
+
+        n ===
+        "temperley este cerrito"
+
     ){
 
         return {
 
-            localidad:"Temperley",
+            localidad:
+            "Temperley",
 
-            zona:"Este Cerrito"
+            zona:
+            "Este Cerrito"
 
         };
 
@@ -988,15 +1484,19 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
+
         n ===
         "temperley este 30 de septiembre"
+
     ){
 
         return {
 
-            localidad:"Temperley",
+            localidad:
+            "Temperley",
 
-            zona:"Este 30 de Septiembre"
+            zona:
+            "Este 30 de Septiembre"
 
         };
 
@@ -1004,56 +1504,73 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "temperley oeste"
+
+        n ===
+        "temperley oeste"
+
     ){
 
         return {
 
-            localidad:"Temperley",
+            localidad:
+            "Temperley",
 
-            zona:"Oeste"
+            zona:
+            "Oeste"
 
         };
 
     }
 
 
+
     /*
-     ==================================================
+     ==========================================
      TURDERA
-     ==================================================
+     ==========================================
     */
 
     if(
-        n === "turdera"
+
+        n ===
+        "turdera"
+
     ){
 
         return {
 
-            localidad:"Turdera",
+            localidad:
+            "Turdera",
 
-            zona:"Turdera"
+            zona:
+            "Turdera"
 
         };
 
     }
 
 
+
     /*
-     ==================================================
+     ==========================================
      LOMAS
-     ==================================================
+     ==========================================
     */
 
     if(
-        n === "lomas este"
+
+        n ===
+        "lomas este"
+
     ){
 
         return {
 
-            localidad:"Lomas",
+            localidad:
+            "Lomas",
 
-            zona:"Este"
+            zona:
+            "Este"
 
         };
 
@@ -1061,14 +1578,19 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "lomas - microcentro"
+
+        n ===
+        "lomas - microcentro"
+
     ){
 
         return {
 
-            localidad:"Lomas",
+            localidad:
+            "Lomas",
 
-            zona:"Microcentro"
+            zona:
+            "Microcentro"
 
         };
 
@@ -1076,16 +1598,19 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "lomas - frias/garibaldi"
-        ||
-        n === "lomas - frias/garibaldi"
+
+        n ===
+        "lomas - frias/garibaldi"
+
     ){
 
         return {
 
-            localidad:"Lomas",
+            localidad:
+            "Lomas",
 
-            zona:"Frias/Garibaldi"
+            zona:
+            "Frias/Garibaldi"
 
         };
 
@@ -1093,14 +1618,19 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "lomas - p libertad"
+
+        n ===
+        "lomas - p libertad"
+
     ){
 
         return {
 
-            localidad:"Lomas",
+            localidad:
+            "Lomas",
 
-            zona:"P Libertad"
+            zona:
+            "P Libertad"
 
         };
 
@@ -1108,14 +1638,19 @@ function equivalenciaZona(nombreKMZ){
 
 
     if(
-        n === "lomas - las heras"
+
+        n ===
+        "lomas - las heras"
+
     ){
 
         return {
 
-            localidad:"Lomas",
+            localidad:
+            "Lomas",
 
-            zona:"Las Heras"
+            zona:
+            "Las Heras"
 
         };
 
@@ -1123,8 +1658,7 @@ function equivalenciaZona(nombreKMZ){
 
 
     /*
-     Si no encuentra equivalencia,
-     usa el nombre original.
+     No encontrada.
     */
 
     return null;
@@ -1134,8 +1668,9 @@ function equivalenciaZona(nombreKMZ){
 
 
 /* =====================================================
-   COMPARAR DIRECCIÓN CON ZONA
+   COMPARAR ZONA
    ===================================================== */
+
 
 function coincideZona(
 
@@ -1146,6 +1681,7 @@ function coincideZona(
 ){
 
     const eq =
+
     equivalenciaZona(
         nombreKMZ
     );
@@ -1157,16 +1693,24 @@ function coincideZona(
 
     if(
 
-        normalizar(nombreKMZ)
+        normalizar(
+            nombreKMZ
+        )
+
         ===
+
         "turdera"
 
     ){
 
         return (
 
-            normalizar(item.localidad)
+            normalizar(
+                item.localidad
+            )
+
             ===
+
             "turdera"
 
         );
@@ -1175,7 +1719,7 @@ function coincideZona(
 
 
     /*
-     Si existe equivalencia
+     Si existe equivalencia.
     */
 
     if(eq){
@@ -1219,10 +1763,13 @@ function coincideZona(
    MOSTRAR MAPA
    ===================================================== */
 
-function mostrarMapa(nombre){
+
+function mostrarMapa(
+    nombre
+){
 
     /*
-     Quitar polígono anterior.
+     Eliminar polígono anterior.
     */
 
     if(activeLayer){
@@ -1231,7 +1778,7 @@ function mostrarMapa(nombre){
             activeLayer
         );
 
-        activeLayer=null;
+        activeLayer = null;
 
     }
 
@@ -1241,6 +1788,7 @@ function mostrarMapa(nombre){
     */
 
     const feature =
+
     zonasGeo.find(
 
         f =>
@@ -1260,7 +1808,7 @@ function mostrarMapa(nombre){
 
 
     /*
-     Crear polígono.
+     Dibujar polígono.
     */
 
     activeLayer =
@@ -1289,6 +1837,7 @@ function mostrarMapa(nombre){
     */
 
     const bounds =
+
     activeLayer.getBounds();
 
 
@@ -1313,7 +1862,7 @@ function mostrarMapa(nombre){
 
 
     title.textContent =
-    "🗺️ "+nombre;
+    "🗺️ " + nombre;
 
 }
 
@@ -1322,6 +1871,7 @@ function mostrarMapa(nombre){
 /* =====================================================
    MOSTRAR DIRECCIONES
    ===================================================== */
+
 
 function render(){
 
@@ -1344,6 +1894,7 @@ function render(){
 
 
         list.innerHTML =
+
         '<div class="empty">' +
 
         'Elegí una zona del menú.' +
@@ -1357,7 +1908,7 @@ function render(){
                 activeLayer
             );
 
-            activeLayer=null;
+            activeLayer = null;
 
         }
 
@@ -1381,8 +1932,7 @@ function render(){
 
 
     /*
-     Filtrar direcciones
-     según equivalencia.
+     Filtrar direcciones.
     */
 
     const direcciones =
@@ -1392,8 +1942,11 @@ function render(){
         item =>
 
         coincideZona(
+
             item,
+
             selectedZone
+
         )
 
     );
@@ -1433,10 +1986,14 @@ function render(){
 
 
     /*
-     Sin direcciones.
+     Sin resultados.
     */
 
-    if(!direcciones.length){
+    if(
+
+        !direcciones.length
+
+    ){
 
         list.innerHTML =
 
@@ -1463,20 +2020,25 @@ function render(){
 
 
             /*
-             Google Maps:
+             Google Maps recibe:
 
-             SOLO
-             Calle + Número + Localidad
+             CALLE
+             NÚMERO
+             LOCALIDAD
 
-             No usamos la zona.
-             No usamos referencias.
+             No se agrega la zona.
+             No se agregan referencias.
             */
 
             const direccion =
 
-            `${item.calle} ${item.numero}, ` +
+            `${item.calle} ${item.numero}, `
 
-            `${item.localidad}, ` +
+            +
+
+            `${item.localidad}, `
+
+            +
 
             `Buenos Aires, Argentina`;
 
@@ -1496,11 +2058,15 @@ function render(){
 
             <div class="address">
 
+
                 <div>
+
 
                     <strong>
 
-                        ${esc(item.calle)}
+                        ${esc(
+                            item.calle
+                        )}
 
                         ${
 
@@ -1508,8 +2074,11 @@ function render(){
 
                             ?
 
-                            " " +
-                            esc(item.numero)
+                            " "
+                            +
+                            esc(
+                                item.numero
+                            )
 
                             :
 
@@ -1527,6 +2096,7 @@ function render(){
                         )}
 
                     </small>
+
 
                 </div>
 
@@ -1547,6 +2117,7 @@ function render(){
 
                 </a>
 
+
             </div>
 
             `;
@@ -1562,6 +2133,7 @@ function render(){
 /* =====================================================
    EVENTOS
    ===================================================== */
+
 
 zone.addEventListener(
 
@@ -1586,6 +2158,7 @@ refresh.addEventListener(
    INICIO
    ===================================================== */
 
+
 cargarMapa();
 
 cargarDatos();
@@ -1595,6 +2168,7 @@ cargarDatos();
 /* =====================================================
    ACTUALIZACIÓN AUTOMÁTICA
    ===================================================== */
+
 
 setInterval(
 
