@@ -2160,7 +2160,6 @@ realizado
 
 <div class="address-actions">
 
-
 <a
 class="maps"
 href="${mapsURL}"
@@ -2170,23 +2169,25 @@ rel="noopener noreferrer"
 📍 Abrir en mapa
 </a>
 
-
 <button
 type="button"
-class="evidence-btn ${realizado ? "done" : ""}"
-data-evidence-index="${index}"
+onclick="abrirEvidencia(currentVisibleDirections[${index}])"
+style="
+display:inline-block!important;
+visibility:visible!important;
+opacity:1!important;
+background:#087a3d!important;
+color:white!important;
+border:0!important;
+padding:10px 14px!important;
+border-radius:9px!important;
+font-size:13px!important;
+font-weight:800!important;
+cursor:pointer!important;
+"
 >
-
-${
-realizado
-?
-"📷 Ver evidencia"
-:
-"📷 Registrar evidencia"
-}
-
+📷 Registrar evidencia
 </button>
-
 
 </div>
 
