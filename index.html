@@ -1056,6 +1056,8 @@ let evidenciaLat = "";
 
 let evidenciaLng = "";
 
+let evidenciaTomadaEn = null;
+
 
 /* =====================================================
    ELEMENTOS
@@ -1270,38 +1272,8 @@ totalZones.textContent =
 zonasGeo.length;
 
 
-zone.innerHTML =
-'<option value="">— Elegí una zona —</option>';
-
-
-zonasGeo.forEach(
-feature => {
-
-const nombre =
-feature.properties.name;
-
-
-if(!nombre)
-return;
-
-
-const option =
-document.createElement(
-"option"
-);
-
-option.value =
-nombre;
-
-option.textContent =
-nombre;
-
-zone.appendChild(
-option
-);
-
-}
-);
+/* Las opciones de zona se cargan desde la columna Zona
+   del Google Sheet. El GeoJSON solo dibuja el mapa. */
 
 }
 )
@@ -1429,6 +1401,7 @@ data.length.toLocaleString(
 "es-AR"
 );
 
+poblarZonasDesdeSheet();
 
 actualizarHora();
 
@@ -1574,6 +1547,45 @@ zona:
 zona
 
 });
+
+}
+
+
+/* =====================================================
+   ZONAS DESDE GOOGLE SHEETS
+   Mantiene exactamente los nombres de la columna Zona.
+===================================================== */
+
+function poblarZonasDesdeSheet(){
+
+const zonas = [...new Set(
+data
+.map(item => String(item.zona || "").trim())
+.filter(Boolean)
+)];
+
+const actual = zone.value;
+
+zone.innerHTML =
+'<option value="">— Elegí una zona —</option>';
+
+zonas.forEach(nombre => {
+
+const option =
+document.createElement("option");
+
+option.value = nombre;
+option.textContent = nombre;
+
+zone.appendChild(option);
+
+});
+
+if(actual && zonas.includes(actual)){
+zone.value = actual;
+}
+
+totalZones.textContent = zonas.length;
 
 }
 
@@ -1881,8 +1893,21 @@ normalizar(nombre)
 );
 
 
-if(!feature)
+if(!feature){
+title.textContent =
+"Mapa de la zona";
+
+mapSubtitle.textContent =
+"Sin polígono disponible para " + nombre;
+
+zoneBadge.textContent =
+nombre;
+
+zoneBadge.style.display =
+"block";
+
 return;
+}
 
 
 activeLayer =
@@ -2417,6 +2442,9 @@ file
 
 try{
 
+/* Momento exacto en que se seleccionó/tomó la foto. */
+evidenciaTomadaEn = new Date();
+
 gpsBox.innerHTML =
 "📷 Procesando fotografía...";
 
@@ -2433,6 +2461,9 @@ evidenciaBase64;
 
 evidencePreview.style.display =
 "block";
+
+takeEvidence.style.display =
+"none";
 
 
 gpsBox.innerHTML =
@@ -2555,7 +2586,7 @@ sendEvidence.textContent =
 
 
 const ahora =
-new Date();
+evidenciaTomadaEn || new Date();
 
 
 const fecha =
@@ -2619,12 +2650,29 @@ datos
 }
 );
 
+/*
+ * no-cors no permite leer la respuesta del Apps Script.
+ * Por eso marcamos localmente como realizada inmediatamente
+ * después de completar el envío y luego sincronizamos con
+ * el histórico real del día.
+ */
+evidenciasHoy.push({
+fecha: fecha,
+hora: hora,
+zona: selectedZone,
+direccion: `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
+latitud: String(evidenciaLat),
+longitud: String(evidenciaLng),
+foto: "",
+estado: "Realizado"
+});
 
 cerrarEvidencia();
 
+render();
 
 mostrarToast(
-"📷 Evidencia enviada. Actualizando..."
+"✅ Evidencia registrada. Guardando foto en Drive..."
 );
 
 
