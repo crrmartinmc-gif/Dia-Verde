@@ -1,39 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Direcciones DIA VERDE</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 
 <style>
+
 :root{
-  --g:#087a3d;
-  --gd:#04552b;
-  --soft:#e9f7ed;
-  --line:#dce9e0;
-  --text:#193329;
-  --muted:#728078;
-  --bg:#f3f7f4
+  --verde:#087a3d;
+  --verde-oscuro:#04552b;
+  --verde-claro:#e9f7ed;
+  --texto:#193329;
+  --gris:#728078;
+  --fondo:#f3f7f4;
+  --borde:#dce9e0;
+  --blanco:#fff;
 }
 
 *{
-  box-sizing:border-box
+  box-sizing:border-box;
 }
 
 body{
   margin:0;
-  font-family:Inter,Arial,Helvetica,sans-serif;
-  background:var(--bg);
-  color:var(--text)
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--fondo);
+  color:var(--texto);
 }
 
+/* ================= HEADER ================= */
+
 header{
-  background:linear-gradient(135deg,var(--gd),var(--g));
-  color:#fff;
+  background:linear-gradient(
+    135deg,
+    var(--verde-oscuro),
+    var(--verde)
+  );
+  color:white;
   padding:24px 28px;
-  box-shadow:0 4px 20px #0002
+  box-shadow:0 4px 20px #0002;
 }
 
 .header-inner{
@@ -42,41 +56,40 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:20px
+  gap:20px;
 }
 
 .brand{
   display:flex;
   align-items:center;
-  gap:15px
+  gap:15px;
 }
 
 .logo{
   width:58px;
   height:58px;
   border-radius:50%;
-  background:#fff;
+  background:white;
   display:grid;
   place-items:center;
-  font-size:29px
+  font-size:29px;
 }
 
 h1{
   margin:0;
-  font-size:28px
+  font-size:28px;
 }
 
 .sub{
   margin-top:5px;
   font-size:15px;
-  opacity:.93
 }
 
 .status{
   display:flex;
   align-items:center;
   gap:10px;
-  font-size:13px
+  font-size:13px;
 }
 
 .status-icon{
@@ -86,45 +99,49 @@ h1{
   border-radius:50%;
   display:grid;
   place-items:center;
-  font-size:20px
+  font-size:20px;
 }
+
+/* ================= GENERAL ================= */
 
 main{
   max-width:1200px;
   margin:auto;
-  padding:22px
+  padding:22px;
 }
 
 .layout{
   display:grid;
   grid-template-columns:300px 1fr;
-  gap:18px
+  gap:18px;
 }
 
 .card{
-  background:#fff;
+  background:white;
   border:1px solid #e5eee8;
   border-radius:18px;
-  box-shadow:0 8px 30px #163a2614
+  box-shadow:0 8px 30px #163a2614;
 }
 
+/* ================= SIDEBAR ================= */
+
 .sidebar{
-  padding:20px
+  padding:20px;
 }
 
 .section-label{
-  color:var(--g);
+  color:var(--verde);
   font-weight:800;
   font-size:12px;
   letter-spacing:.8px;
   text-transform:uppercase;
-  margin-bottom:12px
+  margin-bottom:12px;
 }
 
 label{
   display:block;
   font-weight:700;
-  margin-bottom:8px
+  margin-bottom:8px;
 }
 
 select,
@@ -135,15 +152,15 @@ input{
   border-radius:10px;
   padding:11px 13px;
   font-size:15px;
-  color:var(--text);
-  background:#fff;
-  outline:none
+  color:var(--texto);
+  background:white;
+  outline:none;
 }
 
 select:focus,
 input:focus{
   border-color:#72bb8b;
-  box-shadow:0 0 0 3px #087a3d1a
+  box-shadow:0 0 0 3px #087a3d1a;
 }
 
 .refresh{
@@ -152,14 +169,14 @@ input:focus{
   margin-top:12px;
   border:0;
   border-radius:10px;
-  background:var(--g);
-  color:#fff;
+  background:var(--verde);
+  color:white;
   font-weight:800;
-  cursor:pointer
+  cursor:pointer;
 }
 
 .refresh:hover{
-  background:var(--gd)
+  background:var(--verde-oscuro);
 }
 
 .info-box{
@@ -170,89 +187,91 @@ input:focus{
   background:#f4fbf6;
   color:#40534a;
   font-size:13px;
-  line-height:1.55
+  line-height:1.55;
 }
 
 .stats{
-  margin-top:25px
+  margin-top:25px;
 }
 
 .stat{
-  border:1px solid var(--line);
+  border:1px solid var(--borde);
   border-radius:13px;
   padding:14px;
   margin-top:9px;
   display:flex;
   align-items:center;
-  gap:12px
+  gap:12px;
 }
 
 .stat-icon{
   width:42px;
   height:42px;
   border-radius:50%;
-  background:var(--soft);
+  background:var(--verde-claro);
   display:grid;
   place-items:center;
-  font-size:20px
+  font-size:20px;
 }
 
 .stat small{
   display:block;
-  color:var(--muted)
+  color:var(--gris);
 }
 
 .stat strong{
-  font-size:22px
+  font-size:22px;
 }
 
 .update{
   margin-top:24px;
   font-size:13px;
   color:#4d5d54;
-  line-height:1.5
+  line-height:1.5;
 }
 
+/* ================= MAPA ================= */
+
 .map-card{
-  padding:18px
+  padding:18px;
 }
 
 .card-title{
   display:flex;
   align-items:center;
   gap:12px;
-  margin-bottom:14px
+  margin-bottom:14px;
 }
 
 .card-title-icon{
   width:40px;
   height:40px;
   border-radius:50%;
-  background:var(--soft);
+  background:var(--verde-claro);
   display:grid;
   place-items:center;
-  font-size:20px
+  font-size:20px;
 }
 
 .card-title h2{
   margin:0;
-  font-size:21px
+  font-size:21px;
 }
 
 .card-title p{
   margin:3px 0 0;
-  color:var(--muted);
-  font-size:13px
+  color:var(--gris);
+  font-size:13px;
 }
 
 .map-wrap{
-  position:relative
+  position:relative;
 }
 
 #map{
   height:500px;
   border-radius:14px;
-  overflow:hidden
+  overflow:hidden;
 }
 
 .zone-badge{
@@ -261,18 +280,20 @@ input:focus{
   left:50%;
   top:20px;
   transform:translateX(-50%);
-  background:var(--g);
-  color:#fff;
+  background:var(--verde);
+  color:white;
   padding:9px 16px;
   border-radius:10px;
   font-weight:800;
   box-shadow:0 5px 15px #0003;
-  pointer-events:none
+  pointer-events:none;
 }
+
+/* ================= DIRECCIONES ================= */
 
 .results{
   margin-top:18px;
-  padding:18px
+  padding:18px;
 }
 
 .results-head{
@@ -280,29 +301,28 @@ input:focus{
   justify-content:space-between;
   align-items:center;
   gap:15px;
-  margin-bottom:14px
+  margin-bottom:14px;
 }
 
 .count-pill{
-  background:var(--soft);
-  color:var(--g);
+  background:var(--verde-claro);
+  color:var(--verde);
   padding:8px 13px;
   border-radius:20px;
   font-size:13px;
   font-weight:800;
-  white-space:nowrap
+  white-space:nowrap;
 }
 
 .search{
-  margin-bottom:12px
+  margin-bottom:12px;
 }
 
 .address-list{
   display:grid;
-  gap:0;
   border:1px solid #e1e9e4;
   border-radius:13px;
-  overflow:hidden
+  overflow:hidden;
 }
 
 .address{
@@ -312,80 +332,205 @@ input:focus{
   gap:15px;
   padding:14px 16px;
   border-bottom:1px solid #e7eee9;
-  background:#fff
+  background:white;
 }
 
 .address:last-child{
-  border-bottom:0
+  border-bottom:0;
 }
 
 .address:hover{
-  background:#fbfdfb
+  background:#fbfdfb;
 }
 
 .address-left{
   display:flex;
   align-items:center;
   gap:12px;
-  min-width:0
+  min-width:0;
 }
 
 .pin{
   width:38px;
   height:38px;
   border-radius:50%;
-  background:var(--soft);
+  background:var(--verde-claro);
   display:grid;
   place-items:center;
-  flex:0 0 auto
+  flex:0 0 auto;
 }
 
 .address strong{
   display:block;
-  font-size:15px
+  font-size:15px;
 }
 
 .address small{
   display:block;
   margin-top:4px;
-  color:var(--muted)
+  color:var(--gris);
 }
 
-.maps{
+.address-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.maps,
+.evidence-btn{
   display:inline-block;
   text-decoration:none;
   border:1px solid #8bcaa1;
-  color:var(--g);
+  color:var(--verde);
+  background:white;
   padding:9px 12px;
   border-radius:9px;
   font-size:13px;
   font-weight:800;
-  white-space:nowrap
+  white-space:nowrap;
+  cursor:pointer;
 }
 
-.maps:hover{
-  background:var(--soft)
+.maps:hover,
+.evidence-btn:hover{
+  background:var(--verde-claro);
+}
+
+.evidence-btn.done{
+  background:var(--verde-claro);
+  border-color:#63b57f;
 }
 
 .empty,
 .loading{
   text-align:center;
   padding:35px;
-  color:var(--muted)
+  color:var(--gris);
 }
 
 .error{
   background:#fff0f0;
   color:#a52222;
   padding:15px;
-  border-radius:10px
+  border-radius:10px;
 }
+
+/* ================= MODAL ================= */
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:#062b17aa;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:3000;
+}
+
+.modal-backdrop.show{
+  display:flex;
+}
+
+.evidence-modal{
+  width:min(520px,100%);
+  background:white;
+  border-radius:20px;
+  box-shadow:0 20px 60px #0004;
+  padding:22px;
+}
+
+.evidence-modal h3{
+  margin:0 0 5px;
+  font-size:21px;
+}
+
+.evidence-modal p{
+  margin:0 0 18px;
+  color:var(--gris);
+  font-size:13px;
+}
+
+.evidence-preview{
+  width:100%;
+  max-height:280px;
+  object-fit:cover;
+  border-radius:14px;
+  background:#edf3ef;
+  display:none;
+  margin-bottom:15px;
+}
+
+.gps-box{
+  padding:12px;
+  border-radius:12px;
+  background:#f4fbf6;
+  border:1px solid #c9e7d1;
+  font-size:13px;
+  line-height:1.55;
+  margin-bottom:15px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:10px;
+}
+
+.modal-actions button{
+  flex:1;
+  min-height:46px;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.cancel-btn{
+  border:1px solid #d5e0d9;
+  background:white;
+  color:#53625a;
+}
+
+.send-btn{
+  border:0;
+  background:var(--verde);
+  color:white;
+}
+
+.send-btn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+/* ================= TOAST ================= */
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:4000;
+  background:var(--verde-oscuro);
+  color:white;
+  padding:13px 16px;
+  border-radius:12px;
+  box-shadow:0 8px 25px #0003;
+  display:none;
+  font-size:13px;
+  font-weight:700;
+}
+
+.toast.show{
+  display:block;
+}
+
+/* ================= FOOTER ================= */
 
 footer{
   margin-top:20px;
-  background:var(--gd);
-  color:#fff;
-  padding:22px
+  background:var(--verde-oscuro);
+  color:white;
+  padding:22px;
 }
 
 .footer-inner{
@@ -394,38 +539,32 @@ footer{
   display:flex;
   justify-content:space-between;
   gap:15px;
-  align-items:center
+  align-items:center;
 }
 
 footer span{
   opacity:.9;
-  font-size:13px
+  font-size:13px;
 }
+
+/* ================= CELULAR ================= */
 
 @media(max-width:900px){
 
   .layout{
-    grid-template-columns:1fr
+    grid-template-columns:1fr;
   }
 
   .sidebar{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:15px
+    gap:15px;
   }
 
   .sidebar .stats,
   .sidebar .update{
     grid-column:1/-1;
-    margin-top:0
-  }
-
-  .info-box{
-    margin-top:0
-  }
-
-  .refresh{
-    margin-top:0
+    margin-top:0;
   }
 
 }
@@ -433,122 +572,128 @@ footer span{
 @media(max-width:600px){
 
   header{
-    padding:18px
+    padding:18px;
   }
 
   .header-inner{
-    align-items:flex-start
+    align-items:flex-start;
   }
 
   .status{
-    display:none
+    display:none;
   }
 
   .logo{
     width:48px;
     height:48px;
-    font-size:24px
+    font-size:24px;
   }
 
   h1{
-    font-size:23px
+    font-size:23px;
   }
 
   .sub{
-    font-size:13px
+    font-size:13px;
   }
 
   main{
-    padding:12px
+    padding:12px;
   }
 
   .sidebar{
-    display:block
+    display:block;
   }
 
   .info-box,
   .stats,
   .update{
-    margin-top:18px!important
+    margin-top:18px!important;
   }
 
   #map{
-    height:380px
+    height:380px;
   }
 
   .address{
     align-items:flex-start;
-    flex-direction:column
+    flex-direction:column;
   }
 
-  .maps{
+  .address-actions{
     width:100%;
-    text-align:center
   }
 
-  .results-head{
-    align-items:flex-start
+  .maps,
+  .evidence-btn{
+    flex:1;
+    text-align:center;
   }
 
   .footer-inner{
     flex-direction:column;
-    text-align:center
+    text-align:center;
   }
 
 }
+
 </style>
+
 </head>
+
 
 <body>
 
+
 <header>
 
-  <div class="header-inner">
+<div class="header-inner">
 
-    <div class="brand">
+<div class="brand">
 
-      <div class="logo">
-        🌿
-      </div>
+<div class="logo">
+🌿
+</div>
 
-      <div>
+<div>
 
-        <h1>DIA VERDE</h1>
+<h1>DIA VERDE</h1>
 
-        <div class="sub">
-          Dirección Municipal de Logística Ambiental
-        </div>
+<div class="sub">
+Dirección Municipal de Logística Ambiental
+</div>
 
-      </div>
+</div>
 
-    </div>
+</div>
 
 
-    <div class="status">
+<div class="status">
 
-      <div class="status-icon">
-        ↻
-      </div>
+<div class="status-icon">
+↻
+</div>
 
-      <div>
+<div>
 
-        <strong>
-          Actualización automática
-        </strong>
+<strong>
+Estado del sistema
+</strong>
 
-        <br>
+<br>
 
-        <span id="statusText">
-          Conectando...
-        </span>
+<span id="statusText">
+Conectando...
+</span>
 
-      </div>
+</div>
 
-    </div>
+</div>
 
-  </div>
+</div>
 
 </header>
+
 
 
 <main>
@@ -556,222 +701,243 @@ footer span{
 <div class="layout">
 
 
+<!-- ================= SIDEBAR ================= -->
+
 <aside class="card sidebar">
 
-  <div>
 
-    <div class="section-label">
-      Zona
-    </div>
+<div>
 
-    <label for="zone">
-      Seleccioná una zona
-    </label>
-
-    <select id="zone">
-
-      <option value="">
-        — Elegí una zona —
-      </option>
-
-    </select>
+<div class="section-label">
+Zona
+</div>
 
 
-    <button class="refresh" id="refresh">
-      ↻ &nbsp; Actualizar ahora
-    </button>
+<label for="zone">
+Seleccioná una zona
+</label>
 
 
-    <div class="info-box">
+<select id="zone">
 
-      <strong>
-        ⓘ Información
-      </strong>
+<option value="">
+— Elegí una zona —
+</option>
 
-      <br>
-
-      El mapa corresponde al polígono de la zona seleccionada.
-      Las direcciones se actualizan automáticamente desde Google Sheets.
-
-    </div>
-
-  </div>
+</select>
 
 
-  <div class="stats">
-
-    <div class="section-label">
-      Estadísticas
-    </div>
-
-
-    <div class="stat">
-
-      <div class="stat-icon">
-        📍
-      </div>
-
-      <div>
-
-        <small>
-          Direcciones en total
-        </small>
-
-        <strong id="totalAddresses">
-          —
-        </strong>
-
-      </div>
-
-    </div>
+<button
+class="refresh"
+id="refresh"
+>
+↻ &nbsp; Actualizar ahora
+</button>
 
 
-    <div class="stat">
+<div class="info-box">
 
-      <div class="stat-icon">
-        🏙️
-      </div>
+<strong>
+ⓘ Información
+</strong>
 
-      <div>
+<br>
 
-        <small>
-          Zonas disponibles
-        </small>
+El mapa corresponde al polígono de la zona seleccionada.
 
-        <strong id="totalZones">
-          —
-        </strong>
+Las direcciones se actualizan automáticamente desde Google Sheets.
 
-      </div>
+</div>
 
-    </div>
-
-  </div>
+</div>
 
 
-  <div class="update">
 
-    <strong>
-      ◷ Última actualización
-    </strong>
+<div class="stats">
 
-    <br>
+<div class="section-label">
+Información
+</div>
 
-    <span id="lastUpdate">
-      Esperando datos...
-    </span>
 
-  </div>
+<div class="stat">
+
+<div class="stat-icon">
+📍
+</div>
+
+<div>
+
+<small>
+Direcciones
+</small>
+
+<strong id="totalAddresses">
+—
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-icon">
+🏙️
+</div>
+
+<div>
+
+<small>
+Zonas
+</small>
+
+<strong id="totalZones">
+—
+</strong>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="update">
+
+<strong>
+◷ Última actualización
+</strong>
+
+<br>
+
+<span id="lastUpdate">
+Esperando datos...
+</span>
+
+</div>
+
 
 </aside>
+
 
 
 <section>
 
 
-  <div class="card map-card">
+<!-- ================= MAPA ================= -->
+
+<div class="card map-card">
 
 
-    <div class="card-title">
+<div class="card-title">
 
-      <div class="card-title-icon">
-        🗺️
-      </div>
+<div class="card-title-icon">
+🗺️
+</div>
 
-      <div>
+<div>
 
-        <h2 id="title">
-          Mapa de la zona
-        </h2>
+<h2 id="title">
+Mapa de la zona
+</h2>
 
-        <p id="mapSubtitle">
-          Seleccioná una zona para visualizar su área.
-        </p>
+<p id="mapSubtitle">
+Seleccioná una zona para visualizar su área.
+</p>
 
-      </div>
+</div>
 
-    </div>
-
-
-    <div class="map-wrap">
-
-      <div
-        class="zone-badge"
-        id="zoneBadge"
-        style="display:none"
-      ></div>
-
-      <div id="map"></div>
-
-    </div>
-
-  </div>
+</div>
 
 
+<div class="map-wrap">
 
-  <div class="card results">
-
-
-    <div class="results-head">
-
-
-      <div
-        class="card-title"
-        style="margin:0"
-      >
-
-        <div class="card-title-icon">
-          ☷
-        </div>
-
-        <div>
-
-          <h2 id="resultTitle">
-            Direcciones
-          </h2>
-
-          <p>
-            Direcciones de la zona seleccionada
-          </p>
-
-        </div>
-
-      </div>
+<div
+class="zone-badge"
+id="zoneBadge"
+style="display:none"
+></div>
 
 
-      <div
-        class="count-pill"
-        id="count"
-      >
-        0 direcciones
-      </div>
+<div id="map"></div>
+
+</div>
+
+</div>
 
 
-    </div>
+
+<!-- ================= DIRECCIONES ================= -->
+
+<div class="card results">
 
 
-    <input
-      class="search"
-      id="search"
-      type="search"
-      placeholder="🔎 Buscar calle o número..."
-      disabled
-    >
+<div class="results-head">
 
 
-    <div
-      class="address-list"
-      id="list"
-    >
+<div
+class="card-title"
+style="margin:0"
+>
 
-      <div class="empty">
-        Elegí una zona del menú.
-      </div>
+<div class="card-title-icon">
+☷
+</div>
 
-    </div>
+<div>
+
+<h2 id="resultTitle">
+Direcciones
+</h2>
+
+<p id="resultSubtitle">
+Direcciones de la zona seleccionada
+</p>
+
+</div>
+
+</div>
 
 
-  </div>
+<div
+class="count-pill"
+id="count"
+>
+0 direcciones
+</div>
+
+
+</div>
+
+
+
+<input
+class="search"
+id="search"
+type="search"
+placeholder="🔎 Buscar calle o número..."
+disabled
+>
+
+
+<div
+class="address-list"
+id="list"
+>
+
+<div class="empty">
+
+Elegí una zona del menú.
+
+</div>
+
+</div>
+
+
+</div>
 
 
 </section>
@@ -782,47 +948,154 @@ footer span{
 </main>
 
 
+
 <footer>
 
-  <div class="footer-inner">
+<div class="footer-inner">
 
-    <strong>
-      🌿 DIA VERDE
-    </strong>
+<strong>
+🌿 DIA VERDE
+</strong>
 
-    <span>
-      Dirección Municipal de Logística Ambiental
-    </span>
+<span>
+Dirección Municipal de Logística Ambiental
+</span>
 
-    <span>
-      ♻️ Cuidemos nuestra ciudad
-    </span>
+<span>
+♻️ Cuidemos nuestra ciudad
+</span>
 
-  </div>
+</div>
 
 </footer>
 
 
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- ================= MODAL ================= -->
+
+<div
+class="modal-backdrop"
+id="evidenceBackdrop"
+>
+
+
+<div class="evidence-modal">
+
+
+<h3>
+📷 Registrar evidencia
+</h3>
+
+
+<p id="evidenceAddress">
+Dirección
+</p>
+
+
+<img
+id="evidencePreview"
+class="evidence-preview"
+alt="Vista previa"
+>
+
+
+<div
+class="gps-box"
+id="gpsBox"
+>
+
+Primero sacá la fotografía.
+
+Luego la aplicación obtendrá automáticamente
+la ubicación GPS.
+
+</div>
+
+
+<input
+id="cameraInput"
+type="file"
+accept="image/*"
+capture="environment"
+style="display:none"
+>
+
+
+<div class="modal-actions">
+
+
+<button
+class="cancel-btn"
+id="cancelEvidence"
+>
+Cancelar
+</button>
+
+
+<button
+class="send-btn"
+id="takeEvidence"
+>
+📷 Tomar fotografía
+</button>
+
+
+<button
+class="send-btn"
+id="sendEvidence"
+disabled
+>
+✓ Registrar
+</button>
+
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<div
+class="toast"
+id="toast"
+></div>
+
+
+
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
 
 
 <script>
 
 /* =====================================================
-   GOOGLE SHEETS
-   ===================================================== */
+   CONFIGURACIÓN
+===================================================== */
+
 
 const SHEET_ID =
 "1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
+
 
 const GID =
 "1911460821";
 
 
+/*
+ * NUEVA URL DEL APPS SCRIPT
+ */
+
+const APPS_SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
+
+
 /* =====================================================
    VARIABLES
-   ===================================================== */
+===================================================== */
 
 let data = [];
 
@@ -832,10 +1105,22 @@ let selectedZone = "";
 
 let activeLayer = null;
 
+let currentVisibleDirections = [];
+
+let evidenciasHoy = [];
+
+let evidenciaActual = null;
+
+let evidenciaBase64 = "";
+
+let evidenciaLat = "";
+
+let evidenciaLng = "";
+
 
 /* =====================================================
    ELEMENTOS
-   ===================================================== */
+===================================================== */
 
 const zone =
 document.getElementById("zone");
@@ -845,6 +1130,9 @@ document.getElementById("title");
 
 const resultTitle =
 document.getElementById("resultTitle");
+
+const resultSubtitle =
+document.getElementById("resultSubtitle");
 
 const count =
 document.getElementById("count");
@@ -876,1254 +1164,1850 @@ document.getElementById("zoneBadge");
 const mapSubtitle =
 document.getElementById("mapSubtitle");
 
+const evidenceBackdrop =
+document.getElementById("evidenceBackdrop");
 
-/* =====================================================
-   HORA
-   ===================================================== */
+const evidenceAddress =
+document.getElementById("evidenceAddress");
 
-function actualizarHora(){
+const evidencePreview =
+document.getElementById("evidencePreview");
 
-  if(lastUpdate){
+const gpsBox =
+document.getElementById("gpsBox");
 
-    lastUpdate.textContent =
-    new Date().toLocaleString(
-      "es-AR",
-      {
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-      }
-    );
+const cameraInput =
+document.getElementById("cameraInput");
 
-  }
+const takeEvidence =
+document.getElementById("takeEvidence");
 
-}
+const sendEvidence =
+document.getElementById("sendEvidence");
+
+const cancelEvidence =
+document.getElementById("cancelEvidence");
+
+const toast =
+document.getElementById("toast");
 
 
 /* =====================================================
    MAPA
-   ===================================================== */
+===================================================== */
 
 const map =
 L.map("map").setView(
-  [
-    -34.7777,
-    -58.3809
-  ],
-  13
+[
+-34.7777,
+-58.3809
+],
+13
 );
 
 
 L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  {
-    maxZoom:19,
-    attribution:
-    "&copy; OpenStreetMap contributors"
-  }
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+maxZoom:19,
+attribution:
+"&copy; OpenStreetMap contributors"
+}
 ).addTo(map);
 
 
 /* =====================================================
-   ESCAPAR HTML
-   ===================================================== */
+   UTILIDADES
+===================================================== */
 
 function esc(text){
 
-  return String(
-    text ?? ""
-  ).replace(
-    /[&<>"']/g,
-    function(m){
-
-      return {
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#039;"
-      }[m];
-
-    }
-  );
+return String(
+text ?? ""
+).replace(
+/[&<>"']/g,
+m => ({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[m])
+);
 
 }
 
 
-/* =====================================================
-   NORMALIZAR
-   ===================================================== */
-
 function normalizar(texto){
 
-  return String(
-    texto ?? ""
-  )
-  .trim()
-  .toLowerCase()
-  .normalize("NFD")
-  .replace(
-    /[\u0300-\u036f]/g,
-    ""
-  );
+return String(
+texto ?? ""
+)
+.trim()
+.toLowerCase()
+.normalize("NFD")
+.replace(
+/[\u0300-\u036f]/g,
+""
+);
+
+}
+
+
+function actualizarHora(){
+
+lastUpdate.textContent =
+new Date().toLocaleString(
+"es-AR",
+{
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+function mostrarToast(texto){
+
+toast.textContent =
+texto;
+
+toast.classList.add(
+"show"
+);
+
+setTimeout(
+() => {
+
+toast.classList.remove(
+"show"
+);
+
+},
+3500
+);
 
 }
 
 
 /* =====================================================
    CARGAR MAPA
-   ===================================================== */
+===================================================== */
 
 function cargarMapa(){
 
-  fetch(
-    "zonas.geojson?t="
-    +
-    Date.now()
-  )
+fetch(
+"zonas.geojson?t="+Date.now()
+)
 
-  .then(
-    response => {
+.then(
+response => {
 
-      if(!response.ok){
+if(!response.ok){
 
-        throw new Error(
-          "No se pudo cargar zonas.geojson"
-        );
-
-      }
-
-      return response.json();
-
-    }
-  )
-
-  .then(
-    geojson => {
-
-      zonasGeo =
-      geojson.features || [];
-
-
-      if(totalZones){
-
-        totalZones.textContent =
-        zonasGeo.length;
-
-      }
-
-
-      zone.innerHTML =
-      '<option value="">— Elegí una zona —</option>';
-
-
-      zonasGeo.forEach(
-        feature => {
-
-          const option =
-          document.createElement(
-            "option"
-          );
-
-
-          option.value =
-          feature.properties.name;
-
-
-          option.textContent =
-          feature.properties.name;
-
-
-          zone.appendChild(
-            option
-          );
-
-        }
-      );
-
-    }
-  )
-
-  .catch(
-    error => {
-
-      console.error(error);
-
-      document.getElementById(
-        "map"
-      ).innerHTML =
-      '<div class="error">' +
-      'No se pudo cargar el mapa de zonas.' +
-      '<br><br>' +
-      esc(error.message) +
-      '</div>';
-
-    }
-  );
+throw new Error(
+"No se pudo cargar zonas.geojson"
+);
 
 }
 
-
-/* =====================================================
-   GOOGLE SHEETS
-   ===================================================== */
-
-function cargarDatos(){
-
-  if(statusText){
-
-    statusText.textContent =
-    "Actualizando datos...";
-
-  }
-
-
-  list.innerHTML =
-  '<div class="loading">' +
-  'Cargando direcciones...' +
-  '</div>';
-
-
-  const callback =
-  "handleSheets_" +
-  Date.now();
-
-
-  window[callback] =
-  function(response){
-
-    try{
-
-      const rows =
-      (
-        response.table.rows ||
-        []
-      ).map(
-
-        row =>
-
-        (
-          row.c ||
-          []
-        ).map(
-
-          cell =>
-
-          cell &&
-          cell.v != null
-
-          ?
-
-          String(cell.v)
-
-          :
-
-          ""
-
-        )
-
-      );
-
-
-      data = [];
-
-
-      rows.forEach(
-        row => {
-
-          /*
-           LLAVALLOL
-           A = Calle
-           B = Número
-           C = Zona
-          */
-
-          agregar(
-            row,
-            0,
-            1,
-            2,
-            "Llavallol"
-          );
-
-
-          /*
-           BANFIELD
-           D = Calle
-           E = Número
-           F = Zona
-          */
-
-          agregar(
-            row,
-            3,
-            4,
-            5,
-            "Banfield"
-          );
-
-
-          /*
-           TEMPERLEY
-           G = Calle
-           H = Número
-           I = Zona
-          */
-
-          agregar(
-            row,
-            6,
-            7,
-            8,
-            "Temperley"
-          );
-
-
-          /*
-           TURDERA
-           J = Calle
-           K = Número
-           SIN ZONA
-          */
-
-          agregar(
-            row,
-            9,
-            10,
-            null,
-            "Turdera"
-          );
-
-
-          /*
-           LOMAS
-           L = Calle
-           M = Número
-           N = Zona
-          */
-
-          agregar(
-            row,
-            11,
-            12,
-            13,
-            "Lomas"
-          );
-
-        }
-      );
-
-
-      if(totalAddresses){
-
-        totalAddresses.textContent =
-        data.length.toLocaleString(
-          "es-AR"
-        );
-
-      }
-
-
-      if(statusText){
-
-        statusText.textContent =
-        "Actualizado correctamente";
-
-      }
-
-
-      actualizarHora();
-
-
-      if(selectedZone){
-
-        render();
-
-      }
-      else{
-
-        list.innerHTML =
-        '<div class="empty">' +
-        'Elegí una zona del menú.' +
-        '</div>';
-
-      }
-
-    }
-
-    catch(error){
-
-      console.error(error);
-
-
-      if(statusText){
-
-        statusText.textContent =
-        "Error al actualizar";
-
-      }
-
-
-      list.innerHTML =
-      '<div class="error">' +
-      '<strong>Error al cargar las direcciones</strong>' +
-      '<br><br>' +
-      esc(error.message) +
-      '</div>';
-
-    }
-
-    finally{
-
-      delete window[callback];
-
-
-      const script =
-      document.getElementById(
-        callback
-      );
-
-
-      if(script){
-
-        script.remove();
-
-      }
-
-    }
-
-  };
-
-
-  const script =
-  document.createElement(
-    "script"
-  );
-
-
-  script.id =
-  callback;
-
-
-  script.src =
-
-  "https://docs.google.com/spreadsheets/d/" +
-
-  SHEET_ID +
-
-  "/gviz/tq" +
-
-  "?tqx=responseHandler:" +
-
-  callback +
-
-  "&gid=" +
-
-  GID +
-
-  "&t=" +
-
-  Date.now();
-
-
-  script.onerror =
-  function(){
-
-    if(statusText){
-
-      statusText.textContent =
-      "Sin conexión con Google Sheets";
-
-    }
-
-
-    list.innerHTML =
-    '<div class="error">' +
-    '<strong>No se pudo conectar con Google Sheets.</strong>' +
-    '</div>';
-
-
-    delete window[callback];
-
-    script.remove();
-
-  };
-
-
-  document.body.appendChild(
-    script
-  );
+return response.json();
 
 }
+)
 
+.then(
+geojson => {
 
-/* =====================================================
-   AGREGAR
-   ===================================================== */
+zonasGeo =
+geojson.features || [];
 
-function agregar(
-  row,
-  calleCol,
-  numeroCol,
-  zonaCol,
-  localidad
-){
 
-  const calle =
-  (
-    row[calleCol] ||
-    ""
-  ).trim();
+totalZones.textContent =
+zonasGeo.length;
 
 
-  const numero =
-  (
-    row[numeroCol] ||
-    ""
-  ).trim();
+zone.innerHTML =
+'<option value="">— Elegí una zona —</option>';
 
 
-  if(!calle && !numero){
+zonasGeo.forEach(
+feature => {
 
-    return;
+const nombre =
+feature.properties.name;
 
-  }
 
+if(!nombre)
+return;
 
-  let zona = "";
 
-
-  if(zonaCol !== null){
-
-    zona =
-    (
-      row[zonaCol] ||
-      ""
-    ).trim();
-
-  }
-
-
-  /*
-   TURDERA ES UNA SOLA ZONA
-  */
-
-  if(
-    normalizar(localidad) ===
-    "turdera"
-  ){
-
-    zona =
-    "Turdera";
-
-  }
-
-
-  data.push({
-
-    localidad:
-    localidad,
-
-    calle:
-    calle,
-
-    numero:
-    numero,
-
-    zona:
-    zona
-
-  });
-
-}
-
-
-/* =====================================================
-   EQUIVALENCIAS
-   ===================================================== */
-
-function equivalenciaZona(
-  nombreKMZ
-){
-
-  const n =
-  normalizar(
-    nombreKMZ
-  );
-
-
-  /*
-   LLAVALLOL
-  */
-
-  if(
-    n === "llavallol norte"
-  ){
-
-    return {
-      localidad:"Llavallol",
-      zona:"Norte"
-    };
-
-  }
-
-
-  if(
-    n === "llavallol sur"
-  ){
-
-    return {
-      localidad:"Llavallol",
-      zona:"Sur"
-    };
-
-  }
-
-
-  /*
-   BANFIELD ESTE
-  */
-
-  if(
-    n === "banfield este"
-  ){
-
-    return {
-      localidad:"Banfield",
-      zona:"Este"
-    };
-
-  }
-
-
-  /*
-   BANFIELD OESTE
-  */
-
-  if(
-    n === "banfield oeste"
-  ){
-
-    return {
-      localidad:"Banfield",
-      zona:"Oeste"
-    };
-
-  }
-
-
-  /*
-   BANFIELD 3
-
-   IMPORTANTE:
-   GOOGLE SHEETS:
-   Banfield
-   Banfield 3
-  */
-
-  if(
-    n === "banfield 3" ||
-    n === "banfied 3"
-  ){
-
-    return {
-      localidad:"Banfield",
-      zona:"Banfield 3"
-    };
-
-  }
-
-
-  /*
-   TEMPERLEY
-  */
-
-  if(
-    n === "temperley este cerrito"
-  ){
-
-    return {
-      localidad:"Temperley",
-      zona:"Este Cerrito"
-    };
-
-  }
-
-
-  if(
-    n ===
-    "temperley este 30 de septiembre"
-  ){
-
-    return {
-      localidad:"Temperley",
-      zona:"Este 30 de Septiembre"
-    };
-
-  }
-
-
-  if(
-    n === "temperley oeste"
-  ){
-
-    return {
-      localidad:"Temperley",
-      zona:"Oeste"
-    };
-
-  }
-
-
-  /*
-   TURDERA
-  */
-
-  if(
-    n === "turdera"
-  ){
-
-    return {
-      localidad:"Turdera",
-      zona:"Turdera"
-    };
-
-  }
-
-
-  /*
-   LOMAS
-  */
-
-  if(
-    n === "lomas este"
-  ){
-
-    return {
-      localidad:"Lomas",
-      zona:"Este"
-    };
-
-  }
-
-
-  if(
-    n === "lomas - microcentro"
-  ){
-
-    return {
-      localidad:"Lomas",
-      zona:"Microcentro"
-    };
-
-  }
-
-
-  if(
-    n === "lomas - frias/garibaldi"
-  ){
-
-    return {
-      localidad:"Lomas",
-      zona:"Frias/Garibaldi"
-    };
-
-  }
-
-
-  if(
-    n === "lomas - p libertad"
-  ){
-
-    return {
-      localidad:"Lomas",
-      zona:"P Libertad"
-    };
-
-  }
-
-
-  if(
-    n === "lomas - las heras"
-  ){
-
-    return {
-      localidad:"Lomas",
-      zona:"Las Heras"
-    };
-
-  }
-
-
-  return null;
-
-}
-
-
-/* =====================================================
-   COINCIDENCIA
-   ===================================================== */
-
-function coincideZona(
-  item,
-  nombreKMZ
-){
-
-  if(
-    normalizar(nombreKMZ) ===
-    "turdera"
-  ){
-
-    return (
-      normalizar(
-        item.localidad
-      ) ===
-      "turdera"
-    );
-
-  }
-
-
-  const eq =
-  equivalenciaZona(
-    nombreKMZ
-  );
-
-
-  if(!eq){
-
-    return false;
-
-  }
-
-
-  return (
-
-    normalizar(
-      item.localidad
-    )
-
-    ===
-
-    normalizar(
-      eq.localidad
-    )
-
-    &&
-
-    normalizar(
-      item.zona
-    )
-
-    ===
-
-    normalizar(
-      eq.zona
-    )
-
-  );
-
-}
-
-
-/* =====================================================
-   MAPA
-   ===================================================== */
-
-function mostrarMapa(
-  nombre
-){
-
-  if(activeLayer){
-
-    map.removeLayer(
-      activeLayer
-    );
-
-    activeLayer = null;
-
-  }
-
-
-  const feature =
-  zonasGeo.find(
-    f =>
-    f.properties.name ===
-    nombre
-  );
-
-
-  if(!feature){
-
-    return;
-
-  }
-
-
-  activeLayer =
-  L.geoJSON(
-    feature,
-    {
-
-      style:{
-
-        color:"#087a3d",
-
-        weight:3,
-
-        fillColor:"#7acb91",
-
-        fillOpacity:.30
-
-      }
-
-    }
-  ).addTo(map);
-
-
-  const bounds =
-  activeLayer.getBounds();
-
-
-  if(bounds.isValid()){
-
-    map.fitBounds(
-      bounds,
-      {
-        padding:[
-          25,
-          25
-        ]
-      }
-    );
-
-  }
-
-
-  title.textContent =
-  "Mapa de la zona";
-
-
-  if(mapSubtitle){
-
-    mapSubtitle.textContent =
-    "Área correspondiente a " +
-    nombre;
-
-  }
-
-
-  if(zoneBadge){
-
-    zoneBadge.textContent =
-    nombre;
-
-    zoneBadge.style.display =
-    "block";
-
-  }
-
-}
-
-
-/* =====================================================
-   RENDER
-   ===================================================== */
-
-function render(){
-
-  selectedZone =
-  zone.value;
-
-
-  if(!selectedZone){
-
-    if(search){
-
-      search.disabled =
-      true;
-
-      search.value =
-      "";
-
-    }
-
-
-    if(zoneBadge){
-
-      zoneBadge.style.display =
-      "none";
-
-    }
-
-
-    resultTitle.textContent =
-    "Direcciones";
-
-
-    count.textContent =
-    "0 direcciones";
-
-
-    list.innerHTML =
-    '<div class="empty">' +
-    'Elegí una zona del menú.' +
-    '</div>';
-
-
-    if(activeLayer){
-
-      map.removeLayer(
-        activeLayer
-      );
-
-      activeLayer =
-      null;
-
-    }
-
-
-    title.textContent =
-    "Mapa de la zona";
-
-
-    if(mapSubtitle){
-
-      mapSubtitle.textContent =
-      "Seleccioná una zona para visualizar su área.";
-
-    }
-
-
-    return;
-
-  }
-
-
-  mostrarMapa(
-    selectedZone
-  );
-
-
-  if(search){
-
-    search.disabled =
-    false;
-
-  }
-
-
-  const termino =
-  normalizar(
-    search
-      ?
-      search.value
-      :
-      ""
-  );
-
-
-  const todas =
-  data.filter(
-    item =>
-    coincideZona(
-      item,
-      selectedZone
-    )
-  );
-
-
-  const direcciones =
-  todas.filter(
-    item => {
-
-      if(!termino){
-
-        return true;
-
-      }
-
-
-      return normalizar(
-
-        `${item.calle} ${item.numero} ${item.localidad}`
-
-      ).includes(
-        termino
-      );
-
-    }
-  );
-
-
-  resultTitle.textContent =
-  "Direcciones";
-
-
-  count.textContent =
-
-  todas.length.toLocaleString(
-    "es-AR"
-  )
-
-  +
-
-  (
-    todas.length === 1
-    ?
-    " dirección"
-    :
-    " direcciones"
-  );
-
-
-  if(!direcciones.length){
-
-    list.innerHTML =
-    '<div class="empty">' +
-    'No se encontraron direcciones.' +
-    '</div>';
-
-    return;
-
-  }
-
-
-  list.innerHTML =
-
-  direcciones
-  .slice(0,60)
-  .map(
-
-    item => {
-
-      const direccion =
-
-      `${item.calle} ${item.numero}, ` +
-      `${item.localidad}, ` +
-      `Buenos Aires, Argentina`;
-
-
-      const mapsURL =
-
-      "https://www.google.com/maps/search/?api=1&query=" +
-
-      encodeURIComponent(
-        direccion
-      );
-
-
-      return `
-
-      <div class="address">
-
-        <div class="address-left">
-
-          <div class="pin">
-            📍
-          </div>
-
-          <div>
-
-            <strong>
-
-              ${esc(item.calle)}
-              ${esc(item.numero)}
-
-            </strong>
-
-            <small>
-
-              ${esc(item.localidad)}
-
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <a
-          class="maps"
-          href="${mapsURL}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-
-          📍 Abrir en Maps
-
-        </a>
-
-      </div>
-
-      `;
-
-    }
-
-  )
-  .join("");
-
-
-  if(direcciones.length > 60){
-
-    list.innerHTML +=
-
-    `<div class="empty">
-
-      Mostrando las primeras 60 direcciones.
-      Usá el buscador para encontrar una dirección.
-
-    </div>`;
-
-  }
-
-}
-
-
-/* =====================================================
-   EVENTOS
-   ===================================================== */
-
-zone.addEventListener(
-  "change",
-  render
+const option =
+document.createElement(
+"option"
 );
 
 
-if(search){
+option.value =
+nombre;
 
-  search.addEventListener(
-    "input",
-    render
-  );
+
+option.textContent =
+nombre;
+
+
+zone.appendChild(
+option
+);
+
+}
+);
+
+}
+)
+
+.catch(
+error => {
+
+console.error(error);
+
+
+document.getElementById(
+"map"
+).innerHTML =
+
+'<div class="error">' +
+'No se pudo cargar el mapa de zonas.' +
+'</div>';
+
+}
+);
 
 }
 
 
+/* =====================================================
+   CARGAR DIRECCIONES
+===================================================== */
+
+function cargarDatos(){
+
+statusText.textContent =
+"Cargando direcciones...";
+
+
+const callback =
+"handleSheets_"+Date.now();
+
+
+window[callback] =
+response => {
+
+try{
+
+const rows =
+(response.table.rows || [])
+.map(
+row =>
+(row.c || [])
+.map(
+cell =>
+cell &&
+cell.v != null
+?
+String(cell.v)
+:
+""
+)
+);
+
+
+data = [];
+
+
+rows.forEach(
+row => {
+
+
+/*
+ * LLAVALLOL
+ */
+
+agregar(
+row,
+0,
+1,
+2,
+"Llavallol"
+);
+
+
+/*
+ * BANFIELD
+ */
+
+agregar(
+row,
+3,
+4,
+5,
+"Banfield"
+);
+
+
+/*
+ * TEMPERLEY
+ */
+
+agregar(
+row,
+6,
+7,
+8,
+"Temperley"
+);
+
+
+/*
+ * TURDERA
+ *
+ * UNA SOLA ZONA
+ */
+
+agregar(
+row,
+9,
+10,
+null,
+"Turdera"
+);
+
+
+/*
+ * LOMAS
+ */
+
+agregar(
+row,
+11,
+12,
+13,
+"Lomas"
+);
+
+}
+);
+
+
+totalAddresses.textContent =
+data.length.toLocaleString(
+"es-AR"
+);
+
+
+actualizarHora();
+
+
+/*
+ * Después de cargar las direcciones
+ * consultamos el histórico del día.
+ */
+
+cargarEvidenciasHoy();
+
+
+}
+catch(error){
+
+console.error(error);
+
+statusText.textContent =
+"Error al cargar";
+
+list.innerHTML =
+'<div class="error">' +
+'Error al cargar las direcciones.' +
+'</div>';
+
+}
+
+
+delete window[callback];
+
+
+const script =
+document.getElementById(
+callback
+);
+
+
+if(script)
+script.remove();
+
+};
+
+
+const script =
+document.createElement(
+"script"
+);
+
+
+script.id =
+callback;
+
+
+script.src =
+"https://docs.google.com/spreadsheets/d/" +
+SHEET_ID +
+"/gviz/tq?tqx=responseHandler:" +
+callback +
+"&gid=" +
+GID +
+"&t=" +
+Date.now();
+
+
+script.onerror =
+() => {
+
+statusText.textContent =
+"Error de conexión";
+
+
+list.innerHTML =
+'<div class="error">' +
+'No se pudo conectar con Google Sheets.' +
+'</div>';
+
+
+delete window[callback];
+
+script.remove();
+
+};
+
+
+document.body.appendChild(
+script
+);
+
+}
+
+
+/* =====================================================
+   AGREGAR DIRECCIÓN
+===================================================== */
+
+function agregar(
+row,
+calleCol,
+numeroCol,
+zonaCol,
+localidad
+){
+
+const calle =
+(row[calleCol] || "").trim();
+
+
+const numero =
+(row[numeroCol] || "").trim();
+
+
+if(!calle && !numero)
+return;
+
+
+let zona = "";
+
+
+if(zonaCol !== null){
+
+zona =
+(row[zonaCol] || "").trim();
+
+}
+
+
+/*
+ * TURDERA
+ */
+
+if(
+normalizar(localidad) ===
+"turdera"
+){
+
+zona =
+"Turdera";
+
+}
+
+
+data.push({
+
+localidad:
+localidad,
+
+calle:
+calle,
+
+numero:
+numero,
+
+zona:
+zona
+
+});
+
+}
+
+
+/* =====================================================
+   CARGAR EVIDENCIAS DE HOY
+===================================================== */
+
+function cargarEvidenciasHoy(){
+
+statusText.textContent =
+"Consultando evidencias de hoy...";
+
+
+fetch(
+APPS_SCRIPT_URL +
+"?accion=evidenciasHoy&t="+
+Date.now()
+)
+
+.then(
+response => {
+
+if(!response.ok){
+
+throw new Error(
+"No se pudo consultar el histórico."
+);
+
+}
+
+return response.json();
+
+}
+)
+
+.then(
+resultado => {
+
+if(
+!resultado.ok
+){
+
+throw new Error(
+resultado.error ||
+"Error en el histórico."
+);
+
+}
+
+
+evidenciasHoy =
+resultado.evidencias || [];
+
+
+statusText.textContent =
+"Actualizado correctamente";
+
+
+actualizarHora();
+
+
+if(selectedZone){
+
+render();
+
+}
+else{
+
+list.innerHTML =
+'<div class="empty">' +
+'Elegí una zona del menú.' +
+'</div>';
+
+}
+
+}
+)
+
+.catch(
+error => {
+
+console.error(error);
+
+
+/*
+ * No bloqueamos la aplicación si
+ * el histórico no responde.
+ */
+
+evidenciasHoy = [];
+
+
+statusText.textContent =
+"Direcciones cargadas";
+
+
+if(selectedZone){
+
+render();
+
+}
+
+}
+);
+
+}
+
+
+/* =====================================================
+   CLAVE DE DIRECCIÓN
+===================================================== */
+
+function claveDireccion(
+zona,
+direccion
+){
+
+return (
+
+normalizar(zona) +
+"|" +
+normalizar(direccion)
+
+);
+
+}
+
+
+/* =====================================================
+   ¿ESTÁ REALIZADA HOY?
+===================================================== */
+
+function estaRealizadaHoy(
+item
+){
+
+const direccion =
+`${item.calle} ${item.numero || ""}`;
+
+
+const clave =
+claveDireccion(
+selectedZone,
+direccion
+);
+
+
+return evidenciasHoy.some(
+e => {
+
+const zonaHistorico =
+String(
+e.zona || ""
+);
+
+
+const direccionHistorico =
+String(
+e.direccion || ""
+);
+
+
+return (
+
+claveDireccion(
+zonaHistorico,
+direccionHistorico
+)
+
+===
+
+clave
+
+);
+
+}
+);
+
+}
+
+
+/* =====================================================
+   MAPEO ZONAS
+===================================================== */
+
+function claveZonaSheets(
+nombre
+){
+
+const s =
+normalizar(nombre);
+
+
+const mapa = {
+
+"llavallol norte":
+"llavallol — norte",
+
+"llavallol sur":
+"llavallol — sur",
+
+"banfield 3":
+"banfield — banfield 3",
+
+"banfied 3":
+"banfield — banfield 3",
+
+"banfield este":
+"banfield — este",
+
+"banfield oeste":
+"banfield — oeste",
+
+"temperley este cerrito":
+"temperley — este cerrito",
+
+"temperley este 30 de septiembre":
+"temperley — este 30 de septiembre",
+
+"temperley oeste":
+"temperley — oeste",
+
+"lomas este":
+"lomas — este",
+
+"lomas - microcentro":
+"lomas — microcentro",
+
+"lomas - frias/garibaldi":
+"lomas — frias/garibaldi",
+
+"lomas - p libertad":
+"lomas — p libertad",
+
+"lomas - las heras":
+"lomas — las heras"
+
+};
+
+
+return mapa[s] || s;
+
+}
+
+
+/* =====================================================
+   COINCIDENCIA ZONA
+===================================================== */
+
+function coincideZona(
+item,
+selected
+){
+
+/*
+ * TURDERA
+ */
+
+if(
+normalizar(selected) ===
+"turdera"
+){
+
+return (
+
+normalizar(
+item.localidad
+)
+
+===
+
+"turdera"
+
+);
+
+}
+
+
+const localidad =
+normalizar(
+item.localidad
+);
+
+
+const zona =
+normalizar(
+item.zona
+);
+
+
+const objetivo =
+claveZonaSheets(
+selected
+);
+
+
+return (
+
+objetivo ===
+localidad +
+" — " +
+zona
+
+);
+
+}
+
+
+/* =====================================================
+   MOSTRAR MAPA
+===================================================== */
+
+function mostrarMapa(
+nombre
+){
+
+if(activeLayer){
+
+map.removeLayer(
+activeLayer
+);
+
+activeLayer =
+null;
+
+}
+
+
+const feature =
+zonasGeo.find(
+f =>
+f.properties.name ===
+nombre
+);
+
+
+if(!feature)
+return;
+
+
+activeLayer =
+L.geoJSON(
+feature,
+{
+style:{
+color:"#087a3d",
+weight:3,
+fillColor:"#7acb91",
+fillOpacity:.30
+}
+}
+).addTo(map);
+
+
+const bounds =
+activeLayer.getBounds();
+
+
+if(bounds.isValid()){
+
+map.fitBounds(
+bounds,
+{
+padding:[25,25]
+}
+);
+
+}
+
+
+title.textContent =
+"Mapa de la zona";
+
+
+mapSubtitle.textContent =
+"Área correspondiente a " +
+nombre;
+
+
+zoneBadge.textContent =
+nombre;
+
+
+zoneBadge.style.display =
+"block";
+
+}
+
+
+/* =====================================================
+   RENDER DIRECCIONES
+===================================================== */
+
+function render(){
+
+selectedZone =
+zone.value;
+
+
+if(!selectedZone){
+
+search.disabled =
+true;
+
+
+search.value =
+"";
+
+
+zoneBadge.style.display =
+"none";
+
+
+resultTitle.textContent =
+"Direcciones";
+
+
+resultSubtitle.textContent =
+"Direcciones de la zona seleccionada";
+
+
+count.textContent =
+"0 direcciones";
+
+
+list.innerHTML =
+'<div class="empty">' +
+'Elegí una zona del menú.' +
+'</div>';
+
+
+if(activeLayer){
+
+map.removeLayer(
+activeLayer
+);
+
+activeLayer =
+null;
+
+}
+
+
+title.textContent =
+"Mapa de la zona";
+
+
+mapSubtitle.textContent =
+"Seleccioná una zona para visualizar su área.";
+
+
+return;
+
+}
+
+
+mostrarMapa(
+selectedZone
+);
+
+
+search.disabled =
+false;
+
+
+const termino =
+normalizar(
+search.value
+);
+
+
+const todas =
+data.filter(
+item =>
+coincideZona(
+item,
+selectedZone
+)
+);
+
+
+const direcciones =
+todas.filter(
+item => {
+
+if(!termino)
+return true;
+
+
+return normalizar(
+
+`${item.calle} ${item.numero} ${item.localidad}`
+
+).includes(
+termino
+);
+
+}
+);
+
+
+resultTitle.textContent =
+selectedZone;
+
+
+resultSubtitle.textContent =
+"Estado de las direcciones para hoy";
+
+
+count.textContent =
+todas.length +
+(
+todas.length === 1
+?
+" dirección"
+:
+" direcciones"
+);
+
+
+if(!direcciones.length){
+
+list.innerHTML =
+'<div class="empty">' +
+'No se encontraron direcciones.' +
+'</div>';
+
+return;
+
+}
+
+
+currentVisibleDirections =
+direcciones.slice(
+0,
+100
+);
+
+
+list.innerHTML =
+currentVisibleDirections
+.map(
+(item,index) => {
+
+
+const direccion =
+`${item.calle} ${item.numero || ""}`;
+
+
+const realizado =
+estaRealizadaHoy(
+item
+);
+
+
+const mapsURL =
+"https://www.google.com/maps/search/?api=1&query=" +
+encodeURIComponent(
+`${direccion}, ${item.localidad}, Buenos Aires, Argentina`
+);
+
+
+return `
+
+<div class="address">
+
+
+<div class="address-left">
+
+
+<div class="pin">
+
+${
+realizado
+?
+"✅"
+:
+"📍"
+}
+
+</div>
+
+
+<div>
+
+<strong>
+
+${esc(item.calle)}
+
+${item.numero
+? " " + esc(item.numero)
+: ""}
+
+</strong>
+
+
+<small>
+
+${esc(item.localidad)}
+
+·
+
+${
+realizado
+?
+"🟢 Realizado hoy"
+:
+"⚪ Pendiente"
+}
+
+</small>
+
+</div>
+
+
+</div>
+
+
+<div class="address-actions">
+
+
+<a
+class="maps"
+href="${mapsURL}"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+📍 Maps
+
+</a>
+
+
+<button
+class="evidence-btn ${
+realizado
+?
+"done"
+:
+""
+}"
+data-evidence-index="${index}"
+>
+
+${
+realizado
+?
+"📷 Ver evidencia"
+:
+"📷 Registrar evidencia"
+}
+
+</button>
+
+
+</div>
+
+
+</div>
+
+`;
+
+}
+)
+.join("");
+
+
+if(direcciones.length > 100){
+
+list.innerHTML +=
+
+'<div class="empty">' +
+
+'Mostrando las primeras 100 direcciones.' +
+
+'</div>';
+
+}
+
+}
+
+
+/* =====================================================
+   ABRIR MODAL
+===================================================== */
+
+function abrirEvidencia(
+item
+){
+
+evidenciaActual =
+item;
+
+
+evidenciaBase64 =
+"";
+
+
+evidenciaLat =
+"";
+
+
+evidenciaLng =
+"";
+
+
+evidenceAddress.textContent =
+`${item.calle} ${item.numero || ""} — ${selectedZone}`;
+
+
+evidencePreview.style.display =
+"none";
+
+
+evidencePreview.src =
+"";
+
+
+gpsBox.innerHTML =
+"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
+
+
+sendEvidence.disabled =
+true;
+
+
+takeEvidence.style.display =
+"block";
+
+
+evidenceBackdrop.classList.add(
+"show"
+);
+
+}
+
+
+/* =====================================================
+   CERRAR MODAL
+===================================================== */
+
+function cerrarEvidencia(){
+
+evidenceBackdrop.classList.remove(
+"show"
+);
+
+
+evidenciaActual =
+null;
+
+
+evidenciaBase64 =
+"";
+
+
+evidenciaLat =
+"";
+
+
+evidenciaLng =
+"";
+
+
+cameraInput.value =
+"";
+
+}
+
+
+/* =====================================================
+   COMPRIMIR IMAGEN
+===================================================== */
+
+function comprimirImagen(
+file
+){
+
+return new Promise(
+(resolve,reject) => {
+
+const reader =
+new FileReader();
+
+
+reader.onload =
+event => {
+
+const img =
+new Image();
+
+
+img.onload =
+() => {
+
+let width =
+img.width;
+
+
+let height =
+img.height;
+
+
+const maxWidth =
+1400;
+
+
+if(
+width > maxWidth
+){
+
+height =
+height *
+maxWidth /
+width;
+
+
+width =
+maxWidth;
+
+}
+
+
+const canvas =
+document.createElement(
+"canvas"
+);
+
+
+canvas.width =
+width;
+
+
+canvas.height =
+height;
+
+
+const ctx =
+canvas.getContext(
+"2d"
+);
+
+
+ctx.drawImage(
+img,
+0,
+0,
+width,
+height
+);
+
+
+resolve(
+canvas.toDataURL(
+"image/jpeg",
+0.78
+)
+);
+
+};
+
+
+img.onerror =
+reject;
+
+
+img.src =
+event.target.result;
+
+};
+
+
+reader.onerror =
+reject;
+
+
+reader.readAsDataURL(
+file
+);
+
+}
+);
+
+}
+
+
+/* =====================================================
+   PREPARAR EVIDENCIA
+===================================================== */
+
+async function prepararEvidencia(
+file
+){
+
+try{
+
+gpsBox.innerHTML =
+"📷 Procesando fotografía...";
+
+
+evidenciaBase64 =
+await comprimirImagen(
+file
+);
+
+
+evidencePreview.src =
+evidenciaBase64;
+
+
+evidencePreview.style.display =
+"block";
+
+
+gpsBox.innerHTML =
+"📍 Obteniendo ubicación GPS...";
+
+
+navigator.geolocation.getCurrentPosition(
+
+position => {
+
+evidenciaLat =
+position.coords.latitude;
+
+
+evidenciaLng =
+position.coords.longitude;
+
+
+gpsBox.innerHTML =
+
+"✅ Ubicación obtenida" +
+
+"<br>" +
+
+"Latitud: " +
+evidenciaLat.toFixed(6) +
+
+"<br>" +
+
+"Longitud: " +
+evidenciaLng.toFixed(6);
+
+
+sendEvidence.disabled =
+false;
+
+},
+
+error => {
+
+console.error(error);
+
+
+gpsBox.innerHTML =
+
+"⚠️ No se pudo obtener la ubicación GPS." +
+
+"<br><br>" +
+
+"Activá la ubicación del dispositivo e intentá nuevamente.";
+
+
+sendEvidence.disabled =
+true;
+
+},
+
+{
+enableHighAccuracy:true,
+timeout:15000,
+maximumAge:0
+}
+
+);
+
+}
+catch(error){
+
+console.error(error);
+
+
+gpsBox.innerHTML =
+"❌ No se pudo procesar la fotografía.";
+
+}
+
+}
+
+
+/* =====================================================
+   ENVIAR EVIDENCIA
+===================================================== */
+
+async function enviarEvidencia(){
+
+if(!evidenciaActual)
+return;
+
+
+if(!evidenciaBase64){
+
+alert(
+"Primero sacá la fotografía."
+);
+
+return;
+
+}
+
+
+if(
+!evidenciaLat ||
+!evidenciaLng
+){
+
+alert(
+"No se pudo obtener la ubicación GPS."
+);
+
+return;
+
+}
+
+
+sendEvidence.disabled =
+true;
+
+
+sendEvidence.textContent =
+"Enviando...";
+
+
+const ahora =
+new Date();
+
+
+const fecha =
+ahora.toLocaleDateString(
+"es-AR"
+);
+
+
+const hora =
+ahora.toLocaleTimeString(
+"es-AR",
+{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+
+
+const datos = {
+
+fecha:
+
+fecha,
+
+hora:
+
+hora,
+
+zona:
+
+selectedZone,
+
+direccion:
+
+`${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
+
+latitud:
+
+evidenciaLat,
+
+longitud:
+
+evidenciaLng,
+
+foto:
+
+evidenciaBase64
+
+};
+
+
+try{
+
+/*
+ * Enviamos al Apps Script.
+ */
+
+await fetch(
+APPS_SCRIPT_URL,
+{
+method:"POST",
+mode:"no-cors",
+headers:{
+"Content-Type":
+"text/plain;charset=utf-8"
+},
+body:
+JSON.stringify(
+datos
+)
+}
+);
+
+
+/*
+ * Importante:
+ *
+ * No marcamos la dirección
+ * definitivamente acá.
+ *
+ * Volvemos a consultar
+ * el Histórico.
+ */
+
+cerrarEvidencia();
+
+
+mostrarToast(
+"📷 Evidencia enviada. Actualizando..."
+);
+
+
+/*
+ * Esperamos un momento para que
+ * Google Sheets registre la fila.
+ */
+
+setTimeout(
+cargarEvidenciasHoy,
+1800
+);
+
+}
+catch(error){
+
+console.error(error);
+
+
+alert(
+"No se pudo enviar la evidencia. Intentá nuevamente."
+);
+
+}
+
+
+finally{
+
+sendEvidence.disabled =
+false;
+
+sendEvidence.textContent =
+"✓ Registrar";
+
+}
+
+}
+
+
+/* =====================================================
+   CLICK EN DIRECCIÓN
+===================================================== */
+
+list.addEventListener(
+"click",
+event => {
+
+const button =
+event.target.closest(
+"[data-evidence-index]"
+);
+
+
+if(!button)
+return;
+
+
+const index =
+Number(
+button.dataset.evidenceIndex
+);
+
+
+const item =
+currentVisibleDirections[index];
+
+
+if(item){
+
+abrirEvidencia(
+item
+);
+
+}
+
+}
+);
+
+
+/* =====================================================
+   CÁMARA
+===================================================== */
+
+cameraInput.addEventListener(
+"change",
+async () => {
+
+if(
+cameraInput.files &&
+cameraInput.files[0]
+){
+
+await prepararEvidencia(
+cameraInput.files[0]
+);
+
+}
+
+}
+);
+
+
+/* =====================================================
+   BOTONES MODAL
+===================================================== */
+
+takeEvidence.addEventListener(
+"click",
+() => {
+
+cameraInput.click();
+
+}
+);
+
+
+sendEvidence.addEventListener(
+"click",
+enviarEvidencia
+);
+
+
+cancelEvidence.addEventListener(
+"click",
+cerrarEvidencia
+);
+
+
+evidenceBackdrop.addEventListener(
+"click",
+event => {
+
+if(
+event.target ===
+evidenceBackdrop
+){
+
+cerrarEvidencia();
+
+}
+
+}
+);
+
+
+/* =====================================================
+   EVENTOS PRINCIPALES
+===================================================== */
+
+zone.addEventListener(
+"change",
+render
+);
+
+
+search.addEventListener(
+"input",
+render
+);
+
+
 refresh.addEventListener(
-  "click",
-  cargarDatos
+"click",
+() => {
+
+cargarDatos();
+
+}
 );
 
 
 /* =====================================================
    INICIO
-   ===================================================== */
+===================================================== */
 
 cargarMapa();
 
 cargarDatos();
 
 
-/* =====================================================
-   ACTUALIZACIÓN AUTOMÁTICA
-   ===================================================== */
+/*
+ * Actualización automática.
+ *
+ * Cada 5 minutos consulta:
+ *
+ * 1. Direcciones
+ * 2. Evidencias de HOY
+ */
 
 setInterval(
-  cargarDatos,
-  5 * 60 * 1000
+() => {
+
+cargarDatos();
+
+},
+5 * 60 * 1000
+);
+
+
+/*
+ * Al volver a abrir la pestaña
+ * actualizamos el estado.
+ */
+
+document.addEventListener(
+"visibilitychange",
+() => {
+
+if(
+!document.hidden
+){
+
+cargarEvidenciasHoy();
+
+}
+
+}
 );
 
 </script>
