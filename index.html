@@ -1074,6 +1074,16 @@ let selectedZone = "";
 
 let activeLayer = null;
 
+/* Variables del recorrido GPS */
+const ROUTE_STORAGE_KEY = "diaVerdeRecorridoV1";
+let recorridoActivo = false;
+let recorridoZona = "";
+let recorridoInicio = "";
+let recorridoPuntos = [];
+let recorridoLayer = null;
+let recorridoMarker = null;
+let recorridoWatchId = null;
+
 let currentVisibleDirections = [];
 
 let evidenciasHoy = [];
