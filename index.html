@@ -637,6 +637,16 @@ footer span{
 
 }
 
+
+/* ================= RECORRIDO GPS ================= */
+.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}
+.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}
+.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}
+.route-btn:disabled{opacity:.5;cursor:not-allowed}
+.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}
+.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
+
 </style>
 
 </head>
@@ -851,6 +861,12 @@ style="display:none"
 ></div>
 
 <div id="map"></div>
+
+<div class="route-controls">
+<button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
+<button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button>
+<div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div>
+</div>
 
 </div>
 
@@ -1120,6 +1136,15 @@ document.getElementById("zoneBadge");
 const mapSubtitle =
 document.getElementById("mapSubtitle");
 
+const startRoute =
+document.getElementById("startRoute");
+
+const stopRoute =
+document.getElementById("stopRoute");
+
+const routeStatus =
+document.getElementById("routeStatus");
+
 const evidenceBackdrop =
 document.getElementById("evidenceBackdrop");
 
@@ -1311,6 +1336,70 @@ document.getElementById(
 }
 );
 
+}
+
+/* =====================================================
+   RECORRIDO GPS
+===================================================== */
+function guardarRecorridoLocal(){
+  try{localStorage.setItem(ROUTE_STORAGE_KEY,JSON.stringify({activo:recorridoActivo,zona:recorridoZona,inicio:recorridoInicio,puntos:recorridoPuntos}));}catch(error){console.error(error);}
+}
+function borrarRecorridoLocal(){try{localStorage.removeItem(ROUTE_STORAGE_KEY);}catch(error){console.error(error);}}
+function dibujarRecorrido(){
+  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;}
+  if(recorridoPuntos.length<2)return;
+  recorridoLayer=L.polyline(recorridoPuntos.map(p=>[p.lat,p.lng]),{color:"#087a3d",weight:6,opacity:.9,lineCap:"round",lineJoin:"round"}).addTo(map);
+  recorridoLayer.bringToFront();
+}
+function actualizarEstadoRecorrido(texto,activo=false){routeStatus.innerHTML=texto;routeStatus.classList.toggle("active",activo);}
+function actualizarBotonesRecorrido(){const hayZona=!!selectedZone;startRoute.disabled=!hayZona||recorridoActivo;stopRoute.disabled=!recorridoActivo;}
+function mostrarPosicionRecorrido(lat,lng){
+  if(recorridoMarker){recorridoMarker.setLatLng([lat,lng]);recorridoMarker.bringToFront();return;}
+  recorridoMarker=L.circleMarker([lat,lng],{radius:8,color:"#ffffff",weight:3,fillColor:"#087a3d",fillOpacity:1}).addTo(map);
+  recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
+}
+function registrarPuntoRecorrido(position){
+  const lat=position.coords.latitude,lng=position.coords.longitude,ultimo=recorridoPuntos[recorridoPuntos.length-1];
+  if(ultimo&&Math.abs(lat-ultimo.lat)<0.00001&&Math.abs(lng-ultimo.lng)<0.00001){mostrarPosicionRecorrido(lat,lng);return;}
+  recorridoPuntos.push({lat:lat,lng:lng,hora:new Date().toISOString()});
+  dibujarRecorrido();mostrarPosicionRecorrido(lat,lng);guardarRecorridoLocal();
+  actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Puntos registrados: "+recorridoPuntos.length,true);
+}
+function manejarErrorRecorrido(error){
+  console.error("GPS recorrido:",error);let mensaje="⚠️ No se pudo obtener la ubicación.";
+  if(error&&error.code===1)mensaje="⚠️ Permiso de ubicación denegado. Activá la ubicación del dispositivo para registrar el recorrido.";
+  else if(error&&error.code===2)mensaje="⚠️ No se pudo determinar la ubicación. Mové el vehículo a un lugar con mejor señal GPS.";
+  else if(error&&error.code===3)mensaje="⚠️ El GPS tardó demasiado en responder. Seguimos intentando.";
+  actualizarEstadoRecorrido(mensaje+(recorridoActivo?"<br>El recorrido continúa activo.":""),recorridoActivo);
+}
+function iniciarSeguimientoGPS(){
+  if(!navigator.geolocation){actualizarEstadoRecorrido("❌ Este dispositivo no permite obtener ubicación GPS.");return false;}
+  if(recorridoWatchId!==null)navigator.geolocation.clearWatch(recorridoWatchId);
+  recorridoWatchId=navigator.geolocation.watchPosition(registrarPuntoRecorrido,manejarErrorRecorrido,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  return true;
+}
+function iniciarRecorrido(){
+  if(!selectedZone){alert("Primero seleccioná una zona.");return;} if(recorridoActivo)return;
+  recorridoActivo=true;recorridoZona=selectedZone;recorridoInicio=new Date().toISOString();recorridoPuntos=[];
+  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;} if(recorridoMarker){map.removeLayer(recorridoMarker);recorridoMarker=null;}
+  if(!iniciarSeguimientoGPS()){recorridoActivo=false;actualizarBotonesRecorrido();return;}
+  guardarRecorridoLocal();actualizarBotonesRecorrido();actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Esperando la primera posición GPS...",true);mostrarToast("🚛 Recorrido iniciado");
+}
+function finalizarRecorrido(){
+  if(!recorridoActivo)return;
+  if(recorridoWatchId!==null){navigator.geolocation.clearWatch(recorridoWatchId);recorridoWatchId=null;}
+  const cantidad=recorridoPuntos.length,zonaFinal=recorridoZona;recorridoActivo=false;guardarRecorridoLocal();actualizarBotonesRecorrido();
+  actualizarEstadoRecorrido("✅ <strong>Recorrido finalizado</strong><br>Zona: "+esc(zonaFinal)+"<br>📍 Puntos registrados: "+cantidad+"<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona.");mostrarToast("✅ Recorrido finalizado");
+}
+function recuperarRecorrido(){
+  try{
+    const guardado=localStorage.getItem(ROUTE_STORAGE_KEY);if(!guardado)return;const estado=JSON.parse(guardado);if(!estado||!estado.activo||!estado.zona)return;
+    const inicio=estado.inicio?new Date(estado.inicio):null,ahora=new Date();
+    if(!inicio||inicio.toDateString()!==ahora.toDateString()){borrarRecorridoLocal();return;}
+    recorridoActivo=true;recorridoZona=estado.zona;recorridoInicio=estado.inicio;recorridoPuntos=Array.isArray(estado.puntos)?estado.puntos:[];dibujarRecorrido();actualizarBotonesRecorrido();
+    if(recorridoPuntos.length){const ultimo=recorridoPuntos[recorridoPuntos.length-1];mostrarPosicionRecorrido(ultimo.lat,ultimo.lng);}
+    actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Recorrido recuperado: "+recorridoPuntos.length+" puntos.<br>El GPS continúa registrando cuando el dispositivo entregue una nueva posición.",true);iniciarSeguimientoGPS();
+  }catch(error){console.error(error);borrarRecorridoLocal();}
 }
 
 /* =====================================================
@@ -2097,6 +2186,12 @@ cgm.value;
 selectedZone =
 zone.value;
 
+if(recorridoActivo && recorridoZona && selectedZone !== recorridoZona){
+  selectedZone=recorridoZona;
+  zone.value=recorridoZona;
+}
+actualizarBotonesRecorrido();
+
 if(!selectedCgm){
 
 zone.disabled =
@@ -2504,40 +2599,7 @@ function verEvidencia(item){
     `${direccion} — ${selectedCgm} — ${selectedZone}`;
 
   if(evidencia.foto){
-    /*
-     * Drive guarda en el Sheet el enlace de la pagina del archivo
-     * (drive.google.com/file/d/.../view).
-     * Para mostrar la imagen dentro de la app necesitamos convertir
-     * ese enlace en una URL de vista previa directa de Drive.
-     */
-    const fotoUrl = String(evidencia.foto).trim();
-
-    let fileId = "";
-
-    const matchId = fotoUrl.match(/[-\w]{20,}/);
-    if(matchId){
-      fileId = matchId[0];
-    }
-
-    if(fileId){
-      evidencePreview.src =
-        "https://drive.google.com/thumbnail?id=" +
-        encodeURIComponent(fileId) +
-        "&sz=w1200";
-    }else{
-      evidencePreview.src = fotoUrl;
-    }
-
-    evidencePreview.onerror = () => {
-      /* Segundo intento usando la URL de vista de Drive. */
-      if(fileId){
-        evidencePreview.onerror = null;
-        evidencePreview.src =
-          "https://drive.google.com/uc?export=view&id=" +
-          encodeURIComponent(fileId);
-      }
-    };
-
+    evidencePreview.src = evidencia.foto;
     evidencePreview.style.display = "block";
   }else{
     evidencePreview.style.display = "none";
@@ -3070,6 +3132,12 @@ cerrarEvidencia();
 
 
 /* =====================================================
+   EVENTOS RECORRIDO
+===================================================== */
+startRoute.addEventListener("click",iniciarRecorrido);
+stopRoute.addEventListener("click",finalizarRecorrido);
+
+/* =====================================================
    EVENTOS
 ===================================================== */
 
@@ -3096,7 +3164,16 @@ render();
 
 zone.addEventListener(
 "change",
-render
+() => {
+  if(recorridoActivo && zone.value !== recorridoZona){
+    zone.value=recorridoZona;
+    selectedZone=recorridoZona;
+    alert("Finalizá el recorrido actual antes de cambiar de zona.");
+    return;
+  }
+  render();
+  actualizarBotonesRecorrido();
+}
 );
 
 
