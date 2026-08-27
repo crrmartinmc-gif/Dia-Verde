@@ -1397,9 +1397,35 @@ function iniciarRecorrido(){
 }
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
-  if(recorridoWatchId!==null){navigator.geolocation.clearWatch(recorridoWatchId);recorridoWatchId=null;}
-  const cantidad=recorridoPuntos.length,zonaFinal=recorridoZona;recorridoActivo=false;guardarRecorridoLocal();actualizarBotonesRecorrido();
-  actualizarEstadoRecorrido("✅ <strong>Recorrido finalizado</strong><br>Zona: "+esc(zonaFinal)+"<br>📍 Puntos registrados: "+cantidad+"<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona.");mostrarToast("✅ Recorrido finalizado");
+
+  if(recorridoWatchId!==null){
+    navigator.geolocation.clearWatch(recorridoWatchId);
+    recorridoWatchId=null;
+  }
+
+  const cantidad=recorridoPuntos.length;
+  const zonaFinal=recorridoZona;
+  recorridoActivo=false;
+
+  /* El marcador verde representa la posición ACTUAL del vehículo.
+     Al finalizar, se elimina para no mostrar una ubicación vieja. */
+  if(recorridoMarker){
+    map.removeLayer(recorridoMarker);
+    recorridoMarker=null;
+  }
+
+  guardarRecorridoLocal();
+  actualizarBotonesRecorrido();
+
+  actualizarEstadoRecorrido(
+    "✅ <strong>Recorrido finalizado</strong><br>Zona: "+
+    esc(zonaFinal)+
+    "<br>📍 Puntos registrados: "+
+    cantidad+
+    "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
+  );
+
+  mostrarToast("✅ Recorrido finalizado");
 }
 function recuperarRecorrido(){
   try{
@@ -3181,6 +3207,13 @@ zone.addEventListener(
     alert("Finalizá el recorrido actual antes de cambiar de zona.");
     return;
   }
+
+  /* Si no hay recorrido activo, nunca dejamos un marcador GPS viejo. */
+  if(!recorridoActivo && recorridoMarker){
+    map.removeLayer(recorridoMarker);
+    recorridoMarker=null;
+  }
+
   render();
   actualizarBotonesRecorrido();
 }
