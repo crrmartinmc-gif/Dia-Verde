@@ -2504,7 +2504,40 @@ function verEvidencia(item){
     `${direccion} — ${selectedCgm} — ${selectedZone}`;
 
   if(evidencia.foto){
-    evidencePreview.src = evidencia.foto;
+    /*
+     * Drive guarda en el Sheet el enlace de la pagina del archivo
+     * (drive.google.com/file/d/.../view).
+     * Para mostrar la imagen dentro de la app necesitamos convertir
+     * ese enlace en una URL de vista previa directa de Drive.
+     */
+    const fotoUrl = String(evidencia.foto).trim();
+
+    let fileId = "";
+
+    const matchId = fotoUrl.match(/[-\w]{20,}/);
+    if(matchId){
+      fileId = matchId[0];
+    }
+
+    if(fileId){
+      evidencePreview.src =
+        "https://drive.google.com/thumbnail?id=" +
+        encodeURIComponent(fileId) +
+        "&sz=w1200";
+    }else{
+      evidencePreview.src = fotoUrl;
+    }
+
+    evidencePreview.onerror = () => {
+      /* Segundo intento usando la URL de vista de Drive. */
+      if(fileId){
+        evidencePreview.onerror = null;
+        evidencePreview.src =
+          "https://drive.google.com/uc?export=view&id=" +
+          encodeURIComponent(fileId);
+      }
+    };
+
     evidencePreview.style.display = "block";
   }else{
     evidencePreview.style.display = "none";
