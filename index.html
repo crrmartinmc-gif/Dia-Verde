@@ -1470,12 +1470,8 @@ function registrarPuntoRecorrido(position){
     return;
   }
 
-  /*
-    IMPORTANTE:
-    Mostramos la posición recibida aunque la precisión sea mala.
-    Esto permite comprobar qué está entregando realmente el navegador.
-    Para dibujar la línea filtramos después.
-  */
+  // Mostramos SIEMPRE la posición que entrega el teléfono.
+  // No descartamos la coordenada por un valor de accuracy alto.
   mostrarPosicionRecorrido(lat,lng,precision);
 
   const punto={
@@ -1485,42 +1481,35 @@ function registrarPuntoRecorrido(position){
     precision:Number.isFinite(precision)?precision:null
   };
 
-  const ultimo=
-    recorridoPuntos[recorridoPuntos.length-1];
+  const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
   if(ultimo){
     const distancia=distanciaMetros(ultimo,punto);
-
-    /*
-      Evita duplicados y saltos GPS imposibles.
-      Si el vehículo estuviera viajando a más de ~180 km/h
-      entre dos lecturas de 5-15 s, consideramos el salto inválido.
-    */
     const ahora=Date.now();
     const antes=new Date(ultimo.hora).getTime();
     const segundos=Math.max(1,(ahora-antes)/1000);
     const velocidad=distancia/segundos;
 
+    // Evita registrar la misma posición repetidamente.
     if(distancia<3){
       actualizarEstadoRecorrido(
         "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS actualizado · Puntos: "+
-        recorridoPuntos.length+
-        "<br>📡 Precisión: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+
-        " m",
+        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
+        "<br>📡 Precisión informada: ±"+
+        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
         true
       );
       return;
     }
 
+    // Solo descartamos saltos físicamente imposibles.
     if(velocidad>50){
       actualizarEstadoRecorrido(
         "🔴 <strong>Recorrido en curso</strong><br>"+
-        "⚠️ Salto GPS descartado"+
-        "<br>📍 GPS recibido · ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+
-        " m",
+        "📍 GPS recibido"+
+        "<br>⚠️ Salto de ubicación descartado"+
+        "<br>📡 Precisión informada: ±"+
+        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
         true
       );
       return;
@@ -1528,34 +1517,23 @@ function registrarPuntoRecorrido(position){
   }
 
   /*
-    No rechazamos automáticamente una posición por tener
-    >80 m. Primero la mostramos.
-    Para la línea usamos preferentemente posiciones <=150 m.
+    CAMBIO CLAVE:
+    Ya NO descartamos el punto porque accuracy sea 150, 500 o 2000 m.
+    Si el navegador entrega una coordenada, la usamos.
   */
-  if(Number.isFinite(precision)&&precision>150){
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Punto GPS recibido"+
-      "<br>⚠️ Precisión actual: ±"+
-      Math.round(precision)+
-      " m"+
-      "<br>Esperando una lectura más precisa para pintar la línea...",
-      true
-    );
-    return;
-  }
-
   recorridoPuntos.push(punto);
+
   dibujarRecorrido();
   guardarRecorridoLocal();
 
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS conectado · Puntos registrados: "+
+    "📍 GPS activo · Puntos registrados: "+
     recorridoPuntos.length+
-    "<br>📡 Precisión: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+
-    " m",
+    "<br>🌐 Lat: "+lat.toFixed(6)+
+    " · Lng: "+lng.toFixed(6)+
+    "<br>📡 Precisión informada: ±"+
+    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
     true
   );
 }
