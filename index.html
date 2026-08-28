@@ -1083,6 +1083,8 @@ let recorridoPuntos = [];
 let recorridoLayer = null;
 let recorridoMarker = null;
 let recorridoWatchId = null;
+let usandoGpsNativo = false;
+let ultimaUbicacionNativa = null;
 
 let currentVisibleDirections = [];
 
@@ -1459,28 +1461,42 @@ function mostrarPosicionRecorrido(lat,lng,precision){
   );
 }
 
+function gpsNativoDisponible(){
+  return typeof window.AndroidGPS !== "undefined" &&
+         typeof window.AndroidGPS.startTracking === "function";
+}
+
+window.onNativeLocation = function(payload){
+  try{
+    if(!payload) return;
+    const lat=Number(payload.lat);
+    const lng=Number(payload.lng);
+    const accuracy=Number(payload.accuracy);
+    const speed=Number(payload.speed);
+    const bearing=Number(payload.bearing);
+    const time=Number(payload.time)||Date.now();
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+    ultimaUbicacionNativa={lat,lng,accuracy:Number.isFinite(accuracy)?accuracy:null,
+      speed:Number.isFinite(speed)?speed:null,bearing:Number.isFinite(bearing)?bearing:null,time};
+
+    if(!recorridoActivo) return;
+    registrarPuntoRecorrido({coords:{latitude:lat,longitude:lng,accuracy:accuracy,
+      speed:speed,heading:bearing},timestamp:time});
+  }catch(error){ console.error("GPS nativo Android:",error); }
+};
+
 function registrarPuntoRecorrido(position){
   const c=position.coords;
-
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
   const precision=Number(c.accuracy);
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)){
-    return;
-  }
-
-  // Mostramos SIEMPRE la posición que entrega el teléfono.
-  // No descartamos la coordenada por un valor de accuracy alto.
   mostrarPosicionRecorrido(lat,lng,precision);
 
-  const punto={
-    lat:lat,
-    lng:lng,
-    hora:new Date().toISOString(),
-    precision:Number.isFinite(precision)?precision:null
-  };
-
+  const punto={lat,lng,hora:new Date(position.timestamp||Date.now()).toISOString(),
+    precision:Number.isFinite(precision)?precision:null};
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
   if(ultimo){
@@ -1489,53 +1505,24 @@ function registrarPuntoRecorrido(position){
     const antes=new Date(ultimo.hora).getTime();
     const segundos=Math.max(1,(ahora-antes)/1000);
     const velocidad=distancia/segundos;
-
-    // Evita registrar la misma posición repetidamente.
     if(distancia<3){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
+      actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 GPS activo · Puntos: "+recorridoPuntos.length+
+        "<br>📡 Precisión informada: ±"+(Number.isFinite(precision)?Math.round(precision):"?")+" m",true);
       return;
     }
-
-    // Solo descartamos saltos físicamente imposibles.
     if(velocidad>50){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS recibido"+
-        "<br>⚠️ Salto de ubicación descartado"+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
+      actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 GPS recibido<br>⚠️ Salto de ubicación descartado"+
+        "<br>📡 Precisión informada: ±"+(Number.isFinite(precision)?Math.round(precision):"?")+" m",true);
       return;
     }
   }
 
-  /*
-    CAMBIO CLAVE:
-    Ya NO descartamos el punto porque accuracy sea 150, 500 o 2000 m.
-    Si el navegador entrega una coordenada, la usamos.
-  */
   recorridoPuntos.push(punto);
-
   dibujarRecorrido();
   guardarRecorridoLocal();
-
-  actualizarEstadoRecorrido(
-    "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS activo · Puntos registrados: "+
-    recorridoPuntos.length+
-    "<br>🌐 Lat: "+lat.toFixed(6)+
-    " · Lng: "+lng.toFixed(6)+
-    "<br>📡 Precisión informada: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-    true
-  );
+  actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 GPS activo · Puntos registrados: "+
+    recorridoPuntos.length+"<br>🌐 Lat: "+lat.toFixed(6)+" · Lng: "+lng.toFixed(6)+
+    "<br>📡 Precisión informada: ±"+(Number.isFinite(precision)?Math.round(precision):"?")+" m",true);
 }
 
 function manejarErrorRecorrido(error){
@@ -1567,46 +1554,32 @@ function manejarErrorRecorrido(error){
 }
 
 function iniciarSeguimientoGPS(){
-  if(!navigator.geolocation){
-    actualizarEstadoRecorrido(
-      "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
-    );
-    return false;
-  }
-
-  if(recorridoWatchId!==null){
+  if(recorridoWatchId!==null && navigator.geolocation){
     navigator.geolocation.clearWatch(recorridoWatchId);
     recorridoWatchId=null;
   }
 
-  /*
-    Pedimos primero una posición inmediata.
-    Esto es independiente de la evidencia.
-  */
-  navigator.geolocation.getCurrentPosition(
-    registrarPuntoRecorrido,
-    manejarErrorRecorrido,
-    {
-      enableHighAccuracy:true,
-      timeout:20000,
-      maximumAge:0
+  if(gpsNativoDisponible()){
+    usandoGpsNativo=true;
+    ultimaUbicacionNativa=null;
+    try{
+      window.AndroidGPS.startTracking();
+      actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 GPS nativo de Android activo.<br>⏳ Esperando la primera posición...",true);
+      return true;
+    }catch(error){
+      console.error("No se pudo iniciar GPS nativo:",error);
+      usandoGpsNativo=false;
     }
-  );
+  }
 
-  /*
-    Después mantenemos seguimiento continuo.
-  */
-  recorridoWatchId=
-    navigator.geolocation.watchPosition(
-      registrarPuntoRecorrido,
-      manejarErrorRecorrido,
-      {
-        enableHighAccuracy:true,
-        maximumAge:0,
-        timeout:20000
-      }
-    );
+  if(!navigator.geolocation){
+    actualizarEstadoRecorrido("❌ Este dispositivo/navegador no permite obtener ubicación GPS.");
+    return false;
+  }
 
+  usandoGpsNativo=false;
+  navigator.geolocation.getCurrentPosition(registrarPuntoRecorrido,manejarErrorRecorrido,{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  recorridoWatchId=navigator.geolocation.watchPosition(registrarPuntoRecorrido,manejarErrorRecorrido,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
   return true;
 }
 
@@ -1654,31 +1627,23 @@ function iniciarRecorrido(){
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
 
-  if(recorridoWatchId!==null){
+  if(recorridoWatchId!==null && navigator.geolocation){
     navigator.geolocation.clearWatch(recorridoWatchId);
     recorridoWatchId=null;
   }
+  if(usandoGpsNativo && gpsNativoDisponible()){
+    try{ window.AndroidGPS.stopTracking(); }catch(error){ console.error("No se pudo detener GPS nativo:",error); }
+  }
+  usandoGpsNativo=false;
 
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
-
   recorridoActivo=false;
-
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-
+  if(recorridoMarker){ map.removeLayer(recorridoMarker); recorridoMarker=null; }
   guardarRecorridoLocal();
   actualizarBotonesRecorrido();
-
-  actualizarEstadoRecorrido(
-    "✅ <strong>Recorrido finalizado</strong><br>"+
-    "Zona: "+esc(zonaFinal)+
-    "<br>📍 Puntos registrados: "+cantidad+
-    "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
-  );
-
+  actualizarEstadoRecorrido("✅ <strong>Recorrido finalizado</strong><br>Zona: "+esc(zonaFinal)+
+    "<br>📍 Puntos registrados: "+cantidad+"<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona.");
   mostrarToast("✅ Recorrido finalizado");
 }
 
@@ -3033,13 +2998,8 @@ return new Promise((resolve,reject) => {
 try{
 
 /*
- * OPTIMIZACIÓN DE MEMORIA
- *
- * Las cámaras modernas pueden generar fotografías
- * de muchos megapíxeles. En WebView, convertir primero
- * una foto enorme a Base64 puede consumir mucha memoria.
- *
- * Reducimos la imagen antes de generar el Base64.
+ * OPTIMIZACIÓN DE MEMORIA PARA WEBVIEW
+ * Mantiene el GPS de la evidencia intacto.
  */
 
 const reader = new FileReader();
@@ -3055,11 +3015,6 @@ try{
 let width = img.naturalWidth || img.width;
 let height = img.naturalHeight || img.height;
 
-/*
- * Para una evidencia fotográfica no necesitamos
- * resolución de cámara. 1000 px de ancho máximo
- * mantiene buena calidad y reduce mucho el peso.
- */
 const maxWidth = 1000;
 
 if(width > maxWidth){
@@ -3100,18 +3055,11 @@ width,
 height
 );
 
-/*
- * JPEG comprimido para reducir memoria y
- * tamaño de envío a Apps Script.
- */
 const resultado = canvas.toDataURL(
 "image/jpeg",
 0.65
 );
 
-/*
- * Liberamos referencias de la imagen procesada.
- */
 canvas.width = 1;
 canvas.height = 1;
 img.src = "";
@@ -3119,15 +3067,21 @@ img.src = "";
 resolve(resultado);
 
 }catch(error){
+
 reject(error);
+
 }
 
 };
 
 img.onerror = () => {
+
 reject(
-new Error("No se pudo cargar la fotografía en WebView")
+new Error(
+"No se pudo cargar la fotografía en WebView"
+)
 );
+
 };
 
 img.src = event.target.result;
@@ -3135,9 +3089,13 @@ img.src = event.target.result;
 };
 
 reader.onerror = () => {
+
 reject(
-new Error("No se pudo leer la fotografía")
+new Error(
+"No se pudo leer la fotografía"
+)
 );
+
 };
 
 reader.readAsDataURL(file);
@@ -3187,8 +3145,26 @@ gpsBox.innerHTML =
 
 const watchActivoAntesDeEvidencia =
   recorridoActivo && recorridoWatchId !== null;
+const recorridoNativoAntesDeEvidencia =
+  recorridoActivo && usandoGpsNativo;
 
-if(watchActivoAntesDeEvidencia){
+if(recorridoNativoAntesDeEvidencia && ultimaUbicacionNativa){
+  const edad=Date.now()-Number(ultimaUbicacionNativa.time||0);
+  if(edad<=30000){
+    evidenciaLat=ultimaUbicacionNativa.lat;
+    evidenciaLng=ultimaUbicacionNativa.lng;
+    const precisionEvidencia=Number(ultimaUbicacionNativa.accuracy||0);
+    gpsBox.innerHTML="✅ Ubicación GPS nativa obtenida"+
+      "<br>Latitud: "+evidenciaLat.toFixed(6)+
+      "<br>Longitud: "+evidenciaLng.toFixed(6)+
+      "<br>📡 Precisión: ±"+Math.round(precisionEvidencia)+" m"+
+      "<br>🚛 Recorrido continúa activo.";
+    sendEvidence.disabled=false;
+    return;
+  }
+}
+
+if(watchActivoAntesDeEvidencia && !recorridoNativoAntesDeEvidencia){
   navigator.geolocation.clearWatch(recorridoWatchId);
   recorridoWatchId = null;
 }
@@ -3228,7 +3204,7 @@ navigator.geolocation.getCurrentPosition(
     sendEvidence.disabled =
       false;
 
-    if(watchActivoAntesDeEvidencia && recorridoActivo){
+    if(watchActivoAntesDeEvidencia && recorridoActivo && !recorridoNativoAntesDeEvidencia){
       iniciarSeguimientoGPS();
     }
 
@@ -3260,7 +3236,7 @@ navigator.geolocation.getCurrentPosition(
     sendEvidence.disabled =
       true;
 
-    if(watchActivoAntesDeEvidencia && recorridoActivo){
+    if(watchActivoAntesDeEvidencia && recorridoActivo && !recorridoNativoAntesDeEvidencia){
       iniciarSeguimientoGPS();
     }
 
