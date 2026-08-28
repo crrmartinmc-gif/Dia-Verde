@@ -1072,59 +1072,6 @@ let selectedCgm = "";
 
 let selectedZone = "";
 
-/* =====================================================
-   PERSISTENCIA CGM + ZONA
-   Mantiene la selección aunque el usuario cambie
-   de aplicación y vuelva a DIA VERDE.
-===================================================== */
-
-const SELECCION_STORAGE_KEY = "diaVerdeSeleccionV1";
-
-function guardarSeleccion(){
-
-try{
-
-localStorage.setItem(
-SELECCION_STORAGE_KEY,
-JSON.stringify({
-  cgm: selectedCgm,
-  zona: selectedZone
-})
-);
-
-}catch(error){
-console.error("No se pudo guardar la selección:",error);
-}
-
-}
-
-function recuperarSeleccion(){
-
-try{
-
-const guardado =
-localStorage.getItem(SELECCION_STORAGE_KEY);
-
-if(!guardado) return;
-
-const estado = JSON.parse(guardado);
-
-if(!estado) return;
-
-if(estado.cgm){
-selectedCgm = estado.cgm;
-}
-
-if(estado.zona){
-window.__diaVerdeZonaGuardada = estado.zona;
-}
-
-}catch(error){
-console.error("No se pudo recuperar la selección:",error);
-}
-
-}
-
 let activeLayer = null;
 
 /* Variables del recorrido GPS */
@@ -1865,25 +1812,6 @@ agregar(row,11,12,13,"Lomas");
 cargarCGMs();
 
 actualizarZonasPorCGM();
-
-/* Recuperar la zona guardada después de reconstruir sus opciones. */
-if(window.__diaVerdeZonaGuardada){
-
-const zonaGuardada = window.__diaVerdeZonaGuardada;
-
-const existeZona =
-[...zone.options].some(
-option => option.value === zonaGuardada
-);
-
-if(existeZona){
-selectedZone = zonaGuardada;
-zone.value = zonaGuardada;
-}
-
-window.__diaVerdeZonaGuardada = null;
-
-}
 
 actualizarContadores();
 
@@ -3098,69 +3026,44 @@ takeEvidence.style.display = "block";
    COMPRIMIR FOTO
 ===================================================== */
 
-function comprimirImagen(
-file
-){
+function comprimirImagen(file){
 
-return new Promise(
-(resolve,reject) => {
+return new Promise((resolve,reject) => {
 
-const reader =
-new FileReader();
+const reader = new FileReader();
 
+reader.onload = event => {
 
-reader.onload =
-event => {
+const img = new Image();
 
-const img =
-new Image();
+img.onload = () => {
 
+let width = img.naturalWidth || img.width;
+let height = img.naturalHeight || img.height;
 
-img.onload =
-() => {
-
-let width =
-img.width;
-
-let height =
-img.height;
-
-
-const maxWidth =
-1400;
-
+const maxWidth = 1000;
 
 if(width > maxWidth){
 
-height =
-height *
-maxWidth /
-width;
+height = Math.round(
+height * maxWidth / width
+);
 
-width =
-maxWidth;
+width = maxWidth;
 
 }
 
+const canvas = document.createElement("canvas");
 
-const canvas =
-document.createElement(
-"canvas"
-);
+canvas.width = width;
+canvas.height = height;
 
+const ctx = canvas.getContext("2d");
 
-canvas.width =
-width;
-
-canvas.height =
-height;
-
-
-const ctx =
-canvas.getContext(
-"2d"
-);
-
+if(!ctx){
+reject(new Error("No se pudo procesar la fotografía."));
+return;
+}
 
 ctx.drawImage(
 img,
@@ -3170,37 +3073,29 @@ width,
 height
 );
 
-
-resolve(
-canvas.toDataURL(
+const resultado = canvas.toDataURL(
 "image/jpeg",
-0.78
-)
+0.65
 );
+
+canvas.width = 1;
+canvas.height = 1;
+
+resolve(resultado);
 
 };
 
+img.onerror = reject;
 
-img.onerror =
-reject;
-
-
-img.src =
-event.target.result;
+img.src = event.target.result;
 
 };
 
+reader.onerror = reject;
 
-reader.onerror =
-reject;
+reader.readAsDataURL(file);
 
-
-reader.readAsDataURL(
-file
-);
-
-}
-);
+});
 
 }
 
@@ -3637,9 +3532,6 @@ search.value =
 
 actualizarZonasPorCGM();
 
-/* Guardar la selección inmediatamente. */
-guardarSeleccion();
-
 render();
 
 }
@@ -3661,8 +3553,6 @@ zone.addEventListener(
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
   }
-
-  guardarSeleccion();
 
   render();
   actualizarBotonesRecorrido();
@@ -3689,9 +3579,6 @@ cargarDatos();
 /* =====================================================
    INICIO
 ===================================================== */
-
-/* Recuperar la última selección guardada antes de cargar los datos. */
-recuperarSeleccion();
 
 cargarMapa();
 
