@@ -1371,27 +1371,27 @@ function mostrarPosicionRecorrido(lat,lng,precision){
     recorridoMarker.setLatLng([lat,lng]);
     recorridoMarker.bringToFront();
   }else{
-    recorridoMarker=L.circleMarker([lat,lng],{
-      radius:9,
-      color:"#ffffff",
-      weight:3,
-      fillColor:"#087a3d",
-      fillOpacity:1
-    }).addTo(map);
+    recorridoMarker=L.circleMarker(
+      [lat,lng],
+      {
+        radius:9,
+        color:"#ffffff",
+        weight:3,
+        fillColor:"#087a3d",
+        fillOpacity:1
+      }
+    ).addTo(map);
     recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
   }
 
-  if(recorridoPuntos.length<=1){
+  // Centrar solamente al recibir la primera posición.
+  if(recorridoPuntos.length===1){
     map.setView([lat,lng],Math.max(map.getZoom(),16),{animate:true});
   }
 
   if(precision){
     recorridoMarker.bindPopup(
-      "🚛 <strong>Vehículo</strong><br>"+
-      "📍 Ubicación del teléfono<br>"+
-      "🌐 Lat: "+lat.toFixed(6)+"<br>"+
-      "🌐 Lng: "+lng.toFixed(6)+"<br>"+
-      "📡 Precisión: ±"+Math.round(precision)+" m"
+      "🚛 <strong>Vehículo</strong><br>📍 GPS del teléfono<br>📡 Precisión ±"+Math.round(precision)+" m"
     );
   }
 }
@@ -1415,16 +1415,11 @@ function registrarPuntoRecorrido(position){
 
   if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  // Mostrar la última ubicación que entrega directamente el teléfono.
-  mostrarPosicionRecorrido(lat,lng,precision);
-
-  if(precision>150){
+  // No usamos posiciones con error mayor a 80 m.
+  if(precision>80){
     actualizarEstadoRecorrido(
       "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 GPS del teléfono recibido<br>"+
-      "⚠️ Precisión aproximada: ±"+Math.round(precision)+" m"+
-      "<br>🌐 "+lat.toFixed(6)+", "+lng.toFixed(6)+
-      "<br>Esperando una lectura más precisa...",
+      "📡 GPS del teléfono: señal imprecisa (±"+Math.round(precision)+" m). Esperando una lectura mejor...",
       true
     );
     return;
@@ -1439,11 +1434,15 @@ function registrarPuntoRecorrido(position){
 
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
+  // Mostrar siempre la ubicación actual del teléfono.
+  mostrarPosicionRecorrido(lat,lng,precision);
+
+  // No sumar puntos si prácticamente no hubo movimiento.
   if(ultimo && distanciaMetros(ultimo,punto)<3){
     actualizarEstadoRecorrido(
       "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Ubicación GPS actualizada · Puntos: "+recorridoPuntos.length+
-      "<br>📡 Precisión: ±"+Math.round(precision)+" m",
+      "📍 Posición GPS actualizada · Puntos registrados: "+recorridoPuntos.length+
+      "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
       true
     );
     return;
@@ -1455,8 +1454,8 @@ function registrarPuntoRecorrido(position){
 
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS del teléfono conectado · Puntos: "+recorridoPuntos.length+
-    "<br>📡 Precisión: ±"+Math.round(precision)+" m",
+    "📍 GPS del teléfono conectado · Puntos registrados: "+recorridoPuntos.length+
+    "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
     true
   );
 }
@@ -2953,61 +2952,98 @@ gpsBox.innerHTML =
 "📍 Obteniendo ubicación GPS...";
 
 
+/* =====================================================
+   GPS DE EVIDENCIA INDEPENDIENTE DEL RECORRIDO
+   Si hay un recorrido activo, pausamos temporalmente
+   watchPosition para obtener una lectura fresca del GPS.
+===================================================== */
+
+const watchActivoAntesDeEvidencia =
+  recorridoActivo && recorridoWatchId !== null;
+
+if(watchActivoAntesDeEvidencia){
+  navigator.geolocation.clearWatch(recorridoWatchId);
+  recorridoWatchId = null;
+}
+
+gpsBox.innerHTML =
+  "📍 Obteniendo ubicación GPS de la evidencia..." +
+  (watchActivoAntesDeEvidencia
+    ? "<br>🚛 Reanudando recorrido al terminar..."
+    : "");
+
 navigator.geolocation.getCurrentPosition(
 
-position => {
+  position => {
 
-evidenciaLat =
-position.coords.latitude;
+    evidenciaLat =
+      position.coords.latitude;
 
-evidenciaLng =
-position.coords.longitude;
+    evidenciaLng =
+      position.coords.longitude;
 
+    const precisionEvidencia =
+      Number(position.coords.accuracy || 0);
 
-gpsBox.innerHTML =
+    gpsBox.innerHTML =
+      "✅ Ubicación obtenida" +
+      "<br>" +
+      "Latitud: " +
+      evidenciaLat.toFixed(6) +
+      "<br>" +
+      "Longitud: " +
+      evidenciaLng.toFixed(6) +
+      "<br>" +
+      "📡 Precisión: ±" +
+      Math.round(precisionEvidencia) +
+      " m";
 
-"✅ Ubicación obtenida" +
+    sendEvidence.disabled =
+      false;
 
-"<br>" +
+    if(watchActivoAntesDeEvidencia && recorridoActivo){
+      iniciarSeguimientoGPS();
+    }
 
-"Latitud: " +
-evidenciaLat.toFixed(6) +
+  },
 
-"<br>" +
+  error => {
 
-"Longitud: " +
-evidenciaLng.toFixed(6);
+    console.error("GPS evidencia:",error);
 
+    let detalle =
+      "Activá la ubicación del dispositivo e intentá nuevamente.";
 
-sendEvidence.disabled =
-false;
+    if(error && error.code === 1){
+      detalle =
+        "El navegador no tiene permiso para usar la ubicación.";
+    }else if(error && error.code === 2){
+      detalle =
+        "El dispositivo no pudo determinar la ubicación.";
+    }else if(error && error.code === 3){
+      detalle =
+        "El GPS tardó demasiado en responder.";
+    }
 
-},
+    gpsBox.innerHTML =
+      "⚠️ No se pudo obtener la ubicación GPS." +
+      "<br><br>" +
+      detalle;
 
-error => {
+    sendEvidence.disabled =
+      true;
 
-console.error(error);
+    if(watchActivoAntesDeEvidencia && recorridoActivo){
+      iniciarSeguimientoGPS();
+    }
 
+  },
 
-gpsBox.innerHTML =
-
-"⚠️ No se pudo obtener la ubicación GPS." +
-
-"<br><br>" +
-
-"Activá la ubicación del dispositivo e intentá nuevamente.";
-
-
-sendEvidence.disabled =
-true;
-
-},
-
-{
-enableHighAccuracy:true,
-timeout:15000,
-maximumAge:0
-}
+  {
+    enableHighAccuracy:true,
+    timeout:20000,
+    maximumAge:0
+  }
 
 );
 
