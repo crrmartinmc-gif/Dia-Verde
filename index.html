@@ -1072,59 +1072,6 @@ let selectedCgm = "";
 
 let selectedZone = "";
 
-/* =====================================================
-   PERSISTENCIA CGM + ZONA
-   Mantiene la selección aunque el usuario cambie
-   de aplicación y vuelva a DIA VERDE.
-===================================================== */
-
-const SELECCION_STORAGE_KEY = "diaVerdeSeleccionV1";
-
-function guardarSeleccion(){
-
-try{
-
-localStorage.setItem(
-SELECCION_STORAGE_KEY,
-JSON.stringify({
-  cgm: selectedCgm,
-  zona: selectedZone
-})
-);
-
-}catch(error){
-console.error("No se pudo guardar la selección:",error);
-}
-
-}
-
-function recuperarSeleccion(){
-
-try{
-
-const guardado =
-localStorage.getItem(SELECCION_STORAGE_KEY);
-
-if(!guardado) return;
-
-const estado = JSON.parse(guardado);
-
-if(!estado) return;
-
-if(estado.cgm){
-selectedCgm = estado.cgm;
-}
-
-if(estado.zona){
-window.__diaVerdeZonaGuardada = estado.zona;
-}
-
-}catch(error){
-console.error("No se pudo recuperar la selección:",error);
-}
-
-}
-
 let activeLayer = null;
 
 /* Variables del recorrido GPS */
@@ -1865,25 +1812,6 @@ agregar(row,11,12,13,"Lomas");
 cargarCGMs();
 
 actualizarZonasPorCGM();
-
-/* Recuperar la zona guardada después de reconstruir sus opciones. */
-if(window.__diaVerdeZonaGuardada){
-
-const zonaGuardada = window.__diaVerdeZonaGuardada;
-
-const existeZona =
-[...zone.options].some(
-option => option.value === zonaGuardada
-);
-
-if(existeZona){
-selectedZone = zonaGuardada;
-zone.value = zonaGuardada;
-}
-
-window.__diaVerdeZonaGuardada = null;
-
-}
 
 actualizarContadores();
 
@@ -3098,69 +3026,71 @@ takeEvidence.style.display = "block";
    COMPRIMIR FOTO
 ===================================================== */
 
-function comprimirImagen(
-file
-){
+function comprimirImagen(file){
 
-return new Promise(
-(resolve,reject) => {
+return new Promise((resolve,reject) => {
 
-const reader =
-new FileReader();
+try{
 
+/*
+ * OPTIMIZACIÓN DE MEMORIA
+ *
+ * Las cámaras modernas pueden generar fotografías
+ * de muchos megapíxeles. En WebView, convertir primero
+ * una foto enorme a Base64 puede consumir mucha memoria.
+ *
+ * Reducimos la imagen antes de generar el Base64.
+ */
 
-reader.onload =
-event => {
+const reader = new FileReader();
 
-const img =
-new Image();
+reader.onload = event => {
 
+const img = new Image();
 
-img.onload =
-() => {
+img.onload = () => {
 
-let width =
-img.width;
+try{
 
-let height =
-img.height;
+let width = img.naturalWidth || img.width;
+let height = img.naturalHeight || img.height;
 
-
-const maxWidth =
-1400;
-
+/*
+ * Para una evidencia fotográfica no necesitamos
+ * resolución de cámara. 1000 px de ancho máximo
+ * mantiene buena calidad y reduce mucho el peso.
+ */
+const maxWidth = 1000;
 
 if(width > maxWidth){
 
-height =
-height *
-maxWidth /
-width;
+height = Math.round(
+height * maxWidth / width
+);
 
-width =
-maxWidth;
+width = maxWidth;
 
 }
 
+if(!width || !height){
+throw new Error("Dimensiones de imagen inválidas");
+}
 
-const canvas =
-document.createElement(
-"canvas"
-);
+const canvas = document.createElement("canvas");
 
+canvas.width = width;
+canvas.height = height;
 
-canvas.width =
-width;
+const ctx = canvas.getContext("2d", {
+alpha:false
+});
 
-canvas.height =
-height;
+if(!ctx){
+throw new Error("No se pudo crear el procesador de imagen");
+}
 
-
-const ctx =
-canvas.getContext(
-"2d"
-);
-
+ctx.fillStyle = "#ffffff";
+ctx.fillRect(0,0,width,height);
 
 ctx.drawImage(
 img,
@@ -3170,37 +3100,49 @@ width,
 height
 );
 
-
-resolve(
-canvas.toDataURL(
+/*
+ * JPEG comprimido para reducir memoria y
+ * tamaño de envío a Apps Script.
+ */
+const resultado = canvas.toDataURL(
 "image/jpeg",
-0.78
-)
+0.65
 );
 
-};
+/*
+ * Liberamos referencias de la imagen procesada.
+ */
+canvas.width = 1;
+canvas.height = 1;
+img.src = "";
 
+resolve(resultado);
 
-img.onerror =
-reject;
-
-
-img.src =
-event.target.result;
-
-};
-
-
-reader.onerror =
-reject;
-
-
-reader.readAsDataURL(
-file
-);
-
+}catch(error){
+reject(error);
 }
+
+};
+
+img.onerror = () => {
+reject(
+new Error("No se pudo cargar la fotografía en WebView")
 );
+};
+
+img.src = event.target.result;
+
+};
+
+reader.onerror = () => {
+reject(
+new Error("No se pudo leer la fotografía")
+);
+};
+
+reader.readAsDataURL(file);
+
+});
 
 }
 
@@ -3637,9 +3579,6 @@ search.value =
 
 actualizarZonasPorCGM();
 
-/* Guardar la selección inmediatamente. */
-guardarSeleccion();
-
 render();
 
 }
@@ -3661,8 +3600,6 @@ zone.addEventListener(
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
   }
-
-  guardarSeleccion();
 
   render();
   actualizarBotonesRecorrido();
@@ -3689,9 +3626,6 @@ cargarDatos();
 /* =====================================================
    INICIO
 ===================================================== */
-
-/* Recuperar la última selección guardada antes de cargar los datos. */
-recuperarSeleccion();
 
 cargarMapa();
 
