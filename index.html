@@ -1371,27 +1371,27 @@ function mostrarPosicionRecorrido(lat,lng,precision){
     recorridoMarker.setLatLng([lat,lng]);
     recorridoMarker.bringToFront();
   }else{
-    recorridoMarker=L.circleMarker(
-      [lat,lng],
-      {
-        radius:9,
-        color:"#ffffff",
-        weight:3,
-        fillColor:"#087a3d",
-        fillOpacity:1
-      }
-    ).addTo(map);
+    recorridoMarker=L.circleMarker([lat,lng],{
+      radius:9,
+      color:"#ffffff",
+      weight:3,
+      fillColor:"#087a3d",
+      fillOpacity:1
+    }).addTo(map);
     recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
   }
 
-  // Centrar solamente al recibir la primera posición.
-  if(recorridoPuntos.length===1){
+  if(recorridoPuntos.length<=1){
     map.setView([lat,lng],Math.max(map.getZoom(),16),{animate:true});
   }
 
   if(precision){
     recorridoMarker.bindPopup(
-      "🚛 <strong>Vehículo</strong><br>📍 GPS del teléfono<br>📡 Precisión ±"+Math.round(precision)+" m"
+      "🚛 <strong>Vehículo</strong><br>"+
+      "📍 Ubicación del teléfono<br>"+
+      "🌐 Lat: "+lat.toFixed(6)+"<br>"+
+      "🌐 Lng: "+lng.toFixed(6)+"<br>"+
+      "📡 Precisión: ±"+Math.round(precision)+" m"
     );
   }
 }
@@ -1415,11 +1415,16 @@ function registrarPuntoRecorrido(position){
 
   if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  // No usamos posiciones con error mayor a 80 m.
-  if(precision>80){
+  // Mostrar la última ubicación que entrega directamente el teléfono.
+  mostrarPosicionRecorrido(lat,lng,precision);
+
+  if(precision>150){
     actualizarEstadoRecorrido(
       "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📡 GPS del teléfono: señal imprecisa (±"+Math.round(precision)+" m). Esperando una lectura mejor...",
+      "📍 GPS del teléfono recibido<br>"+
+      "⚠️ Precisión aproximada: ±"+Math.round(precision)+" m"+
+      "<br>🌐 "+lat.toFixed(6)+", "+lng.toFixed(6)+
+      "<br>Esperando una lectura más precisa...",
       true
     );
     return;
@@ -1434,15 +1439,11 @@ function registrarPuntoRecorrido(position){
 
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
-  // Mostrar siempre la ubicación actual del teléfono.
-  mostrarPosicionRecorrido(lat,lng,precision);
-
-  // No sumar puntos si prácticamente no hubo movimiento.
   if(ultimo && distanciaMetros(ultimo,punto)<3){
     actualizarEstadoRecorrido(
       "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Posición GPS actualizada · Puntos registrados: "+recorridoPuntos.length+
-      "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
+      "📍 Ubicación GPS actualizada · Puntos: "+recorridoPuntos.length+
+      "<br>📡 Precisión: ±"+Math.round(precision)+" m",
       true
     );
     return;
@@ -1454,8 +1455,8 @@ function registrarPuntoRecorrido(position){
 
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS del teléfono conectado · Puntos registrados: "+recorridoPuntos.length+
-    "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
+    "📍 GPS del teléfono conectado · Puntos: "+recorridoPuntos.length+
+    "<br>📡 Precisión: ±"+Math.round(precision)+" m",
     true
   );
 }
