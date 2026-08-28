@@ -950,11 +950,11 @@ Elegí una zona del menú.
 </strong>
 
 <span>
-Dirección Municipal de Logística Ambiental
+Estamos actualizando la APP... 
 </span>
 
 <span>
-♻️ Cuidemos nuestra ciudad
+♻️ Lomas Recicla
 </span>
 
 </div>
@@ -1368,12 +1368,57 @@ function mostrarPosicionRecorrido(lat,lng){
   recorridoMarker=L.circleMarker([lat,lng],{radius:8,color:"#ffffff",weight:3,fillColor:"#087a3d",fillOpacity:1}).addTo(map);
   recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
 }
+function distanciaMetros(a,b){
+  const R=6371000;
+  const p1=a.lat*Math.PI/180;
+  const p2=b.lat*Math.PI/180;
+  const dp=(b.lat-a.lat)*Math.PI/180;
+  const dl=(b.lng-a.lng)*Math.PI/180;
+  const x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
 function registrarPuntoRecorrido(position){
-  const lat=position.coords.latitude,lng=position.coords.longitude,ultimo=recorridoPuntos[recorridoPuntos.length-1];
-  if(ultimo&&Math.abs(lat-ultimo.lat)<0.00001&&Math.abs(lng-ultimo.lng)<0.00001){mostrarPosicionRecorrido(lat,lng);return;}
-  recorridoPuntos.push({lat:lat,lng:lng,hora:new Date().toISOString()});
-  dibujarRecorrido();mostrarPosicionRecorrido(lat,lng);guardarRecorridoLocal();
-  actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Puntos registrados: "+recorridoPuntos.length,true);
+  const c=position.coords;
+  const lat=Number(c.latitude);
+  const lng=Number(c.longitude);
+  const precision=Number(c.accuracy||9999);
+
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+  if(precision>80){
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>📡 Mejorando señal GPS... Precisión ±"+Math.round(precision)+" m",
+      true
+    );
+    return;
+  }
+
+  const punto={
+    lat:lat,
+    lng:lng,
+    hora:new Date().toISOString(),
+    precision:precision
+  };
+
+  const ultimo=recorridoPuntos[recorridoPuntos.length-1];
+
+  if(ultimo && distanciaMetros(ultimo,punto)<3){
+    mostrarPosicionRecorrido(lat,lng);
+    return;
+  }
+
+  recorridoPuntos.push(punto);
+  dibujarRecorrido();
+  mostrarPosicionRecorrido(lat,lng);
+  guardarRecorridoLocal();
+
+  actualizarEstadoRecorrido(
+    "🔴 <strong>Recorrido en curso</strong><br>"+
+    "📍 Puntos registrados: "+recorridoPuntos.length+
+    "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
+    true
+  );
 }
 function manejarErrorRecorrido(error){
   console.error("GPS recorrido:",error);let mensaje="⚠️ No se pudo obtener la ubicación.";
@@ -1385,7 +1430,15 @@ function manejarErrorRecorrido(error){
 function iniciarSeguimientoGPS(){
   if(!navigator.geolocation){actualizarEstadoRecorrido("❌ Este dispositivo no permite obtener ubicación GPS.");return false;}
   if(recorridoWatchId!==null)navigator.geolocation.clearWatch(recorridoWatchId);
-  recorridoWatchId=navigator.geolocation.watchPosition(registrarPuntoRecorrido,manejarErrorRecorrido,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  recorridoWatchId=navigator.geolocation.watchPosition(
+    registrarPuntoRecorrido,
+    manejarErrorRecorrido,
+    {
+      enableHighAccuracy:true,
+      maximumAge:0,
+      timeout:10000
+    }
+  );
   return true;
 }
 function iniciarRecorrido(){
