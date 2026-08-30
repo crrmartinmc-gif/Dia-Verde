@@ -679,32 +679,24 @@ footer span{
 
 
 <style id="dia-verde-reclamos-style">
-/* Marcadores de reclamos - estética Medio Ambiente */
 .dv-reclamo-pin{
   width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));
 }
 .dv-reclamo-pin::before{
   content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;
-  transform:rotate(-45deg);background:#2e7d32;border:3px solid #fff;box-sizing:border-box;
+  transform:rotate(-45deg);background:#66bb6a;border:3px solid #fff;box-sizing:border-box;
 }
 .dv-reclamo-pin span{
   position:relative;z-index:2;font-size:17px;line-height:1;transform:translateY(-1px);
 }
-.dv-reclamo-pin.pendiente::before{background:#66bb6a}
 .dv-reclamo-pin.realizado::before{background:#2e7d32}
 .dv-reclamo-pin.suspendido::before{background:#8d6e63}
 .dv-reclamo-pin.amarillo::before{background:#f9a825}
 .dv-reclamo-pin.rojo::before{background:#c62828}
-.dv-reclamo-popup{
-  font-family:Arial,sans-serif;min-width:190px
-}
-.dv-reclamo-popup .titulo{
-  font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px
-}
-.dv-reclamo-popup .estado{
-  font-weight:700;margin-bottom:4px
-}
+.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}
+.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}
+.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
 </style>
 
 </head>
@@ -1298,44 +1290,172 @@ map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiend
 
 
 /* =====================================================
-   MARCADORES DE RECLAMOS - ESTÉTICA MEDIO AMBIENTE
+   MARCADORES DE RECLAMOS + MAPA GIRATORIO
+   DIA VERDE
 ===================================================== */
+let reclamosMarkersLayer = null;
+let mapaRotacion = 0;
+
+function asegurarCapaReclamos(){
+  if(!map) return null;
+  if(!reclamosMarkersLayer){
+    reclamosMarkersLayer = L.layerGroup().addTo(map);
+  }
+  return reclamosMarkersLayer;
+}
+
+function escaparHTML(valor){
+  return String(valor ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
 function iconoReclamoMedioAmbiente(estado){
-  const s=(estado||"").toString().toLowerCase();
-  let clase="pendiente", emoji="🌱";
+  const s = String(estado || "").toLowerCase();
+  let clase = "pendiente";
+  let simbolo = "🌱";
 
   if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
-    clase="realizado"; emoji="✓";
+    clase = "realizado"; simbolo = "✓";
   }else if(s.includes("suspend")){
-    clase="suspendido"; emoji="⏸";
-  }else if(s.includes("rechaz") || s.includes("anulad")){
-    clase="rojo"; emoji="!";
+    clase = "suspendido"; simbolo = "⏸";
   }else if(s.includes("espera") || s.includes("definir")){
-    clase="amarillo"; emoji="⏳";
+    clase = "amarillo"; simbolo = "⏳";
+  }else if(s.includes("rechaz") || s.includes("anulad")){
+    clase = "rojo"; simbolo = "!";
   }
 
   return L.divIcon({
     className:"dv-reclamo-icon",
-    html:'<div class="dv-reclamo-pin '+clase+'"><span>'+emoji+'</span></div>',
+    html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
     iconSize:[36,44],
     iconAnchor:[18,43],
     popupAnchor:[0,-40]
   });
 }
 
-function popupReclamoMedioAmbiente(datos){
-  const estado=datos.estado || datos.Estado || "Pendiente";
-  const direccion=datos.direccion || datos.Direccion || datos.domicilio || datos.Domicilio || "";
-  const tipo=datos.tipo || datos.Tipo || datos.reclamo || datos.Reclamo || "";
-  const id=datos.id || datos.ID || datos.nro || datos.Nro || "";
+function popupReclamoMedioAmbiente(d){
+  const direccion = d.direccion || d.Direccion || d.domicilio || d.Domicilio || "";
+  const estado = d.estado || d.Estado || "Pendiente";
+  const tipo = d.tipo || d.Tipo || d.reclamo || d.Reclamo || "";
+  const id = d.id || d.ID || d.nro || d.Nro || "";
 
   return '<div class="dv-reclamo-popup">'+
     '<div class="titulo">🌿 Reclamo ambiental</div>'+
-    (direccion ? '<div>📍 <strong>'+String(direccion)+'</strong></div>' : '')+
-    (tipo ? '<div>🌳 '+String(tipo)+'</div>' : '')+
-    (id ? '<div>📝 Nº '+String(id)+'</div>' : '')+
-    '<div class="estado">Estado: '+String(estado)+'</div>'+
+    (direccion ? '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>' : '')+
+    (tipo ? '<div>🌳 '+escaparHTML(tipo)+'</div>' : '')+
+    (id ? '<div>📝 Nº '+escaparHTML(id)+'</div>' : '')+
+    '<div class="estado">Estado: '+escaparHTML(estado)+'</div>'+
     '</div>';
+}
+
+function obtenerLatLngReclamo(d){
+  const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
+  const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
+  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
+    return [lat,lng];
+  }
+  return null;
+}
+
+/*
+ * Agrega un reclamo al mapa cuando el registro ya trae coordenadas.
+ * Si el Sheet todavía no tiene lat/lng, no inventamos una posición.
+ */
+function agregarMarcadorReclamo(d){
+  const pos = obtenerLatLngReclamo(d);
+  if(!pos) return null;
+
+  const layer = asegurarCapaReclamos();
+  if(!layer) return null;
+
+  const estado = d.estado || d.Estado || "Pendiente";
+  const marker = L.marker(pos,{
+    icon:iconoReclamoMedioAmbiente(estado),
+    zIndexOffset:100
+  });
+
+  marker.bindPopup(popupReclamoMedioAmbiente(d));
+  marker.addTo(layer);
+  return marker;
+}
+
+function limpiarMarcadoresReclamos(){
+  if(reclamosMarkersLayer){
+    reclamosMarkersLayer.clearLayers();
+  }
+}
+
+/*
+ * Permite pasar cualquier array de reclamos a la capa.
+ * Se usa solamente si el render existente dispone de coordenadas.
+ */
+function mostrarMarcadoresReclamos(lista){
+  limpiarMarcadoresReclamos();
+  if(!Array.isArray(lista)) return;
+
+  lista.forEach(d => agregarMarcadorReclamo(d));
+}
+
+/* ---------- Rotación del mapa ---------- */
+/*
+ * Leaflet no trae rotación de mapa base de forma nativa.
+ * Esta implementación rota visualmente las capas del mapa sin alterar
+ * las coordenadas GPS. El control se activa con dos dedos cuando el
+ * dispositivo/navegador permite Pointer Events.
+ */
+function aplicarRotacionMapa(grados){
+  mapaRotacion = ((Number(grados)||0)%360+360)%360;
+  const pane = document.querySelector(".leaflet-map-pane");
+  if(pane){
+    pane.style.transformOrigin = "50% 50%";
+    pane.style.transform = "rotate("+mapaRotacion+"deg)";
+  }
+}
+
+function instalarControlRotacionMapa(){
+  if(!map || !map.getContainer()) return;
+  const container = map.getContainer();
+  if(container.dataset.dvRotationInstalled==="1") return;
+  container.dataset.dvRotationInstalled="1";
+
+  let pointers = new Map();
+  let startAngle = null;
+  let startRotation = mapaRotacion;
+
+  function angle(a,b){
+    return Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX)*180/Math.PI;
+  }
+
+  container.addEventListener("pointerdown",e=>{
+    pointers.set(e.pointerId,e);
+    if(pointers.size===2){
+      const p=[...pointers.values()];
+      startAngle=angle(p[0],p[1]);
+      startRotation=mapaRotacion;
+      mapaSiguiendoVehiculo=false;
+      mapaUsuarioMovio=true;
+    }
+  },{passive:true});
+
+  container.addEventListener("pointermove",e=>{
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId,e);
+    if(pointers.size===2 && startAngle!==null){
+      const p=[...pointers.values()];
+      aplicarRotacionMapa(startRotation + angle(p[0],p[1]) - startAngle);
+    }
+  },{passive:true});
+
+  function endPointer(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size<2) startAngle=null;
+  }
+  container.addEventListener("pointerup",endPointer,{passive:true});
+  container.addEventListener("pointercancel",endPointer,{passive:true});
 }
 
 
