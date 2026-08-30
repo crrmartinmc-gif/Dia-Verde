@@ -1295,6 +1295,8 @@ map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiend
 ===================================================== */
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let geocodingGeneration = 0;
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 
 function asegurarCapaReclamos(){
   if(!map) return null;
@@ -1398,6 +1400,110 @@ function mostrarMarcadoresReclamos(lista){
   if(!Array.isArray(lista)) return;
 
   lista.forEach(d => agregarMarcadorReclamo(d));
+}
+
+function cargarCacheGeocoding(){
+  try{
+    return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
+  }catch(e){
+    return {};
+  }
+}
+
+function guardarCacheGeocoding(cache){
+  try{
+    localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
+  }catch(e){}
+}
+
+function claveGeocoding(d){
+  return normalizar(
+    `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
+  );
+}
+
+async function geocodificarDireccion(d){
+  const directa=obtenerLatLngReclamo(d);
+  if(directa) return directa;
+
+  const cache=cargarCacheGeocoding();
+  const key=claveGeocoding(d);
+
+  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+    return [Number(cache[key].lat),Number(cache[key].lng)];
+  }
+
+  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
+  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
+
+  try{
+    const response=await fetch(url,{headers:{"Accept":"application/json"}});
+    if(!response.ok) return null;
+    const resultados=await response.json();
+    if(!resultados.length) return null;
+
+    const lat=Number(resultados[0].lat);
+    const lng=Number(resultados[0].lon);
+
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+
+    cache[key]={lat,lng};
+    guardarCacheGeocoding(cache);
+    return [lat,lng];
+  }catch(error){
+    console.warn("Geocodificación:",q,error);
+    return null;
+  }
+}
+
+async function mostrarMarcadoresGeocodificados(lista){
+  limpiarMarcadoresReclamos();
+  if(!Array.isArray(lista)||!lista.length) return;
+
+  const generacion=++geocodingGeneration;
+  const capa=asegurarCapaReclamos();
+  if(!capa) return;
+
+  // Primero mostramos inmediatamente los que ya tengan coordenadas/cache.
+  const pendientes=[];
+  for(const d of lista){
+    const pos=obtenerLatLngReclamo(d);
+    if(pos){
+      agregarMarcadorReclamo(d);
+    }else{
+      const cache=cargarCacheGeocoding();
+      const key=claveGeocoding(d);
+      if(cache[key]){
+        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
+      }else{
+        pendientes.push(d);
+      }
+    }
+  }
+
+  // Geocodificación progresiva para no congelar la aplicación.
+  const limite=3;
+  let indice=0;
+
+  async function trabajador(){
+    while(indice<pendientes.length){
+      if(generacion!==geocodingGeneration) return;
+      const d=pendientes[indice++];
+      const pos=await geocodificarDireccion(d);
+
+      if(generacion!==geocodingGeneration) return;
+
+      if(pos){
+        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+      }
+      // Pequeña pausa para no saturar el servicio de geocodificación.
+      await new Promise(r=>setTimeout(r,350));
+    }
+  }
+
+  await Promise.all(
+    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
+  );
 }
 
 /* ---------- Rotación del mapa ---------- */
@@ -3027,6 +3133,10 @@ direcciones.slice(
 0,
 100
 );
+
+// Marcadores de reclamos de la zona seleccionada.
+// Se geocodifican una sola vez y luego quedan guardados en el teléfono.
+mostrarMarcadoresGeocodificados(todas);
 
 
 list.innerHTML =
