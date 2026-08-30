@@ -647,167 +647,47 @@ footer span{
 .route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}
 .route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
+</style>
 
 
-/* =====================================================
-   LOGIN DIA VERDE
-===================================================== */
-
-body:not(.dv-authenticated) > header,
-body:not(.dv-authenticated) > main{
-  display:none !important;
-}
-
+<style id="diaverde-auth-css">
 #dvLoginOverlay{
-  position:fixed;
-  inset:0;
-  z-index:999999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:linear-gradient(135deg,#04552b,#087a3d);
+  position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#087a3d,#04552b); padding:20px;
 }
-
 #dvLoginBox{
-  width:min(420px,100%);
-  background:white;
-  border-radius:22px;
-  padding:30px;
-  box-shadow:0 20px 60px #0005;
+  width:min(420px,100%); background:#fff; border-radius:20px; padding:28px;
+  box-shadow:0 18px 60px rgba(0,0,0,.25);
 }
-
-#dvLoginLogo{
-  width:70px;
-  height:70px;
-  margin:0 auto 14px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#e9f7ed;
-  font-size:34px;
+#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}
+#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}
+#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}
+#dvLoginBtn{
+  width:100%; min-height:48px; border:0; border-radius:10px; background:#087a3d;
+  color:#fff; font-weight:800; cursor:pointer;
 }
-
-#dvLoginBox h2{
-  margin:0;
-  text-align:center;
-  color:#04552b;
+#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}
+#dvUserBar{
+  display:none; align-items:center; gap:10px; margin-left:auto;
 }
-
-#dvLoginBox p{
-  text-align:center;
-  color:#728078;
-  margin:7px 0 24px;
+#dvUserName{font-weight:800}
+#dvLogout{
+  border:1px solid rgba(255,255,255,.5); background:transparent; color:#fff;
+  border-radius:9px; padding:8px 12px; cursor:pointer; font-weight:800;
 }
-
-.dv-login-field{
-  margin-bottom:14px;
-}
-
-.dv-login-field label{
-  color:#193329;
-}
-
-#dvLoginUser,
-#dvLoginPassword{
-  width:100%;
-  min-height:50px;
-  border:1px solid #d5e0d9;
-  border-radius:10px;
-  padding:12px 14px;
-  font-size:16px;
-  outline:none;
-}
-
-#dvLoginUser:focus,
-#dvLoginPassword:focus{
-  border-color:#72bb8b;
-  box-shadow:0 0 0 3px #087a3d1a;
-}
-
-#dvLoginButton{
-  width:100%;
-  min-height:50px;
-  border:0;
-  border-radius:10px;
-  background:#087a3d;
-  color:white;
-  font-weight:800;
-  font-size:16px;
-  cursor:pointer;
-}
-
-#dvLoginButton:hover{
-  background:#04552b;
-}
-
-#dvLoginError{
-  min-height:20px;
-  margin-top:12px;
-  text-align:center;
-  color:#b42318;
-  font-size:14px;
-  font-weight:700;
-}
-
-#dvUserPanel{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-left:auto;
-}
-
-#dvUserName{
-  font-size:13px;
-  font-weight:700;
-}
-
-#dvLogoutButton{
-  border:1px solid #ffffff55;
-  background:#ffffff18;
-  color:white;
-  border-radius:9px;
-  padding:9px 12px;
-  cursor:pointer;
-  font-weight:700;
-}
-
-#dvLogoutButton:hover{
-  background:#ffffff2b;
-}
-
-@media(max-width:700px){
-  #dvLoginBox{padding:24px;}
-  #dvUserPanel{gap:6px;}
-  #dvUserName{display:none;}
-}
-
 </style>
 
 </head>
 
 <body>
 
-<!-- =====================================================
-     LOGIN DIA VERDE
-===================================================== -->
 <div id="dvLoginOverlay">
   <div id="dvLoginBox">
-    <div id="dvLoginLogo">🌿</div>
-    <h2>DIA VERDE</h2>
-    <p>Ingresá con tu usuario y contraseña</p>
-
-    <div class="dv-login-field">
-      <label for="dvLoginUser">Usuario</label>
-      <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
-    </div>
-
-    <div class="dv-login-field">
-      <label for="dvLoginPassword">Contraseña</label>
-      <input id="dvLoginPassword" type="password" autocomplete="current-password" placeholder="Contraseña">
-    </div>
-
-    <button id="dvLoginButton" type="button">INGRESAR</button>
+    <h2>🌿 DIA VERDE</h2>
+    <p>Ingresá con tu usuario</p>
+    <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
+    <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña">
+    <button id="dvLoginBtn" type="button">INGRESAR</button>
     <div id="dvLoginError"></div>
   </div>
 </div>
@@ -857,11 +737,10 @@ Conectando...
 
 </div>
 
-<div id="dvUserPanel">
-  <span id="dvUserName"></span>
-  <button id="dvLogoutButton" type="button">Salir</button>
-</div>
 
+<div id="dvUserBar">
+  <span>👤 <span id="dvUserName"></span></span>
+  <button id="dvLogout" type="button">Salir</button>
 </div>
 
 </header>
@@ -1213,121 +1092,6 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 <script>
 
 /* =====================================================
-   USUARIOS - OPCION 1
-   
-   ADMINISTRACION: para agregar, quitar o cambiar usuarios
-   editá solamente esta lista.
-
-   IMPORTANTE: esta opcion es simple y los datos quedan
-   dentro del index.html. No es un sistema de seguridad
-   de servidor.
-===================================================== */
-
-const USUARIOS_DIA_VERDE = [
-  { usuario: "admin", password: "diaverde2026", nombre: "Administrador" },
-  { usuario: "chofer1", password: "1234", nombre: "Chofer 1" },
-  { usuario: "chofer2", password: "1234", nombre: "Chofer 2" }
-];
-
-const DV_SESSION_KEY = "diaVerdeSesionV1";
-
-function dvObtenerSesion(){
-  try{
-    const raw = localStorage.getItem(DV_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  }catch(error){
-    console.error("Error leyendo sesion DIA VERDE",error);
-    return null;
-  }
-}
-
-function dvGuardarSesion(usuario){
-  try{
-    localStorage.setItem(DV_SESSION_KEY,JSON.stringify({
-      usuario:usuario.usuario,
-      nombre:usuario.nombre
-    }));
-  }catch(error){
-    console.error("Error guardando sesion DIA VERDE",error);
-  }
-}
-
-function dvAplicarSesion(sesion){
-  if(!sesion) return;
-
-  document.body.classList.add("dv-authenticated");
-
-  const overlay = document.getElementById("dvLoginOverlay");
-  if(overlay) overlay.style.display="none";
-
-  const userName = document.getElementById("dvUserName");
-  if(userName){
-    userName.textContent = "👤 "+(sesion.nombre || sesion.usuario);
-  }
-}
-
-function dvCerrarSesion(){
-  try{localStorage.removeItem(DV_SESSION_KEY);}catch(error){}
-  location.reload();
-}
-
-function dvIntentarLogin(){
-  const inputUser = document.getElementById("dvLoginUser");
-  const inputPassword = document.getElementById("dvLoginPassword");
-  const error = document.getElementById("dvLoginError");
-
-  const usuario = inputUser.value.trim();
-  const password = inputPassword.value;
-
-  const encontrado = USUARIOS_DIA_VERDE.find(
-    item => item.usuario === usuario && item.password === password
-  );
-
-  if(!encontrado){
-    error.textContent = "Usuario o contraseña incorrectos.";
-    inputPassword.select();
-    return;
-  }
-
-  error.textContent = "";
-  dvGuardarSesion(encontrado);
-  dvAplicarSesion({usuario:encontrado.usuario,nombre:encontrado.nombre});
-}
-
-(function dvInicializarLogin(){
-  const sesion = dvObtenerSesion();
-
-  if(sesion){
-    dvAplicarSesion(sesion);
-  }else{
-    document.body.classList.remove("dv-authenticated");
-  }
-
-  document.addEventListener("DOMContentLoaded",()=>{
-    const button = document.getElementById("dvLoginButton");
-    const user = document.getElementById("dvLoginUser");
-    const password = document.getElementById("dvLoginPassword");
-    const logout = document.getElementById("dvLogoutButton");
-
-    if(button) button.addEventListener("click",dvIntentarLogin);
-    if(logout) logout.addEventListener("click",dvCerrarSesion);
-
-    if(user){
-      user.addEventListener("keydown",event=>{
-        if(event.key === "Enter") password?.focus();
-      });
-    }
-
-    if(password){
-      password.addEventListener("keydown",event=>{
-        if(event.key === "Enter") dvIntentarLogin();
-      });
-    }
-  });
-})();
-
-
-/* =====================================================
    CONFIGURACIÓN
 ===================================================== */
 
@@ -1357,7 +1121,17 @@ let selectedZone = "";
 let activeLayer = null;
 
 /* Variables del recorrido GPS */
-const ROUTE_STORAGE_KEY = "diaVerdeRecorridoV1";
+const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
+
+function getRouteStorageKey(){
+  try{
+    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
+    const id = u && u.usuario ? u.usuario : "sin_usuario";
+    return ROUTE_STORAGE_BASE_KEY + "_" + id;
+  }catch(e){
+    return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
+  }
+}
 let recorridoActivo = false;
 let recorridoZona = "";
 let recorridoInicio = "";
@@ -1631,50 +1405,32 @@ document.getElementById(
 }
 
 /* =====================================================
-   RECORRIDO GPS
+   RECORRIDO GPS - WEB APP / PWA
+   Usa el GPS del navegador sin interferir con las
+   evidencias. Guarda puntos localmente durante el día.
 ===================================================== */
+
 function guardarRecorridoLocal(){
-  try{localStorage.setItem(ROUTE_STORAGE_KEY,JSON.stringify({activo:recorridoActivo,zona:recorridoZona,inicio:recorridoInicio,puntos:recorridoPuntos}));}catch(error){console.error(error);}
-}
-function borrarRecorridoLocal(){try{localStorage.removeItem(ROUTE_STORAGE_KEY);}catch(error){console.error(error);}}
-function dibujarRecorrido(){
-  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;}
-  if(recorridoPuntos.length<2)return;
-  recorridoLayer=L.polyline(recorridoPuntos.map(p=>[p.lat,p.lng]),{color:"#087a3d",weight:6,opacity:.9,lineCap:"round",lineJoin:"round"}).addTo(map);
-  recorridoLayer.bringToFront();
-}
-function actualizarEstadoRecorrido(texto,activo=false){routeStatus.innerHTML=texto;
-  routeStatus.classList.toggle("active",activo);}
-function actualizarBotonesRecorrido(){const hayZona=!!selectedZone;startRoute.disabled=!hayZona||recorridoActivo;stopRoute.disabled=!recorridoActivo;}
-function mostrarPosicionRecorrido(lat,lng,precision){
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
-
-  if(recorridoMarker){
-    recorridoMarker.setLatLng([lat,lng]);
-    recorridoMarker.bringToFront();
-  }else{
-    recorridoMarker=L.circleMarker(
-      [lat,lng],
-      {
-        radius:9,
-        color:"#ffffff",
-        weight:3,
-        fillColor:"#087a3d",
-        fillOpacity:1
-      }
-    ).addTo(map);
-    recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
-  }
-
-  // Centrar solamente al recibir la primera posición.
-  if(recorridoPuntos.length===1){
-    map.setView([lat,lng],Math.max(map.getZoom(),16),{animate:true});
-  }
-
-  if(precision){
-    recorridoMarker.bindPopup(
-      "🚛 <strong>Vehículo</strong><br>📍 GPS del teléfono<br>📡 Precisión ±"+Math.round(precision)+" m"
+  try{
+    localStorage.setItem(
+      getRouteStorageKey(),
+      JSON.stringify({
+        activo:recorridoActivo,
+        zona:recorridoZona,
+        inicio:recorridoInicio,
+        puntos:recorridoPuntos
+      })
     );
+  }catch(error){
+    console.error("Guardar recorrido:",error);
+  }
+}
+
+function borrarRecorridoLocal(){
+  try{
+    localStorage.removeItem(getRouteStorageKey());
+  }catch(error){
+    console.error("Borrar recorrido:",error);
   }
 }
 
@@ -1684,99 +1440,273 @@ function distanciaMetros(a,b){
   const p2=b.lat*Math.PI/180;
   const dp=(b.lat-a.lat)*Math.PI/180;
   const dl=(b.lng-a.lng)*Math.PI/180;
-  const x=Math.sin(dp/2)**2+
+  const x=
+    Math.sin(dp/2)**2+
     Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
   return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
+function dibujarRecorrido(){
+  if(recorridoLayer){
+    map.removeLayer(recorridoLayer);
+    recorridoLayer=null;
+  }
+
+  if(recorridoPuntos.length<2)return;
+
+  recorridoLayer=L.polyline(
+    recorridoPuntos.map(p=>[p.lat,p.lng]),
+    {
+      color:"#087a3d",
+      weight:6,
+      opacity:.9,
+      lineCap:"round",
+      lineJoin:"round"
+    }
+  ).addTo(map);
+
+  recorridoLayer.bringToFront();
+}
+
+function actualizarEstadoRecorrido(texto,activo=false){
+  routeStatus.innerHTML=texto;
+  routeStatus.classList.toggle("active",activo);
+}
+
+function actualizarBotonesRecorrido(){
+  const hayZona=!!selectedZone;
+  startRoute.disabled=!hayZona||recorridoActivo;
+  stopRoute.disabled=!recorridoActivo;
+}
+
+function mostrarPosicionRecorrido(lat,lng,precision){
+  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+
+  if(!recorridoMarker){
+    recorridoMarker=L.circleMarker(
+      [lat,lng],
+      {
+        radius:9,
+        color:"#ffffff",
+        weight:3,
+        fillColor:"#087a3d",
+        fillOpacity:1,
+        pane:"markerPane"
+      }
+    ).addTo(map);
+
+    recorridoMarker.bindTooltip(
+      "🚛 Vehículo",
+      {permanent:false}
+    );
+  }else{
+    recorridoMarker.setLatLng([lat,lng]);
+    recorridoMarker.bringToFront();
+  }
+
+  recorridoMarker.bindPopup(
+    "🚛 <strong>Vehículo</strong><br>"+
+    "📍 Ubicación GPS del teléfono<br>"+
+    "🌐 Lat: "+lat.toFixed(6)+"<br>"+
+    "🌐 Lng: "+lng.toFixed(6)+
+    (Number.isFinite(precision)
+      ? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
+      : "")
+  );
+}
+
 function registrarPuntoRecorrido(position){
   const c=position.coords;
+
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
-  const precision=Number(c.accuracy||9999);
+  const precision=Number(c.accuracy);
 
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
-
-  // No usamos posiciones con error mayor a 80 m.
-  if(precision>80){
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📡 GPS del teléfono: señal imprecisa (±"+Math.round(precision)+" m). Esperando una lectura mejor...",
-      true
-    );
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)){
     return;
   }
+
+  // Mostramos SIEMPRE la posición que entrega el teléfono.
+  // No descartamos la coordenada por un valor de accuracy alto.
+  mostrarPosicionRecorrido(lat,lng,precision);
 
   const punto={
     lat:lat,
     lng:lng,
     hora:new Date().toISOString(),
-    precision:precision
+    precision:Number.isFinite(precision)?precision:null
   };
 
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
-  // Mostrar siempre la ubicación actual del teléfono.
-  mostrarPosicionRecorrido(lat,lng,precision);
+  if(ultimo){
+    const distancia=distanciaMetros(ultimo,punto);
+    const ahora=Date.now();
+    const antes=new Date(ultimo.hora).getTime();
+    const segundos=Math.max(1,(ahora-antes)/1000);
+    const velocidad=distancia/segundos;
 
-  // No sumar puntos si prácticamente no hubo movimiento.
-  if(ultimo && distanciaMetros(ultimo,punto)<3){
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Posición GPS actualizada · Puntos registrados: "+recorridoPuntos.length+
-      "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
-      true
-    );
-    return;
+    // Evita registrar la misma posición repetidamente.
+    if(distancia<3){
+      actualizarEstadoRecorrido(
+        "🔴 <strong>Recorrido en curso</strong><br>"+
+        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
+        "<br>📡 Precisión informada: ±"+
+        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
+        true
+      );
+      return;
+    }
+
+    // Solo descartamos saltos físicamente imposibles.
+    if(velocidad>50){
+      actualizarEstadoRecorrido(
+        "🔴 <strong>Recorrido en curso</strong><br>"+
+        "📍 GPS recibido"+
+        "<br>⚠️ Salto de ubicación descartado"+
+        "<br>📡 Precisión informada: ±"+
+        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
+        true
+      );
+      return;
+    }
   }
 
+  /*
+    CAMBIO CLAVE:
+    Ya NO descartamos el punto porque accuracy sea 150, 500 o 2000 m.
+    Si el navegador entrega una coordenada, la usamos.
+  */
   recorridoPuntos.push(punto);
+
   dibujarRecorrido();
   guardarRecorridoLocal();
 
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS del teléfono conectado · Puntos registrados: "+recorridoPuntos.length+
-    "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
+    "📍 GPS activo · Puntos registrados: "+
+    recorridoPuntos.length+
+    "<br>🌐 Lat: "+lat.toFixed(6)+
+    " · Lng: "+lng.toFixed(6)+
+    "<br>📡 Precisión informada: ±"+
+    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
     true
   );
 }
 
 function manejarErrorRecorrido(error){
-  console.error("GPS recorrido:",error);let mensaje="⚠️ No se pudo obtener la ubicación.";
-  if(error&&error.code===1)mensaje="⚠️ Permiso de ubicación denegado. Activá la ubicación del dispositivo para registrar el recorrido.";
-  else if(error&&error.code===2)mensaje="⚠️ No se pudo determinar la ubicación. Mové el vehículo a un lugar con mejor señal GPS.";
-  else if(error&&error.code===3)mensaje="⚠️ El GPS tardó demasiado en responder. Seguimos intentando.";
-  actualizarEstadoRecorrido(mensaje+(recorridoActivo?"<br>El recorrido continúa activo.":""),recorridoActivo);
+  console.error("GPS recorrido:",error);
+
+  let mensaje="⚠️ No se pudo obtener la ubicación.";
+
+  if(error&&error.code===1){
+    mensaje=
+      "⚠️ Permiso de ubicación denegado."+
+      "<br>Permití la ubicación para DIA VERDE.";
+  }else if(error&&error.code===2){
+    mensaje=
+      "⚠️ El dispositivo no pudo determinar la ubicación."+
+      "<br>Seguimos intentando.";
+  }else if(error&&error.code===3){
+    mensaje=
+      "⚠️ El GPS tardó demasiado en responder."+
+      "<br>Seguimos intentando.";
+  }
+
+  actualizarEstadoRecorrido(
+    mensaje+
+    (recorridoActivo
+      ? "<br>El recorrido continúa activo."
+      : ""),
+    recorridoActivo
+  );
 }
+
 function iniciarSeguimientoGPS(){
-  if(!navigator.geolocation){actualizarEstadoRecorrido("❌ Este dispositivo no permite obtener ubicación GPS.");return false;}
-  if(recorridoWatchId!==null)navigator.geolocation.clearWatch(recorridoWatchId);
-  recorridoWatchId=navigator.geolocation.watchPosition(
+  if(!navigator.geolocation){
+    actualizarEstadoRecorrido(
+      "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
+    );
+    return false;
+  }
+
+  if(recorridoWatchId!==null){
+    navigator.geolocation.clearWatch(recorridoWatchId);
+    recorridoWatchId=null;
+  }
+
+  /*
+    Pedimos primero una posición inmediata.
+    Esto es independiente de la evidencia.
+  */
+  navigator.geolocation.getCurrentPosition(
     registrarPuntoRecorrido,
     manejarErrorRecorrido,
     {
       enableHighAccuracy:true,
-      maximumAge:0,
-      timeout:15000
+      timeout:20000,
+      maximumAge:0
     }
   );
+
+  /*
+    Después mantenemos seguimiento continuo.
+  */
+  recorridoWatchId=
+    navigator.geolocation.watchPosition(
+      registrarPuntoRecorrido,
+      manejarErrorRecorrido,
+      {
+        enableHighAccuracy:true,
+        maximumAge:0,
+        timeout:20000
+      }
+    );
+
   return true;
 }
+
 function iniciarRecorrido(){
-  if(!selectedZone){alert("Primero seleccioná una zona.");return;} if(recorridoActivo)return;
-  recorridoActivo=true;recorridoZona=selectedZone;recorridoInicio=new Date().toISOString();recorridoPuntos=[];
-  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;} if(recorridoMarker){map.removeLayer(recorridoMarker);recorridoMarker=null;}
-  if(!iniciarSeguimientoGPS()){recorridoActivo=false;actualizarBotonesRecorrido();return;}
-  guardarRecorridoLocal();
+  if(!selectedZone){
+    alert("Primero seleccioná una zona.");
+    return;
+  }
+
+  if(recorridoActivo)return;
+
+  recorridoActivo=true;
+  recorridoZona=selectedZone;
+  recorridoInicio=new Date().toISOString();
+  recorridoPuntos=[];
+
+  if(recorridoLayer){
+    map.removeLayer(recorridoLayer);
+    recorridoLayer=null;
+  }
+
+  if(recorridoMarker){
+    map.removeLayer(recorridoMarker);
+    recorridoMarker=null;
+  }
+
   actualizarBotonesRecorrido();
+
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 Solicitando ubicación al GPS del teléfono...",
+    "📍 Solicitando ubicación GPS del teléfono...",
     true
   );
+
+  if(!iniciarSeguimientoGPS()){
+    recorridoActivo=false;
+    actualizarBotonesRecorrido();
+    return;
+  }
+
+  guardarRecorridoLocal();
   mostrarToast("🚛 Recorrido iniciado");
 }
+
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
 
@@ -1787,10 +1717,9 @@ function finalizarRecorrido(){
 
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
+
   recorridoActivo=false;
 
-  /* El marcador verde representa la posición ACTUAL del vehículo.
-     Al finalizar, se elimina para no mostrar una ubicación vieja. */
   if(recorridoMarker){
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
@@ -1800,24 +1729,82 @@ function finalizarRecorrido(){
   actualizarBotonesRecorrido();
 
   actualizarEstadoRecorrido(
-    "✅ <strong>Recorrido finalizado</strong><br>Zona: "+
-    esc(zonaFinal)+
-    "<br>📍 Puntos registrados: "+
-    cantidad+
+    "✅ <strong>Recorrido finalizado</strong><br>"+
+    "Zona: "+esc(zonaFinal)+
+    "<br>📍 Puntos registrados: "+cantidad+
     "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
   );
 
   mostrarToast("✅ Recorrido finalizado");
 }
+
 function recuperarRecorrido(){
   try{
-    const guardado=localStorage.getItem(ROUTE_STORAGE_KEY);if(!guardado)return;const estado=JSON.parse(guardado);if(!estado||!estado.activo||!estado.zona)return;
-    const inicio=estado.inicio?new Date(estado.inicio):null,ahora=new Date();
-    if(!inicio||inicio.toDateString()!==ahora.toDateString()){borrarRecorridoLocal();return;}
-    recorridoActivo=true;recorridoZona=estado.zona;recorridoInicio=estado.inicio;recorridoPuntos=Array.isArray(estado.puntos)?estado.puntos:[];dibujarRecorrido();actualizarBotonesRecorrido();
-    if(recorridoPuntos.length){const ultimo=recorridoPuntos[recorridoPuntos.length-1];mostrarPosicionRecorrido(ultimo.lat,ultimo.lng);}
-    actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Recorrido recuperado: "+recorridoPuntos.length+" puntos.<br>El GPS continúa registrando cuando el dispositivo entregue una nueva posición.",true);iniciarSeguimientoGPS();
-  }catch(error){console.error(error);borrarRecorridoLocal();}
+    const guardado=
+      localStorage.getItem(getRouteStorageKey());
+
+    if(!guardado)return;
+
+    const estado=JSON.parse(guardado);
+
+    if(
+      !estado||
+      !estado.activo||
+      !estado.zona
+    )return;
+
+    const inicio=
+      estado.inicio
+      ?new Date(estado.inicio)
+      :null;
+
+    const ahora=new Date();
+
+    if(
+      !inicio||
+      inicio.toDateString()!==ahora.toDateString()
+    ){
+      borrarRecorridoLocal();
+      return;
+    }
+
+    recorridoActivo=true;
+    recorridoZona=estado.zona;
+    recorridoInicio=estado.inicio;
+    recorridoPuntos=
+      Array.isArray(estado.puntos)
+      ?estado.puntos
+      :[];
+
+    dibujarRecorrido();
+    actualizarBotonesRecorrido();
+
+    if(recorridoPuntos.length){
+      const ultimo=
+        recorridoPuntos[recorridoPuntos.length-1];
+
+      mostrarPosicionRecorrido(
+        ultimo.lat,
+        ultimo.lng,
+        ultimo.precision
+      );
+    }
+
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>"+
+      "📍 Recorrido recuperado: "+
+      recorridoPuntos.length+
+      " puntos.<br>"+
+      "El GPS continúa registrando nuevas posiciones.",
+      true
+    );
+
+    iniciarSeguimientoGPS();
+
+  }catch(error){
+    console.error("Recuperar recorrido:",error);
+    borrarRecorridoLocal();
+  }
 }
 
 /* =====================================================
@@ -3095,69 +3082,44 @@ takeEvidence.style.display = "block";
    COMPRIMIR FOTO
 ===================================================== */
 
-function comprimirImagen(
-file
-){
+function comprimirImagen(file){
 
-return new Promise(
-(resolve,reject) => {
+return new Promise((resolve,reject) => {
 
-const reader =
-new FileReader();
+const reader = new FileReader();
 
+reader.onload = event => {
 
-reader.onload =
-event => {
+const img = new Image();
 
-const img =
-new Image();
+img.onload = () => {
 
+let width = img.naturalWidth || img.width;
+let height = img.naturalHeight || img.height;
 
-img.onload =
-() => {
-
-let width =
-img.width;
-
-let height =
-img.height;
-
-
-const maxWidth =
-1400;
-
+const maxWidth = 1000;
 
 if(width > maxWidth){
 
-height =
-height *
-maxWidth /
-width;
+height = Math.round(
+height * maxWidth / width
+);
 
-width =
-maxWidth;
+width = maxWidth;
 
 }
 
+const canvas = document.createElement("canvas");
 
-const canvas =
-document.createElement(
-"canvas"
-);
+canvas.width = width;
+canvas.height = height;
 
+const ctx = canvas.getContext("2d");
 
-canvas.width =
-width;
-
-canvas.height =
-height;
-
-
-const ctx =
-canvas.getContext(
-"2d"
-);
-
+if(!ctx){
+reject(new Error("No se pudo procesar la fotografía."));
+return;
+}
 
 ctx.drawImage(
 img,
@@ -3167,37 +3129,29 @@ width,
 height
 );
 
-
-resolve(
-canvas.toDataURL(
+const resultado = canvas.toDataURL(
 "image/jpeg",
-0.78
-)
+0.65
 );
+
+canvas.width = 1;
+canvas.height = 1;
+
+resolve(resultado);
 
 };
 
+img.onerror = reject;
 
-img.onerror =
-reject;
-
-
-img.src =
-event.target.result;
+img.src = event.target.result;
 
 };
 
+reader.onerror = reject;
 
-reader.onerror =
-reject;
+reader.readAsDataURL(file);
 
-
-reader.readAsDataURL(
-file
-);
-
-}
-);
+});
 
 }
 
@@ -3719,6 +3673,110 @@ cargarEvidenciasHoy();
 }
 );
 
+</script>
+
+
+<script id="diaverde-auth">
+/* ================= USUARIOS DIA VERDE =================
+   Opción 1: usuarios definidos localmente en el index.
+   Cambiá esta lista para agregar/quitar usuarios.
+========================================================= */
+const DV_USUARIOS = [
+  { usuario:"Peke",  password:"banfield09", nombre:"Administrador" },
+  { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
+  { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
+];
+
+const DV_SESSION_KEY = "diaVerdeSesionV1";
+const DV_USER_KEY = "diaVerdeUsuarioV1";
+
+function dvUsuarioActual(){
+  try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
+  catch(e){ return null; }
+}
+
+function dvMostrarAplicacion(usuario){
+  const overlay = document.getElementById("dvLoginOverlay");
+  const bar = document.getElementById("dvUserBar");
+  const name = document.getElementById("dvUserName");
+  if(overlay) overlay.style.display = "none";
+  if(bar) bar.style.display = "flex";
+  if(name) name.textContent = usuario.nombre || usuario.usuario;
+}
+
+function dvMostrarLogin(){
+  const overlay = document.getElementById("dvLoginOverlay");
+  const bar = document.getElementById("dvUserBar");
+  if(overlay) overlay.style.display = "flex";
+  if(bar) bar.style.display = "none";
+}
+
+function dvIniciarSesion(){
+  const user = (document.getElementById("dvLoginUser").value || "").trim();
+  const pass = document.getElementById("dvLoginPass").value || "";
+  const error = document.getElementById("dvLoginError");
+
+  const encontrado = DV_USUARIOS.find(
+    u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass
+  );
+
+  if(!encontrado){
+    if(error) error.textContent = "Usuario o contraseña incorrectos.";
+    return;
+  }
+
+  localStorage.setItem(DV_SESSION_KEY, "1");
+  localStorage.setItem(DV_USER_KEY, JSON.stringify({
+    usuario: encontrado.usuario,
+    nombre: encontrado.nombre
+  }));
+
+  if(error) error.textContent = "";
+  dvMostrarAplicacion(encontrado);
+
+  // Recuperar estado ya guardado sin alterar CGM/zonas/reclamos.
+  try {
+    if(typeof recuperarRecorrido === "function") recuperarRecorrido();
+  } catch(e) {
+    console.error("Recuperación de recorrido:", e);
+  }
+}
+
+function dvCerrarSesion(){
+  localStorage.removeItem(DV_SESSION_KEY);
+  localStorage.removeItem(DV_USER_KEY);
+  dvMostrarLogin();
+  const u = document.getElementById("dvLoginUser");
+  const p = document.getElementById("dvLoginPass");
+  if(u) u.value = "";
+  if(p) p.value = "";
+  if(u) u.focus();
+}
+
+function dvComprobarSesion(){
+  const sesion = localStorage.getItem(DV_SESSION_KEY);
+  const usuario = dvUsuarioActual();
+  if(sesion === "1" && usuario){
+    dvMostrarAplicacion(usuario);
+  }else{
+    dvMostrarLogin();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  const btn = document.getElementById("dvLoginBtn");
+  const logout = document.getElementById("dvLogout");
+  const pass = document.getElementById("dvLoginPass");
+
+  if(btn) btn.addEventListener("click", dvIniciarSesion);
+  if(logout) logout.addEventListener("click", dvCerrarSesion);
+
+  if(pass) pass.addEventListener("keydown", function(e){
+    if(e.key === "Enter") dvIniciarSesion();
+  });
+
+  dvComprobarSesion();
+});
 </script>
 
 </body>
