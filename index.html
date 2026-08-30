@@ -688,7 +688,7 @@ footer span{
   transform:rotate(-45deg);background:#66bb6a;border:3px solid #fff;box-sizing:border-box;
 }
 .dv-reclamo-pin span{
-  position:relative;z-index:2;font-size:17px;line-height:1;transform:translateY(-1px);
+  position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;
 }
 .dv-reclamo-pin.realizado::before{background:#2e7d32}
 .dv-reclamo-pin.suspendido::before{background:#8d6e63}
@@ -1110,6 +1110,15 @@ id="toast"
 src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ></script>
 
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.css"
+>
+
+<script
+src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"
+></script>
+
 
 <script>
 
@@ -1266,7 +1275,16 @@ document.getElementById("toast");
 ===================================================== */
 
 const map =
-L.map("map").setView(
+L.map("map", {
+  rotate: true,
+  bearing: 0,
+  touchRotate: true,
+  touchZoom: true,
+  rotateControl: {
+    closeOnZeroBearing: false,
+    position: "topleft"
+  }
+}).setView(
 [
 -34.7777,
 -58.3809
@@ -1318,16 +1336,16 @@ function escaparHTML(valor){
 function iconoReclamoMedioAmbiente(estado){
   const s = String(estado || "").toLowerCase();
   let clase = "pendiente";
-  let simbolo = "🌱";
+  let simbolo = "♻";
 
   if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
-    clase = "realizado"; simbolo = "✓";
+    clase = "realizado";
   }else if(s.includes("suspend")){
-    clase = "suspendido"; simbolo = "⏸";
+    clase = "suspendido";
   }else if(s.includes("espera") || s.includes("definir")){
-    clase = "amarillo"; simbolo = "⏳";
+    clase = "amarillo";
   }else if(s.includes("rechaz") || s.includes("anulad")){
-    clase = "rojo"; simbolo = "!";
+    clase = "rojo";
   }
 
   return L.divIcon({
@@ -1340,17 +1358,23 @@ function iconoReclamoMedioAmbiente(estado){
 }
 
 function popupReclamoMedioAmbiente(d){
-  const direccion = d.direccion || d.Direccion || d.domicilio || d.Domicilio || "";
-  const estado = d.estado || d.Estado || "Pendiente";
-  const tipo = d.tipo || d.Tipo || d.reclamo || d.Reclamo || "";
-  const id = d.id || d.ID || d.nro || d.Nro || "";
+  const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
+
+  // El estado visual se toma del histórico real de evidencias.
+  // Así, cuando se registra un reclamo, el popup cambia a "Realizado".
+  const realizado = typeof estaRealizadaHoy === "function"
+    ? estaRealizadaHoy(d)
+    : false;
+
+  const estado = realizado ? "Realizado" : "Pendiente";
 
   return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">🌿 Reclamo ambiental</div>'+
-    (direccion ? '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>' : '')+
-    (tipo ? '<div>🌳 '+escaparHTML(tipo)+'</div>' : '')+
-    (id ? '<div>📝 Nº '+escaparHTML(id)+'</div>' : '')+
-    '<div class="estado">Estado: '+escaparHTML(estado)+'</div>'+
+    '<div class="titulo">♻️ Vecino Reciclador</div>'+
+    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
+    '<div class="estado">'+
+      (realizado ? '🟢 ' : '⚪ ')+
+      escaparHTML(estado)+
+    '</div>'+
     '</div>';
 }
 
@@ -1374,15 +1398,39 @@ function agregarMarcadorReclamo(d){
   const layer = asegurarCapaReclamos();
   if(!layer) return null;
 
-  const estado = d.estado || d.Estado || "Pendiente";
+  const realizado = typeof estaRealizadaHoy === "function"
+    ? estaRealizadaHoy(d)
+    : false;
+
+  const estado = realizado ? "Realizado" : "Pendiente";
+
   const marker = L.marker(pos,{
     icon:iconoReclamoMedioAmbiente(estado),
     zIndexOffset:100
   });
 
+  marker.__dvReclamoData = d;
   marker.bindPopup(popupReclamoMedioAmbiente(d));
   marker.addTo(layer);
   return marker;
+}
+
+function refrescarEstadosMarcadoresReclamos(){
+  if(!reclamosMarkersLayer) return;
+
+  reclamosMarkersLayer.eachLayer(marker => {
+    const d = marker.__dvReclamoData;
+    if(!d) return;
+
+    const realizado = typeof estaRealizadaHoy === "function"
+      ? estaRealizadaHoy(d)
+      : false;
+
+    marker.setIcon(
+      iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
+    );
+    marker.setPopupContent(popupReclamoMedioAmbiente(d));
+  });
 }
 
 function limpiarMarcadoresReclamos(){
@@ -1507,61 +1555,13 @@ async function mostrarMarcadoresGeocodificados(lista){
 }
 
 /* ---------- Rotación del mapa ---------- */
-/*
- * Leaflet no trae rotación de mapa base de forma nativa.
- * Esta implementación rota visualmente las capas del mapa sin alterar
- * las coordenadas GPS. El control se activa con dos dedos cuando el
- * dispositivo/navegador permite Pointer Events.
- */
-function aplicarRotacionMapa(grados){
-  mapaRotacion = ((Number(grados)||0)%360+360)%360;
-  const pane = document.querySelector(".leaflet-map-pane");
-  if(pane){
-    pane.style.transformOrigin = "50% 50%";
-    pane.style.transform = "rotate("+mapaRotacion+"deg)";
+/* La rotación real la gestiona leaflet-rotate.
+   Permite giro con dos dedos y control de brújula sin romper
+   el sistema interno de transformaciones de Leaflet. */
+function resetearRotacionMapa(){
+  if(map && typeof map.setBearing === "function"){
+    map.setBearing(0);
   }
-}
-
-function instalarControlRotacionMapa(){
-  if(!map || !map.getContainer()) return;
-  const container = map.getContainer();
-  if(container.dataset.dvRotationInstalled==="1") return;
-  container.dataset.dvRotationInstalled="1";
-
-  let pointers = new Map();
-  let startAngle = null;
-  let startRotation = mapaRotacion;
-
-  function angle(a,b){
-    return Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX)*180/Math.PI;
-  }
-
-  container.addEventListener("pointerdown",e=>{
-    pointers.set(e.pointerId,e);
-    if(pointers.size===2){
-      const p=[...pointers.values()];
-      startAngle=angle(p[0],p[1]);
-      startRotation=mapaRotacion;
-      mapaSiguiendoVehiculo=false;
-      mapaUsuarioMovio=true;
-    }
-  },{passive:true});
-
-  container.addEventListener("pointermove",e=>{
-    if(!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId,e);
-    if(pointers.size===2 && startAngle!==null){
-      const p=[...pointers.values()];
-      aplicarRotacionMapa(startRotation + angle(p[0],p[1]) - startAngle);
-    }
-  },{passive:true});
-
-  function endPointer(e){
-    pointers.delete(e.pointerId);
-    if(pointers.size<2) startAngle=null;
-  }
-  container.addEventListener("pointerup",endPointer,{passive:true});
-  container.addEventListener("pointercancel",endPointer,{passive:true});
 }
 
 
@@ -2671,8 +2671,11 @@ actualizarHora();
 if(selectedZone){
 
 render();
+refrescarEstadosMarcadoresReclamos();
 
 }
+
+refrescarEstadosMarcadoresReclamos();
 
 }
 )
@@ -2703,6 +2706,7 @@ statusText.textContent =
 if(selectedZone){
 
 render();
+refrescarEstadosMarcadoresReclamos();
 
 }
 
