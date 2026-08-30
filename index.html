@@ -1262,6 +1262,9 @@ attribution:
 }
 ).addTo(map);
 
+map.on("dragstart zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+
 
 /* =====================================================
    UTILIDADES
@@ -1479,19 +1482,78 @@ function actualizarBotonesRecorrido(){
   stopRoute.disabled=!recorridoActivo;
 }
 
-function mostrarPosicionRecorrido(lat,lng,precision){
+function normalizarRumbo(grados){
+  let r=Number(grados);
+  if(!Number.isFinite(r)) return null;
+  r=((r%360)+360)%360;
+  return r;
+}
+
+function suavizarRumbo(nuevo){
+  nuevo=normalizarRumbo(nuevo);
+  if(nuevo===null) return recorridoHeading;
+
+  if(recorridoHeading===null){
+    recorridoHeading=nuevo;
+    return recorridoHeading;
+  }
+
+  let delta=((nuevo-recorridoHeading+540)%360)-180;
+
+  // Ignora pequeñas oscilaciones del GPS.
+  if(Math.abs(delta)<4) return recorridoHeading;
+
+  // Suavizado: evita que el vehículo pegue giros bruscos.
+  recorridoHeading=normalizarRumbo(
+    recorridoHeading + delta*0.35
+  );
+
+  return recorridoHeading;
+}
+
+function crearIconoVehiculo(rumbo){
+  const rot=normalizarRumbo(rumbo);
+  return L.divIcon({
+    className:"dia-verde-vehiculo-icon",
+    html:
+      '<div style="width:42px;height:42px;display:flex;align-items:center;justify-content:center;'+
+      'transform:rotate('+(rot===null?0:rot)+'deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));">'+
+      '<div style="font-size:32px;line-height:1;transform:rotate(0deg);">🚛</div>'+
+      '</div>',
+    iconSize:[42,42],
+    iconAnchor:[21,21]
+  });
+}
+
+function activarSeguimientoVisual(lat,lng,forzarZoom=false){
+  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+  // Al comenzar el recorrido: acercamiento tipo navegación.
+  if(forzarZoom){
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
+    map.setView([lat,lng],18,{animate:true});
+    return;
+  }
+
+  // Mientras el usuario no haya desplazado manualmente el mapa,
+  // lo mantenemos centrado en el vehículo.
+  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    map.panTo([lat,lng],{animate:true,duration:.45});
+  }
+}
+
+function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
   if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
 
+  const heading=suavizarRumbo(rumbo);
+
   if(!recorridoMarker){
-    recorridoMarker=L.circleMarker(
+    recorridoMarker=L.marker(
       [lat,lng],
       {
-        radius:9,
-        color:"#ffffff",
-        weight:3,
-        fillColor:"#087a3d",
-        fillOpacity:1,
-        pane:"markerPane"
+        icon:crearIconoVehiculo(heading),
+        zIndexOffset:1000
       }
     ).addTo(map);
 
@@ -1501,6 +1563,10 @@ function mostrarPosicionRecorrido(lat,lng,precision){
     );
   }else{
     recorridoMarker.setLatLng([lat,lng]);
+    if(heading!==null){
+      recorridoMarker.setIcon(crearIconoVehiculo(heading));
+    }
+    recorridoMarker.setZIndexOffset(1000);
     recorridoMarker.bringToFront();
   }
 
@@ -1511,8 +1577,13 @@ function mostrarPosicionRecorrido(lat,lng,precision){
     "🌐 Lng: "+lng.toFixed(6)+
     (Number.isFinite(precision)
       ? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
+      : "")+
+    (heading!==null
+      ? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
       : "")
   );
+
+  activarSeguimientoVisual(lat,lng,forzarZoom);
 }
 
 function registrarPuntoRecorrido(position){
@@ -1528,7 +1599,7 @@ function registrarPuntoRecorrido(position){
 
   // Mostramos SIEMPRE la posición que entrega el teléfono.
   // No descartamos la coordenada por un valor de accuracy alto.
-  mostrarPosicionRecorrido(lat,lng,precision);
+  mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
 
   const punto={
     lat:lat,
@@ -1675,6 +1746,9 @@ function iniciarRecorrido(){
   if(recorridoActivo)return;
 
   recorridoActivo=true;
+  recorridoHeading=null;
+  mapaSiguiendoVehiculo=true;
+  mapaUsuarioMovio=false;
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
@@ -3682,7 +3756,7 @@ cargarEvidenciasHoy();
    Cambiá esta lista para agregar/quitar usuarios.
 ========================================================= */
 const DV_USUARIOS = [
-  { usuario:"admin",  password:"banfield09", nombre:"Administrador" },
+  { usuario:"admin",  password:"diaverde2026", nombre:"Administrador" },
   { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
   { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
 ];
