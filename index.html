@@ -647,11 +647,171 @@ footer span{
 .route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}
 .route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
+
+
+/* =====================================================
+   LOGIN DIA VERDE
+===================================================== */
+
+body:not(.dv-authenticated) > header,
+body:not(.dv-authenticated) > main{
+  display:none !important;
+}
+
+#dvLoginOverlay{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:linear-gradient(135deg,#04552b,#087a3d);
+}
+
+#dvLoginBox{
+  width:min(420px,100%);
+  background:white;
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 20px 60px #0005;
+}
+
+#dvLoginLogo{
+  width:70px;
+  height:70px;
+  margin:0 auto 14px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#e9f7ed;
+  font-size:34px;
+}
+
+#dvLoginBox h2{
+  margin:0;
+  text-align:center;
+  color:#04552b;
+}
+
+#dvLoginBox p{
+  text-align:center;
+  color:#728078;
+  margin:7px 0 24px;
+}
+
+.dv-login-field{
+  margin-bottom:14px;
+}
+
+.dv-login-field label{
+  color:#193329;
+}
+
+#dvLoginUser,
+#dvLoginPassword{
+  width:100%;
+  min-height:50px;
+  border:1px solid #d5e0d9;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:16px;
+  outline:none;
+}
+
+#dvLoginUser:focus,
+#dvLoginPassword:focus{
+  border-color:#72bb8b;
+  box-shadow:0 0 0 3px #087a3d1a;
+}
+
+#dvLoginButton{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:10px;
+  background:#087a3d;
+  color:white;
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+}
+
+#dvLoginButton:hover{
+  background:#04552b;
+}
+
+#dvLoginError{
+  min-height:20px;
+  margin-top:12px;
+  text-align:center;
+  color:#b42318;
+  font-size:14px;
+  font-weight:700;
+}
+
+#dvUserPanel{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+}
+
+#dvUserName{
+  font-size:13px;
+  font-weight:700;
+}
+
+#dvLogoutButton{
+  border:1px solid #ffffff55;
+  background:#ffffff18;
+  color:white;
+  border-radius:9px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+#dvLogoutButton:hover{
+  background:#ffffff2b;
+}
+
+@media(max-width:700px){
+  #dvLoginBox{padding:24px;}
+  #dvUserPanel{gap:6px;}
+  #dvUserName{display:none;}
+}
+
 </style>
 
 </head>
 
 <body>
+
+<!-- =====================================================
+     LOGIN DIA VERDE
+===================================================== -->
+<div id="dvLoginOverlay">
+  <div id="dvLoginBox">
+    <div id="dvLoginLogo">🌿</div>
+    <h2>DIA VERDE</h2>
+    <p>Ingresá con tu usuario y contraseña</p>
+
+    <div class="dv-login-field">
+      <label for="dvLoginUser">Usuario</label>
+      <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
+    </div>
+
+    <div class="dv-login-field">
+      <label for="dvLoginPassword">Contraseña</label>
+      <input id="dvLoginPassword" type="password" autocomplete="current-password" placeholder="Contraseña">
+    </div>
+
+    <button id="dvLoginButton" type="button">INGRESAR</button>
+    <div id="dvLoginError"></div>
+  </div>
+</div>
+
 
 <header>
 
@@ -693,6 +853,13 @@ Conectando...
 
 </div>
 
+</div>
+
+</div>
+
+<div id="dvUserPanel">
+  <span id="dvUserName"></span>
+  <button id="dvLogoutButton" type="button">Salir</button>
 </div>
 
 </div>
@@ -1044,6 +1211,121 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 
 
 <script>
+
+/* =====================================================
+   USUARIOS - OPCION 1
+   
+   ADMINISTRACION: para agregar, quitar o cambiar usuarios
+   editá solamente esta lista.
+
+   IMPORTANTE: esta opcion es simple y los datos quedan
+   dentro del index.html. No es un sistema de seguridad
+   de servidor.
+===================================================== */
+
+const USUARIOS_DIA_VERDE = [
+  { usuario: "admin", password: "diaverde2026", nombre: "Administrador" },
+  { usuario: "chofer1", password: "1234", nombre: "Chofer 1" },
+  { usuario: "chofer2", password: "1234", nombre: "Chofer 2" }
+];
+
+const DV_SESSION_KEY = "diaVerdeSesionV1";
+
+function dvObtenerSesion(){
+  try{
+    const raw = localStorage.getItem(DV_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    console.error("Error leyendo sesion DIA VERDE",error);
+    return null;
+  }
+}
+
+function dvGuardarSesion(usuario){
+  try{
+    localStorage.setItem(DV_SESSION_KEY,JSON.stringify({
+      usuario:usuario.usuario,
+      nombre:usuario.nombre
+    }));
+  }catch(error){
+    console.error("Error guardando sesion DIA VERDE",error);
+  }
+}
+
+function dvAplicarSesion(sesion){
+  if(!sesion) return;
+
+  document.body.classList.add("dv-authenticated");
+
+  const overlay = document.getElementById("dvLoginOverlay");
+  if(overlay) overlay.style.display="none";
+
+  const userName = document.getElementById("dvUserName");
+  if(userName){
+    userName.textContent = "👤 "+(sesion.nombre || sesion.usuario);
+  }
+}
+
+function dvCerrarSesion(){
+  try{localStorage.removeItem(DV_SESSION_KEY);}catch(error){}
+  location.reload();
+}
+
+function dvIntentarLogin(){
+  const inputUser = document.getElementById("dvLoginUser");
+  const inputPassword = document.getElementById("dvLoginPassword");
+  const error = document.getElementById("dvLoginError");
+
+  const usuario = inputUser.value.trim();
+  const password = inputPassword.value;
+
+  const encontrado = USUARIOS_DIA_VERDE.find(
+    item => item.usuario === usuario && item.password === password
+  );
+
+  if(!encontrado){
+    error.textContent = "Usuario o contraseña incorrectos.";
+    inputPassword.select();
+    return;
+  }
+
+  error.textContent = "";
+  dvGuardarSesion(encontrado);
+  dvAplicarSesion({usuario:encontrado.usuario,nombre:encontrado.nombre});
+}
+
+(function dvInicializarLogin(){
+  const sesion = dvObtenerSesion();
+
+  if(sesion){
+    dvAplicarSesion(sesion);
+  }else{
+    document.body.classList.remove("dv-authenticated");
+  }
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    const button = document.getElementById("dvLoginButton");
+    const user = document.getElementById("dvLoginUser");
+    const password = document.getElementById("dvLoginPassword");
+    const logout = document.getElementById("dvLogoutButton");
+
+    if(button) button.addEventListener("click",dvIntentarLogin);
+    if(logout) logout.addEventListener("click",dvCerrarSesion);
+
+    if(user){
+      user.addEventListener("keydown",event=>{
+        if(event.key === "Enter") password?.focus();
+      });
+    }
+
+    if(password){
+      password.addEventListener("keydown",event=>{
+        if(event.key === "Enter") dvIntentarLogin();
+      });
+    }
+  });
+})();
+
 
 /* =====================================================
    CONFIGURACIÓN
@@ -3428,37 +3710,12 @@ document.addEventListener(
 "visibilitychange",
 () => {
 
-  /*
-   * No detenemos el recorrido cuando Chrome pasa a segundo plano.
-   * Los puntos que ya llegaron quedan guardados localmente.
-   * Al volver a DIA VERDE, reactivamos el GPS inmediatamente.
-   */
-  if(!document.hidden){
+if(!document.hidden){
 
-    cargarEvidenciasHoy();
+cargarEvidenciasHoy();
 
-    if(recorridoActivo){
-
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 Reanudando GPS...<br>"+
-        "💾 Puntos guardados: "+recorridoPuntos.length,
-        true
-      );
-
-      iniciarSeguimientoGPS();
-    }
-  }
 }
-);
 
-/* Guardar los puntos recibidos antes de que Chrome descarte la pagina. */
-document.addEventListener(
-"pagehide",
-() => {
-  if(recorridoActivo){
-    guardarRecorridoLocal();
-  }
 }
 );
 
