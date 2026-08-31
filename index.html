@@ -51,8 +51,30 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 }
 </style>
 
+
+<style id="dv-navigation-mode">
+html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden}
+#map,.map,.map-container,#map-container{min-height:100%;height:100%;width:100%}
+#dvCenterButton{
+  position:fixed!important;
+  right:16px!important;
+  bottom:96px!important;
+  z-index:2147483647!important;
+  display:none;
+  padding:11px 17px!important;
+  border:0!important;
+  border-radius:24px!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.28)!important;
+}
+#dvCenterButton.dv-visible{display:block!important}
+body.dv-navigation-active .dia-verde-vehiculo-icon{z-index:10000!important}
+</style>
+
 </head>
-<body>
+<body class="dv-navigation-active">
 <div id="dvLoginOverlay">
   <div id="dvLoginBox">
     <h2>🌿 DIA VERDE</h2>
@@ -2684,6 +2706,104 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   setTimeout(window.dvAsegurarPinesGeograficos, 500);
+})();
+</script>
+
+
+<script id="dv-navigation-mode-js">
+(function(){
+  document.body.classList.add("dv-navigation-active");
+
+  function dvGetMap(){
+    return window.map || window.dvMap || null;
+  }
+
+  function dvNavigationCenter(){
+    const m=dvGetMap();
+    const p=window.__dvLastNavigationLocation;
+    if(!m||!p) return;
+
+    const center=[Number(p.lng),Number(p.lat)];
+    const bearing=Number(p.bearing||0);
+
+    try{
+      if(typeof m.stop==="function")m.stop();
+
+      const opts={
+        center:center,
+        zoom:17,
+        pitch:45,
+        bearing:bearing,
+        duration:500,
+        essential:true
+      };
+
+      if(typeof m.easeTo==="function")m.easeTo(opts);
+      else{
+        if(typeof m.setCenter==="function")m.setCenter(center);
+        if(typeof m.setZoom==="function")m.setZoom(17);
+        if(typeof m.setPitch==="function")m.setPitch(45);
+        if(typeof m.setBearing==="function")m.setBearing(bearing);
+      }
+
+      const b=document.getElementById("dvCenterButton");
+      if(b)b.classList.remove("dv-visible");
+    }catch(e){}
+  }
+
+  window.dvSetNavigationLocation=function(p){
+    if(!p)return;
+    window.__dvLastNavigationLocation=p;
+
+    /*
+     * Cuando el recorrido recién comienza, centramos automáticamente.
+     * Después el seguimiento existente continúa controlando la cámara.
+     */
+    if(!window.__dvNavigationStarted){
+      window.__dvNavigationStarted=true;
+      setTimeout(dvNavigationCenter,100);
+    }
+  };
+
+  window.dvNavigationCenter=dvNavigationCenter;
+
+  const b=document.getElementById("dvCenterButton");
+  if(b)b.addEventListener("click",dvNavigationCenter);
+
+  /*
+   * Cualquier interacción manual hace visible CENTRAR.
+   * No modifica el movimiento de los pines.
+   */
+  let tries=0;
+  const bind=setInterval(function(){
+    const m=dvGetMap();
+    if(m&&typeof m.on==="function"){
+      clearInterval(bind);
+      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+        try{m.on(ev,function(){
+          const btn=document.getElementById("dvCenterButton");
+          if(btn)btn.classList.add("dv-visible");
+        });}catch(e){}
+      });
+    }
+    if(++tries>60)clearInterval(bind);
+  },200);
+})();
+</script>
+
+
+<script id="dv-navigation-location-bridge">
+(function(){
+  if(window.__dvNavigationBridgeInstalled)return;
+  window.__dvNavigationBridgeInstalled=true;
+
+  const old=window.onNativeLocation;
+  window.onNativeLocation=function(p){
+    try{
+      if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p);
+    }catch(e){}
+    if(typeof old==="function")return old.apply(this,arguments);
+  };
 })();
 </script>
 
