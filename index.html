@@ -35,7 +35,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 #dvLoginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#087a3d,#04552b);padding:20px;}#dvLoginBox{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.25);}#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}#dvLoginBtn{width:100%;min-height:48px;border:0;border-radius:10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer;}#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}#dvUserBar{display:none;align-items:center;gap:10px;margin-left:auto;}#dvUserName{font-weight:800}#dvLogout{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;}
 </style>
 <style id="dia-verde-reclamos-style">
-.dv-reclamo-pin{width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));}.dv-reclamo-pin::before{content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#66bb6a;border:3px solid #fff;box-sizing:border-box;}.dv-reclamo-pin span{position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;}.dv-reclamo-pin.realizado::before{background:#2e7d32}.dv-reclamo-pin.suspendido::before{background:#8d6e63}.dv-reclamo-pin.amarillo::before{background:#f9a825}.dv-reclamo-pin.rojo::before{background:#c62828}.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
+.dv-reclamo-pin{width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));}.dv-reclamo-pin::before{content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;border:3px solid #fff;box-sizing:border-box;}.dv-reclamo-pin span{position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;}.dv-reclamo-pin.realizado::before{background:#66bb6a}.dv-reclamo-pin.suspendido::before{background:#8d6e63}.dv-reclamo-pin.amarillo::before{background:#f9a825}.dv-reclamo-pin.rojo::before{background:#c62828}.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
 </style>
 <style id="dia-verde-map-3d-css">
 .dv-truck-3d{width:52px;height:52px;display:flex;align-items:center;justify-content:center;filter:none;transform-origin:center center;transition:transform .25s ease}.dv-map-marker{will-change:transform}.dv-pitch-control button{font-weight:900;font-size:13px}.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
@@ -55,18 +55,51 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 
 
 
+<style id="dv-navigation-mode">
+/* Modo navegación: agranda el mapa sin ocultar el resto de la WebApp. */
+.map-card{position:relative}
+.map-wrap{position:relative;width:100%;height:clamp(520px,70vh,760px)}
+#map{width:100%;height:100%;min-height:520px;border-radius:14px;overflow:hidden}
+#dvCenterButton{
+  position:absolute!important;
+  right:16px!important;
+  bottom:18px!important;
+  z-index:10000!important;
+  display:none;
+  padding:12px 18px!important;
+  border:0!important;
+  border-radius:24px!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  background:#087a3d!important;
+  color:#fff!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
+  cursor:pointer!important;
+}
+#dvCenterButton.dv-visible{display:block!important}
 
-
-<style id="dv-navigation-pro-css">
-.map-card{position:relative;}
-.map-wrap{position:relative;width:100%;height:clamp(500px,64vh,760px);overflow:hidden;border-radius:14px;}
-#map{width:100%;height:100%;min-height:0;border-radius:14px;overflow:hidden;}
-#dvCenterButton{position:absolute!important;right:14px!important;bottom:18px!important;z-index:2147483647!important;display:none!important;border:0!important;border-radius:999px!important;padding:11px 17px!important;font-size:15px!important;font-weight:800!important;line-height:1!important;background:#087a3d!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.30)!important;cursor:pointer!important;}
-#dvCenterButton.dv-visible{display:block!important;}
-.route-controls{margin-top:12px!important;display:flex!important;gap:10px!important;flex-wrap:wrap!important;align-items:center!important;}
-.route-status{margin-top:12px!important;}
-@media(max-width:600px){.map-card{padding:10px!important;}.map-wrap{height:64vh;min-height:500px;max-height:760px;}.route-btn{min-height:52px!important;font-size:14px!important;}}
+/* FIX GEOREFERENCIA: el root de cada pin sigue siendo administrado por MapLibre. */
+.maplibregl-marker.dv-map-marker{
+  position:absolute!important;
+  top:0!important;
+  left:0!important;
+  will-change:transform;
+  pointer-events:auto;
+}
+.maplibregl-marker.dv-map-marker > .dv-reclamo-pin,
+.maplibregl-marker.dv-map-marker > .dv-truck-3d{
+  pointer-events:auto;
+}
+@media(max-width:600px){
+  .map-wrap{height:68vh;min-height:460px;max-height:none}
+  #map{min-height:460px}
+  .map-card{padding:10px}
+  .card-title{margin-bottom:10px}
+  #dvCenterButton{right:12px!important;bottom:14px!important}
+}
 </style>
+
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -190,6 +223,7 @@ Esperando datos...
 </aside>
 <section>
 <div class="card map-card">
+<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div class="card-title">
 <div class="card-title-icon">
 🗺️
@@ -204,19 +238,18 @@ Seleccioná una zona para visualizar su área.
 </div>
 </div>
 <div class="map-wrap">
-<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div
 class="zone-badge"
 id="zoneBadge"
 style="display:none"
 ></div>
 <div id="map"></div>
-</div>
 <div class="route-controls">
 <button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
 <button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button>
-</div>
 <div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div>
+</div>
+</div>
 </div>
 <div class="card results">
 <div class="results-head">
@@ -462,23 +495,65 @@ class DVMarker{
     this.__dvPopupHtml="";
     this.__dvTooltip="";
     this._element=document.createElement("div");
-    this._element.className="dv-map-marker";
+    this._element.className="maplibregl-marker dv-map-marker";
     this._element.style.pointerEvents="auto";
     this._element.style.cursor="pointer";
-    this._setIcon(options.icon || {html:"",className:"",iconSize:[36,36],iconAnchor:[18,18]});
-    const size=options.icon&&options.icon.iconSize ? options.icon.iconSize : [36,36];
-     const anchorPx=options.icon&&options.icon.iconAnchor ? options.icon.iconAnchor : [size[0]/2,size[1]/2];
-     const anchor=Math.abs(anchorPx[0]-size[0]/2)<2 && anchorPx[1]>=size[1]-2 ? "bottom" : "center";
-     this._marker=new maplibregl.Marker({element:this._element,anchor:anchor}).setLngLat([latlng[1],latlng[0]]);
+
+    this._setIcon(
+      options.icon || {
+        html:"",
+        className:"",
+        iconSize:[36,36],
+        iconAnchor:[18,18]
+      }
+    );
+
+    const icon=options.icon || {};
+    const size=icon.iconSize || [36,36];
+    const anchorPx=icon.iconAnchor || [size[0]/2,size[1]/2];
+
+    /*
+     * El punto geográfico debe coincidir exactamente con el anclaje
+     * del pin. Los pines de reclamo tienen la punta abajo; el vehículo
+     * usa centro.
+     */
+    let anchor="center";
+    if(
+      Math.abs(anchorPx[0]-(size[0]/2)) < 2 &&
+      anchorPx[1] >= size[1]-2
+    ){
+      anchor="bottom";
+    }
+
+    this._marker=new maplibregl.Marker({
+      element:this._element,
+      anchor:anchor
+    }).setLngLat([latlng[1],latlng[0]]);
   }
+
   _setIcon(icon){
     this._icon=icon;
-    this._element.className="dv-map-marker "+(icon.className||"");
-    this._element.innerHTML=icon.html||"";
-    if(icon.iconSize){ this._element.style.width=icon.iconSize[0]+"px"; this._element.style.height=icon.iconSize[1]+"px"; }
-    const anchor=icon.iconAnchor||[0,0];
-    this._element.style.transformOrigin=(anchor[0]-((icon.iconSize||[0,0])[0]/2))+"px "+(anchor[1]-((icon.iconSize||[0,0])[1]/2))+"px";
+
+    /*
+     * IMPORTANTE:
+     * Nunca reemplazamos la clase "maplibregl-marker".
+     * MapLibre utiliza esa clase para mantener el elemento pegado
+     * a su coordenada geográfica al mover, hacer zoom, rotar o inclinar.
+     */
+    this._element.className =
+      "maplibregl-marker dv-map-marker " +
+      (icon.className || "");
+
+    this._element.innerHTML=icon.html || "";
+
+    if(icon.iconSize){
+      this._element.style.width=icon.iconSize[0]+"px";
+      this._element.style.height=icon.iconSize[1]+"px";
+    }
+
+    this._element.style.pointerEvents="auto";
   }
+
   addTo(target){
     if(target instanceof DVLayerGroup) return target.addLayer(this);
     const mapObj=target instanceof DVMap ? target : map;
@@ -486,21 +561,77 @@ class DVMarker{
     this._marker.addTo(mapObj._map);
     return this;
   }
-  remove(){ try{this._marker.remove();}catch(e){} return this; }
-  setLatLng(latlng){ this._latlng=latlng; this._marker.setLngLat([latlng[1],latlng[0]]); return this; }
-  getLatLng(){ return {lat:this._latlng[0],lng:this._latlng[1]}; }
-  setIcon(icon){ this._setIcon(icon); this._marker.setLngLat([this._latlng[1],this._latlng[0]]); return this; }
-  bindPopup(html){ this.__dvPopupHtml=html||""; this._popup=new maplibregl.Popup({offset:28,maxWidth:"300px",closeButton:true}).setHTML(this.__dvPopupHtml); this._marker.setPopup(this._popup); return this; }
-  setPopupContent(html){ this.__dvPopupHtml=html||""; if(this._popup) this._popup.setHTML(this.__dvPopupHtml); else this.bindPopup(this.__dvPopupHtml); return this; }
-  bindTooltip(text){ this.__dvTooltip=text||""; this._element.title=String(text||""); return this; }
-  setZIndexOffset(z){ this._element.style.zIndex=String(1000+Number(z||0)); return this; }
-  bringToFront(){ this._element.style.zIndex="9999"; return this; }
+
+  remove(){
+    try{this._marker.remove();}catch(e){}
+    return this;
+  }
+
+  setLatLng(latlng){
+    this._latlng=latlng;
+    this._marker.setLngLat([latlng[1],latlng[0]]);
+    return this;
+  }
+
+  getLatLng(){
+    return {
+      lat:this._latlng[0],
+      lng:this._latlng[1]
+    };
+  }
+
+  setIcon(icon){
+    this._setIcon(icon);
+    this._marker.setLngLat([this._latlng[1],this._latlng[0]]);
+    return this;
+  }
+
+  bindPopup(html){
+    this.__dvPopupHtml=html || "";
+    this._popup=new maplibregl.Popup({
+      offset:28,
+      maxWidth:"300px",
+      closeButton:true
+    }).setHTML(this.__dvPopupHtml);
+    this._marker.setPopup(this._popup);
+    return this;
+  }
+
+  setPopupContent(html){
+    this.__dvPopupHtml=html || "";
+    if(this._popup){
+      this._popup.setHTML(this.__dvPopupHtml);
+    }else{
+      this.bindPopup(this.__dvPopupHtml);
+    }
+    return this;
+  }
+
+  bindTooltip(text){
+    this.__dvTooltip=text || "";
+    this._element.title=String(text || "");
+    return this;
+  }
+
+  setZIndexOffset(z){
+    this._element.style.zIndex=String(1000+Number(z || 0));
+    return this;
+  }
+
+  bringToFront(){
+    this._element.style.zIndex="9999";
+    return this;
+  }
+
   updateScreenRotation(){
     const heading=Number(this._heading);
     if(Number.isFinite(heading) && map && map._map){
       const bearing=map._map.getBearing();
       const inner=this._element.firstElementChild;
-      if(inner) inner.style.transform="rotate("+(((heading-bearing)%360+360)%360)+"deg)";
+      if(inner){
+        inner.style.transform=
+          "rotate("+(((heading-bearing)%360+360)%360)+"deg)";
+      }
     }
   }
 }
@@ -1013,27 +1144,29 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng) || !map._map) return;
+  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
   const heading=recorridoHeading;
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
-  }
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    const h=map._map.getContainer().clientHeight||600;
-    const padding={top:0,right:0,bottom:Math.round(h*.24),left:0};
     map._map.easeTo({
       center:[lng,lat],
       zoom:18,
-      bearing:Number.isFinite(heading)?heading:map._map.getBearing(),
+      bearing:Number.isFinite(heading)?heading:map.getBearing(),
       pitch:45,
-      padding:padding,
-      duration:forzarZoom?700:450,
-      essential:true
+      duration:800
+    });
+    return;
+  }
+  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    map._map.easeTo({
+      center:[lng,lat],
+      bearing:Number.isFinite(heading)?heading:map.getBearing(),
+      pitch:45,
+      duration:450
     });
   }
 }
-
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
   if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
   const heading=suavizarRumbo(rumbo);
@@ -2550,6 +2683,95 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 
+(function(){
+  const dvCenterButton = document.getElementById("dvCenterButton");
+  let dvUserMovedMap = false;
+  let dvLastNativeLocation = null;
+
+  function dvShowCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
+    dvUserMovedMap = true;
+  }
+
+  function dvHideCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
+    dvUserMovedMap = false;
+  }
+
+  function dvCenterOnVehicle(){
+    const p = dvLastNativeLocation;
+    if(!p || !window.map) return;
+
+    try{
+      const center = [Number(p.lng), Number(p.lat)];
+
+      if(typeof window.map.stop === "function") window.map.stop();
+
+      if(typeof window.map.easeTo === "function"){
+        window.map.easeTo({
+          center:center,
+          zoom:16.8,
+          pitch:45,
+          bearing:Number(p.bearing || 0),
+          duration:450,
+          essential:true
+        });
+      }else{
+        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
+        if(typeof window.map.setPitch === "function") window.map.setPitch(45);
+        if(typeof window.map.setBearing === "function") window.map.setBearing(Number(p.bearing || 0));
+      }
+
+      dvHideCenterButton();
+    }catch(e){}
+  }
+
+  if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
+
+  window.dvRegisterNativeLocationForCenter = function(p){
+    if(p) dvLastNativeLocation = p;
+  };
+
+  function dvWatchMapInteraction(){
+    if(!window.map || typeof window.map.on !== "function") return false;
+
+    if(!window.__dvCenterInteractionBound){
+      window.__dvCenterInteractionBound = true;
+
+      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+        window.map.on(ev, dvShowCenterButton);
+      });
+    }
+    return true;
+  }
+
+  let tries = 0;
+  const timer = setInterval(function(){
+    if(dvWatchMapInteraction() || ++tries > 40) clearInterval(timer);
+  },250);
+
+  window.dvCenterOnVehicle = dvCenterOnVehicle;
+})();
+
+
+
+(function(){
+  if(window.__dvNativeCenterBridgeInstalled) return;
+  window.__dvNativeCenterBridgeInstalled = true;
+
+  const oldOnNativeLocation = window.onNativeLocation;
+  window.onNativeLocation = function(p){
+    try{
+      if(window.dvRegisterNativeLocationForCenter){
+        window.dvRegisterNativeLocationForCenter(p);
+      }
+    }catch(e){}
+    if(typeof oldOnNativeLocation === "function"){
+      return oldOnNativeLocation.apply(this, arguments);
+    }
+  };
+})();
+
 </script>
 
 <script>
@@ -2571,106 +2793,112 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 
-<script id="dv-pines-geograficos-fix">
+<script id="dv-navigation-location-bridge">
 (function(){
-  /*
-   * Asegura que los pines que ya son markers geográficos no se conviertan
-   * accidentalmente en overlays fijos de pantalla.
-   */
-  window.dvAsegurarPinesGeograficos = function(){
+  if(window.__dvNavigationBridgeInstalled)return;
+  window.__dvNavigationBridgeInstalled=true;
+
+  const old=window.onNativeLocation;
+  window.onNativeLocation=function(p){
     try{
-      if(!window.map) return;
-
-      /*
-       * Si el wrapper expone cada marker, no hacemos transformaciones manuales:
-       * dejamos que el motor del mapa sea el único responsable de su posición.
-       */
-      if(window.map.eachLayer){
-        window.map.eachLayer(function(layer){
-          if(!layer) return;
-          if(layer.getLatLng && layer.getElement){
-            const el = layer.getElement();
-            if(el){
-              el.style.position = "absolute";
-              el.style.transformOrigin = "center center";
-              el.style.pointerEvents = "auto";
-            }
-          }
-        });
-      }
+      if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p);
     }catch(e){}
+    if(typeof old==="function")return old.apply(this,arguments);
   };
-
-  /*
-   * Después de mover/inclinar/girar el mapa, dejamos que el motor termine
-   * su reposicionamiento antes de revisar los markers.
-   */
-  if(window.map && window.map.on){
-    ["moveend","zoomend","rotateend","pitchend","move"].forEach(function(ev){
-      try{
-        window.map.on(ev, function(){
-          requestAnimationFrame(window.dvAsegurarPinesGeograficos);
-        });
-      }catch(e){}
-    });
-  }
-
-  setTimeout(window.dvAsegurarPinesGeograficos, 500);
 })();
 </script>
 
 
-
-
-
-
-
-
-<script id="dv-navigation-pro-js">
+<script id="dv-navigation-mode-js">
 (function(){
   let last=null;
   let bound=false;
-  function getMap(){return window.map||null;}
-  function centerVehicle(){
-    const map=getMap();
-    if(!map||!map._map||!last)return;
-    const lat=Number(last.lat),lng=Number(last.lng);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-    const bearing=Number.isFinite(Number(last.bearing))?Number(last.bearing):map._map.getBearing();
-    const h=map._map.getContainer().clientHeight||600;
-    map._map.stop();
-    map._map.easeTo({center:[lng,lat],zoom:18,bearing:bearing,pitch:45,padding:{top:0,right:0,bottom:Math.round(h*.24),left:0},duration:500,essential:true});
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
+
+  function mapReady(){
+    return window.map && typeof window.map.on==="function";
+  }
+
+  function showCenter(){
+    const b=document.getElementById("dvCenterButton");
+    if(b)b.classList.add("dv-visible");
+  }
+
+  function hideCenter(){
     const b=document.getElementById("dvCenterButton");
     if(b)b.classList.remove("dv-visible");
   }
-  function showCenter(){
-    if(typeof recorridoActivo!=="undefined"&&!recorridoActivo)return;
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.add("dv-visible");
-    mapaUsuarioMovio=true;
-    mapaSiguiendoVehiculo=false;
+
+  function centerVehicle(){
+    if(!last || !window.map)return;
+    const center=[Number(last.lng),Number(last.lat)];
+    const bearing=Number(last.bearing||0);
+
+    try{
+      if(typeof window.map.stop==="function")window.map.stop();
+      if(typeof window.map.easeTo==="function"){
+        window.map.easeTo({
+          center:center,
+          zoom:17,
+          pitch:45,
+          bearing:bearing,
+          duration:500,
+          essential:true
+        });
+      }else{
+        window.map.setCenter(center);
+        window.map.setZoom(17);
+        window.map.setPitch(45);
+        window.map.setBearing(bearing);
+      }
+      hideCenter();
+    }catch(e){}
   }
+
+  window.dvRegisterNativeLocationForCenter=function(p){
+    if(p){
+      last=p;
+      window.__dvLastNavigationLocation=p;
+    }
+  };
+  window.dvCenterOnVehicle=centerVehicle;
+
   function bind(){
-    const map=getMap();
-    if(!map||typeof map.on!=="function")return false;
-    if(bound)return true;
+    if(bound || !mapReady())return false;
     bound=true;
-    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(ev=>map.on(ev,showCenter));
+
+    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+      window.map.on(ev,showCenter);
+    });
+
     const b=document.getElementById("dvCenterButton");
     if(b)b.addEventListener("click",centerVehicle);
     return true;
   }
-  window.dvRegisterNativeLocationForCenter=function(p){if(p)last=p;};
-  const previous=window.onNativeLocation;
-  window.onNativeLocation=function(p){
-    if(p)last=p;
-    if(typeof previous==="function")return previous.apply(this,arguments);
-  };
-  const timer=setInterval(function(){if(bind())clearInterval(timer);},200);
-  window.dvCenterOnVehicle=centerVehicle;
+
+  let tries=0;
+  const timer=setInterval(function(){
+    if(bind() || ++tries>80)clearInterval(timer);
+  },250);
 })();
 </script>
+
+
+<script id="dv-navigation-native-bridge">
+(function(){
+  if(window.__dvNavigationNativeBridgeInstalled)return;
+  window.__dvNavigationNativeBridgeInstalled=true;
+
+  const previous=window.onNativeLocation;
+  window.onNativeLocation=function(p){
+    try{
+      if(window.dvRegisterNativeLocationForCenter)
+        window.dvRegisterNativeLocationForCenter(p);
+    }catch(e){}
+    if(typeof previous==="function")
+      return previous.apply(this,arguments);
+  };
+})();
+</script>
+
 </body>
 </html>
