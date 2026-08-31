@@ -10,6 +10,26 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 <style>
 :root{--verde:#087a3d;--verde-oscuro:#04552b;--verde-claro:#e9f7ed;--texto:#193329;--gris:#728078;--fondo:#f3f7f4;--borde:#dce9e0;--blanco:#fff;}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto);}header{background:linear-gradient( 135deg, var(--verde-oscuro), var(--verde) );color:white;padding:24px 28px;box-shadow:0 4px 20px #0002;}.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px;}.brand{display:flex;align-items:center;gap:15px;}.logo{width:58px;height:58px;border-radius:50%;background:white;display:grid;place-items:center;font-size:29px;}h1{margin:0;font-size:28px;}.sub{margin-top:5px;font-size:15px;}.status{display:flex;align-items:center;gap:10px;font-size:13px;}.status-icon{width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;font-size:20px;}main{max-width:1200px;margin:auto;padding:22px;}.layout{display:grid;grid-template-columns:300px 1fr;gap:18px;}.card{background:white;border:1px solid #e5eee8;border-radius:18px;box-shadow:0 8px 30px #163a2614;}.sidebar{padding:20px;}.section-label{color:var(--verde);font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}label{display:block;font-weight:700;margin-bottom:8px;}select, input{width:100%;min-height:48px;border:1px solid #d5e0d9;border-radius:10px;padding:11px 13px;font-size:15px;color:var(--texto);background:white;outline:none;}select:focus, input:focus{border-color:#72bb8b;box-shadow:0 0 0 3px #087a3d1a;}.refresh{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:10px;background:var(--verde);color:white;font-weight:800;cursor:pointer;}.refresh:hover{background:var(--verde-oscuro);}.info-box{margin-top:18px;padding:15px;border:1px solid #c9e7d1;border-radius:12px;background:#f4fbf6;color:#40534a;font-size:13px;line-height:1.55;}.stats{margin-top:25px;}.stat{border:1px solid var(--borde);border-radius:13px;padding:14px;margin-top:9px;display:flex;align-items:center;gap:12px;}.stat-icon{width:42px;height:42px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.stat small{display:block;color:var(--gris);}.stat strong{font-size:22px;}.update{margin-top:24px;font-size:13px;color:#4d5d54;line-height:1.5;}.map-card{padding:18px;}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;}.card-title-icon{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.card-title h2{margin:0;font-size:21px;}.card-title p{margin:3px 0 0;color:var(--gris);font-size:13px;}.map-wrap{position:relative;}#map{height:500px;border-radius:14px;overflow:hidden;}.zone-badge{position:absolute;z-index:1000;left:50%;top:20px;transform:translateX(-50%);background:var(--verde);color:white;padding:9px 16px;border-radius:10px;font-weight:800;box-shadow:0 5px 15px #0003;pointer-events:none;}.results{margin-top:18px;padding:18px;}.results-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;}.count-pill{background:var(--verde-claro);color:var(--verde);padding:8px 13px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;}.search{margin-bottom:12px;}.address-list{display:grid;border:1px solid #e1e9e4;border-radius:13px;overflow:hidden;}.address{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border-bottom:1px solid #e7eee9;background:white;}.address:last-child{border-bottom:0;}.address:hover{background:#fbfdfb;}.address-left{display:flex;align-items:center;gap:12px;min-width:0;}.pin{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;flex:0 0 auto;}.address strong{display:block;font-size:15px;}.address small{display:block;margin-top:4px;color:var(--gris);}.address-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.maps, .evidence-btn{display:inline-block;text-decoration:none;border:1px solid #8bcaa1;color:var(--verde);background:white;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;}.maps:hover, .evidence-btn:hover{background:var(--verde-claro);}.evidence-btn.done{background:var(--verde-claro);border-color:#63b57f;}.empty, .loading{text-align:center;padding:35px;color:var(--gris);}.error{background:#fff0f0;color:#a52222;padding:15px;border-radius:10px;}.modal-backdrop{position:fixed;inset:0;background:#062b17aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:3000;}.modal-backdrop.show{display:flex;}.evidence-modal{width:min(520px,100%);background:white;border-radius:20px;box-shadow:0 20px 60px #0004;padding:22px;}.evidence-modal h3{margin:0 0 5px;font-size:21px;}.evidence-modal p{margin:0 0 18px;color:var(--gris);font-size:13px;}.evidence-preview{width:100%;max-height:280px;object-fit:cover;border-radius:14px;background:#edf3ef;display:none;margin-bottom:15px;}.gps-box{padding:12px;border-radius:12px;background:#f4fbf6;border:1px solid #c9e7d1;font-size:13px;line-height:1.55;margin-bottom:15px;}.modal-actions{display:flex;gap:10px;}.modal-actions button{flex:1;min-height:46px;border-radius:10px;font-weight:800;cursor:pointer;}.cancel-btn{border:1px solid #d5e0d9;background:white;color:#53625a;}.send-btn{border:0;background:var(--verde);color:white;}.send-btn:disabled{opacity:.5;cursor:not-allowed;}.toast{position:fixed;right:20px;bottom:20px;z-index:4000;background:var(--verde-oscuro);color:white;padding:13px 16px;border-radius:12px;box-shadow:0 8px 25px #0003;display:none;font-size:13px;font-weight:700;}.toast.show{display:block;}footer{margin-top:20px;background:var(--verde-oscuro);color:white;padding:22px;}.footer-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;gap:15px;align-items:center;}footer span{opacity:.9;font-size:13px;}@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px;}.sidebar .stats, .sidebar .update{grid-column:1/-1;margin-top:0;}}@media(max-width:600px){header{padding:18px;}.header-inner{align-items:flex-start;}.status{display:none;}.logo{width:48px;height:48px;font-size:24px;}h1{font-size:23px;}.sub{font-size:13px;}main{padding:12px;}.sidebar{display:block;}.info-box, .stats, .update{margin-top:18px!important;}#map{height:380px;}.address{align-items:flex-start;flex-direction:column;}.address-actions{width:100%;}.maps, .evidence-btn{flex:1;text-align:center;}.footer-inner{flex-direction:column;text-align:center;}}.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}.route-btn:disabled{opacity:.5;cursor:not-allowed}.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
+
+
+#dvCenterButton{
+  display:none;
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  z-index:1000;
+  border:0;
+  border-radius:999px;
+  padding:10px 15px;
+  font-weight:800;
+  font-size:14px;
+  background:#087f3f;
+  color:#fff;
+  box-shadow:0 3px 12px rgba(0,0,0,.28);
+  cursor:pointer;
+}
+#dvCenterButton.dv-visible{display:block}
+
 </style>
 <style id="diaverde-auth-css">
 #dvLoginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#087a3d,#04552b);padding:20px;}#dvLoginBox{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.25);}#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}#dvLoginBtn{width:100%;min-height:48px;border:0;border-radius:10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer;}#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}#dvUserBar{display:none;align-items:center;gap:10px;margin-left:auto;}#dvUserName{font-weight:800}#dvLogout{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;}
@@ -143,6 +163,7 @@ Esperando datos...
 </aside>
 <section>
 <div class="card map-card">
+<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div class="card-title">
 <div class="card-title-icon">
 🗺️
@@ -2496,6 +2517,116 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   dvComprobarSesion();
 });
+
+
+(function(){
+  const dvCenterButton = document.getElementById("dvCenterButton");
+  let dvUserMovedMap = false;
+  let dvLastNativeLocation = null;
+
+  function dvShowCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
+    dvUserMovedMap = true;
+  }
+
+  function dvHideCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
+    dvUserMovedMap = false;
+  }
+
+  function dvCenterOnVehicle(){
+    const p = dvLastNativeLocation;
+    if(!p || !window.map) return;
+
+    try{
+      const center = [Number(p.lng), Number(p.lat)];
+
+      if(typeof window.map.stop === "function") window.map.stop();
+
+      if(typeof window.map.easeTo === "function"){
+        window.map.easeTo({
+          center:center,
+          zoom:16.8,
+          pitch:45,
+          bearing:Number(p.bearing || 0),
+          duration:450,
+          essential:true
+        });
+      }else{
+        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
+        if(typeof window.map.setPitch === "function") window.map.setPitch(45);
+        if(typeof window.map.setBearing === "function") window.map.setBearing(Number(p.bearing || 0));
+      }
+
+      dvHideCenterButton();
+    }catch(e){}
+  }
+
+  if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
+
+  window.dvRegisterNativeLocationForCenter = function(p){
+    if(p) dvLastNativeLocation = p;
+  };
+
+  function dvWatchMapInteraction(){
+    if(!window.map || typeof window.map.on !== "function") return false;
+
+    if(!window.__dvCenterInteractionBound){
+      window.__dvCenterInteractionBound = true;
+
+      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+        window.map.on(ev, dvShowCenterButton);
+      });
+    }
+    return true;
+  }
+
+  let tries = 0;
+  const timer = setInterval(function(){
+    if(dvWatchMapInteraction() || ++tries > 40) clearInterval(timer);
+  },250);
+
+  window.dvCenterOnVehicle = dvCenterOnVehicle;
+})();
+
+
+
+(function(){
+  if(window.__dvNativeCenterBridgeInstalled) return;
+  window.__dvNativeCenterBridgeInstalled = true;
+
+  const oldOnNativeLocation = window.onNativeLocation;
+  window.onNativeLocation = function(p){
+    try{
+      if(window.dvRegisterNativeLocationForCenter){
+        window.dvRegisterNativeLocationForCenter(p);
+      }
+    }catch(e){}
+    if(typeof oldOnNativeLocation === "function"){
+      return oldOnNativeLocation.apply(this, arguments);
+    }
+  };
+})();
+
 </script>
+
+<script>
+(function(){
+  window.dvCamionReciclableSVG = function(){
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" width="72" height="48" aria-label="Camión de reciclaje">' +
+      '<defs><linearGradient id="dvTruckG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#43d17a"/><stop offset="1" stop-color="#087f3f"/></linearGradient></defs>' +
+      '<g stroke="#123" stroke-width="3" stroke-linejoin="round">' +
+      '<path fill="url(#dvTruckG)" d="M7 17h67v40H7z"/>' +
+      '<path fill="#20a85a" d="M74 29h24l14 14v14H74z"/>' +
+      '<path fill="#bdebd0" d="M82 33h14l9 10H82z"/>' +
+      '<path fill="#fff" d="M22 28h38v10H22z"/>' +
+      '<path fill="none" stroke="#fff" d="M27 49c4-8 10-8 14 0m4 0c4-8 10-8 14 0"/>' +
+      '<circle fill="#222" cx="29" cy="61" r="9"/><circle fill="#777" cx="29" cy="61" r="4"/>' +
+      '<circle fill="#222" cx="91" cy="61" r="9"/><circle fill="#777" cx="91" cy="61" r="4"/>' +
+      '</g></svg>';
+  };
+})();
+</script>
+
 </body>
 </html>
