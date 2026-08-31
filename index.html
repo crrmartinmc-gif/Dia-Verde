@@ -647,75 +647,167 @@ footer span{
 .route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}
 .route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
-</style>
 
 
-<style id="diaverde-auth-css">
+/* =====================================================
+   LOGIN DIA VERDE
+===================================================== */
+
+body:not(.dv-authenticated) > header,
+body:not(.dv-authenticated) > main{
+  display:none !important;
+}
+
 #dvLoginOverlay{
-  position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg,#087a3d,#04552b); padding:20px;
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:linear-gradient(135deg,#04552b,#087a3d);
 }
+
 #dvLoginBox{
-  width:min(420px,100%); background:#fff; border-radius:20px; padding:28px;
-  box-shadow:0 18px 60px rgba(0,0,0,.25);
+  width:min(420px,100%);
+  background:white;
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 20px 60px #0005;
 }
-#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}
-#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}
-#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}
-#dvLoginBtn{
-  width:100%; min-height:48px; border:0; border-radius:10px; background:#087a3d;
-  color:#fff; font-weight:800; cursor:pointer;
-}
-#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}
-#dvUserBar{
-  display:none; align-items:center; gap:10px; margin-left:auto;
-}
-#dvUserName{font-weight:800}
-#dvLogout{
-  border:1px solid rgba(255,255,255,.5); background:transparent; color:#fff;
-  border-radius:9px; padding:8px 12px; cursor:pointer; font-weight:800;
-}
-</style>
 
+#dvLoginLogo{
+  width:70px;
+  height:70px;
+  margin:0 auto 14px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#e9f7ed;
+  font-size:34px;
+}
 
-<style id="dia-verde-reclamos-style">
-.dv-reclamo-pin{
-  width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));
+#dvLoginBox h2{
+  margin:0;
+  text-align:center;
+  color:#04552b;
 }
-.dv-reclamo-pin::before{
-  content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;
-  transform:rotate(-45deg);background:#66bb6a;border:3px solid #fff;box-sizing:border-box;
+
+#dvLoginBox p{
+  text-align:center;
+  color:#728078;
+  margin:7px 0 24px;
 }
-.dv-reclamo-pin span{
-  position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;
+
+.dv-login-field{
+  margin-bottom:14px;
 }
-.dv-reclamo-pin.realizado::before{background:#2e7d32}
-.dv-reclamo-pin.suspendido::before{background:#8d6e63}
-.dv-reclamo-pin.amarillo::before{background:#f9a825}
-.dv-reclamo-pin.rojo::before{background:#c62828}
-.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}
-.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}
-.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
-<style id="dia-verde-map-3d-css">
-.dv-truck-3d{width:58px;height:58px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 5px 4px rgba(0,0,0,.38));transform-origin:center center;transition:transform .25s ease}
-.dv-map-marker{will-change:transform}
-.dv-pitch-control button{font-weight:900;font-size:13px}
-.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}
-.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
+
+.dv-login-field label{
+  color:#193329;
+}
+
+#dvLoginUser,
+#dvLoginPassword{
+  width:100%;
+  min-height:50px;
+  border:1px solid #d5e0d9;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:16px;
+  outline:none;
+}
+
+#dvLoginUser:focus,
+#dvLoginPassword:focus{
+  border-color:#72bb8b;
+  box-shadow:0 0 0 3px #087a3d1a;
+}
+
+#dvLoginButton{
+  width:100%;
+  min-height:50px;
+  border:0;
+  border-radius:10px;
+  background:#087a3d;
+  color:white;
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+}
+
+#dvLoginButton:hover{
+  background:#04552b;
+}
+
+#dvLoginError{
+  min-height:20px;
+  margin-top:12px;
+  text-align:center;
+  color:#b42318;
+  font-size:14px;
+  font-weight:700;
+}
+
+#dvUserPanel{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+}
+
+#dvUserName{
+  font-size:13px;
+  font-weight:700;
+}
+
+#dvLogoutButton{
+  border:1px solid #ffffff55;
+  background:#ffffff18;
+  color:white;
+  border-radius:9px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+#dvLogoutButton:hover{
+  background:#ffffff2b;
+}
+
+@media(max-width:700px){
+  #dvLoginBox{padding:24px;}
+  #dvUserPanel{gap:6px;}
+  #dvUserName{display:none;}
+}
+
 </style>
 
 </head>
 
 <body>
 
+<!-- =====================================================
+     LOGIN DIA VERDE
+===================================================== -->
 <div id="dvLoginOverlay">
   <div id="dvLoginBox">
-    <h2>🌿 DIA VERDE</h2>
-    <p>Ingresá con tu usuario</p>
-    <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
-    <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña">
-    <button id="dvLoginBtn" type="button">INGRESAR</button>
+    <div id="dvLoginLogo">🌿</div>
+    <h2>DIA VERDE</h2>
+    <p>Ingresá con tu usuario y contraseña</p>
+
+    <div class="dv-login-field">
+      <label for="dvLoginUser">Usuario</label>
+      <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
+    </div>
+
+    <div class="dv-login-field">
+      <label for="dvLoginPassword">Contraseña</label>
+      <input id="dvLoginPassword" type="password" autocomplete="current-password" placeholder="Contraseña">
+    </div>
+
+    <button id="dvLoginButton" type="button">INGRESAR</button>
     <div id="dvLoginError"></div>
   </div>
 </div>
@@ -765,10 +857,11 @@ Conectando...
 
 </div>
 
+<div id="dvUserPanel">
+  <span id="dvUserName"></span>
+  <button id="dvLogoutButton" type="button">Salir</button>
+</div>
 
-<div id="dvUserBar">
-  <span>👤 <span id="dvUserName"></span></span>
-  <button id="dvLogout" type="button">Salir</button>
 </div>
 
 </header>
@@ -1112,11 +1205,127 @@ id="toast"
 ></div>
 
 
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
-<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
 
 
 <script>
+
+/* =====================================================
+   USUARIOS - OPCION 1
+   
+   ADMINISTRACION: para agregar, quitar o cambiar usuarios
+   editá solamente esta lista.
+
+   IMPORTANTE: esta opcion es simple y los datos quedan
+   dentro del index.html. No es un sistema de seguridad
+   de servidor.
+===================================================== */
+
+const USUARIOS_DIA_VERDE = [
+  { usuario: "admin", password: "diaverde2026", nombre: "Administrador" },
+  { usuario: "chofer1", password: "1234", nombre: "Chofer 1" },
+  { usuario: "chofer2", password: "1234", nombre: "Chofer 2" }
+];
+
+const DV_SESSION_KEY = "diaVerdeSesionV1";
+
+function dvObtenerSesion(){
+  try{
+    const raw = localStorage.getItem(DV_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    console.error("Error leyendo sesion DIA VERDE",error);
+    return null;
+  }
+}
+
+function dvGuardarSesion(usuario){
+  try{
+    localStorage.setItem(DV_SESSION_KEY,JSON.stringify({
+      usuario:usuario.usuario,
+      nombre:usuario.nombre
+    }));
+  }catch(error){
+    console.error("Error guardando sesion DIA VERDE",error);
+  }
+}
+
+function dvAplicarSesion(sesion){
+  if(!sesion) return;
+
+  document.body.classList.add("dv-authenticated");
+
+  const overlay = document.getElementById("dvLoginOverlay");
+  if(overlay) overlay.style.display="none";
+
+  const userName = document.getElementById("dvUserName");
+  if(userName){
+    userName.textContent = "👤 "+(sesion.nombre || sesion.usuario);
+  }
+}
+
+function dvCerrarSesion(){
+  try{localStorage.removeItem(DV_SESSION_KEY);}catch(error){}
+  location.reload();
+}
+
+function dvIntentarLogin(){
+  const inputUser = document.getElementById("dvLoginUser");
+  const inputPassword = document.getElementById("dvLoginPassword");
+  const error = document.getElementById("dvLoginError");
+
+  const usuario = inputUser.value.trim();
+  const password = inputPassword.value;
+
+  const encontrado = USUARIOS_DIA_VERDE.find(
+    item => item.usuario === usuario && item.password === password
+  );
+
+  if(!encontrado){
+    error.textContent = "Usuario o contraseña incorrectos.";
+    inputPassword.select();
+    return;
+  }
+
+  error.textContent = "";
+  dvGuardarSesion(encontrado);
+  dvAplicarSesion({usuario:encontrado.usuario,nombre:encontrado.nombre});
+}
+
+(function dvInicializarLogin(){
+  const sesion = dvObtenerSesion();
+
+  if(sesion){
+    dvAplicarSesion(sesion);
+  }else{
+    document.body.classList.remove("dv-authenticated");
+  }
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    const button = document.getElementById("dvLoginButton");
+    const user = document.getElementById("dvLoginUser");
+    const password = document.getElementById("dvLoginPassword");
+    const logout = document.getElementById("dvLogoutButton");
+
+    if(button) button.addEventListener("click",dvIntentarLogin);
+    if(logout) logout.addEventListener("click",dvCerrarSesion);
+
+    if(user){
+      user.addEventListener("keydown",event=>{
+        if(event.key === "Enter") password?.focus();
+      });
+    }
+
+    if(password){
+      password.addEventListener("keydown",event=>{
+        if(event.key === "Enter") dvIntentarLogin();
+      });
+    }
+  });
+})();
+
 
 /* =====================================================
    CONFIGURACIÓN
@@ -1148,17 +1357,7 @@ let selectedZone = "";
 let activeLayer = null;
 
 /* Variables del recorrido GPS */
-const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
-
-function getRouteStorageKey(){
-  try{
-    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
-    const id = u && u.usuario ? u.usuario : "sin_usuario";
-    return ROUTE_STORAGE_BASE_KEY + "_" + id;
-  }catch(e){
-    return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
-  }
-}
+const ROUTE_STORAGE_KEY = "diaVerdeRecorridoV1";
 let recorridoActivo = false;
 let recorridoZona = "";
 let recorridoInicio = "";
@@ -1267,484 +1466,27 @@ document.getElementById("toast");
 
 
 /* =====================================================
-   MAPA 3D REAL - MAPLIBRE GL
-   DIA VERDE
+   MAPA
 ===================================================== */
 
-let dvMapReady = false;
-const dvMapPending = [];
+const map =
+L.map("map").setView(
+[
+-34.7777,
+-58.3809
+],
+13
+);
 
-function dvWhenMapReady(fn){
-  if(dvMapReady) fn();
-  else dvMapPending.push(fn);
+
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+maxZoom:19,
+attribution:
+"&copy; OpenStreetMap contributors"
 }
-
-function dvBoundsFromGeometry(geometry){
-  const coords=[];
-  function walk(v){
-    if(Array.isArray(v) && v.length>=2 && typeof v[0]==="number" && typeof v[1]==="number"){
-      coords.push(v);
-      return;
-    }
-    if(Array.isArray(v)) v.forEach(walk);
-  }
-  if(geometry && geometry.coordinates) walk(geometry.coordinates);
-  if(!coords.length) return null;
-  let minLng=Infinity,minLat=Infinity,maxLng=-Infinity,maxLat=-Infinity;
-  coords.forEach(([lng,lat])=>{
-    minLng=Math.min(minLng,lng); minLat=Math.min(minLat,lat);
-    maxLng=Math.max(maxLng,lng); maxLat=Math.max(maxLat,lat);
-  });
-  return {sw:[minLng,minLat],ne:[maxLng,maxLat]};
-}
-
-class DVLayerGroup{
-  constructor(){ this._layers=[]; this._map=null; }
-  addTo(target){ this._map=target; this._layers.forEach(l=>l.addTo(target)); return this; }
-  addLayer(layer){ if(!this._layers.includes(layer)) this._layers.push(layer); if(this._map) layer.addTo(this._map); return this; }
-  removeLayer(layer){ this._layers=this._layers.filter(x=>x!==layer); if(layer && layer.remove) layer.remove(); return this; }
-  clearLayers(){ this._layers.forEach(l=>{ if(l&&l.remove) l.remove(); }); this._layers=[]; }
-  eachLayer(fn){ this._layers.slice().forEach(fn); }
-}
-
-class DVMarker{
-  constructor(latlng,options={}){
-    this._latlng=latlng;
-    this.options=options;
-    this.__dvPopupHtml="";
-    this.__dvTooltip="";
-    this._element=document.createElement("div");
-    this._element.className="dv-map-marker";
-    this._element.style.pointerEvents="auto";
-    this._element.style.cursor="pointer";
-    this._setIcon(options.icon || {html:"",className:"",iconSize:[36,36],iconAnchor:[18,18]});
-    this._marker=new maplibregl.Marker({element:this._element,anchor:"center"}).setLngLat([latlng[1],latlng[0]]);
-  }
-  _setIcon(icon){
-    this._icon=icon;
-    this._element.className="dv-map-marker "+(icon.className||"");
-    this._element.innerHTML=icon.html||"";
-    if(icon.iconSize){ this._element.style.width=icon.iconSize[0]+"px"; this._element.style.height=icon.iconSize[1]+"px"; }
-    const anchor=icon.iconAnchor||[0,0];
-    this._element.style.transformOrigin=(anchor[0]-((icon.iconSize||[0,0])[0]/2))+"px "+(anchor[1]-((icon.iconSize||[0,0])[1]/2))+"px";
-  }
-  addTo(target){
-    if(target instanceof DVLayerGroup) return target.addLayer(this);
-    const mapObj=target instanceof DVMap ? target : map;
-    this._map=mapObj;
-    this._marker.addTo(mapObj._map);
-    return this;
-  }
-  remove(){ try{this._marker.remove();}catch(e){} return this; }
-  setLatLng(latlng){ this._latlng=latlng; this._marker.setLngLat([latlng[1],latlng[0]]); return this; }
-  getLatLng(){ return {lat:this._latlng[0],lng:this._latlng[1]}; }
-  setIcon(icon){ this._setIcon(icon); this._marker.setLngLat([this._latlng[1],this._latlng[0]]); return this; }
-  bindPopup(html){ this.__dvPopupHtml=html||""; this._popup=new maplibregl.Popup({offset:28,maxWidth:"300px",closeButton:true}).setHTML(this.__dvPopupHtml); this._marker.setPopup(this._popup); return this; }
-  setPopupContent(html){ this.__dvPopupHtml=html||""; if(this._popup) this._popup.setHTML(this.__dvPopupHtml); else this.bindPopup(this.__dvPopupHtml); return this; }
-  bindTooltip(text){ this.__dvTooltip=text||""; this._element.title=String(text||""); return this; }
-  setZIndexOffset(z){ this._element.style.zIndex=String(1000+Number(z||0)); return this; }
-  bringToFront(){ this._element.style.zIndex="9999"; return this; }
-  updateScreenRotation(){
-    const heading=Number(this._heading);
-    if(Number.isFinite(heading) && map && map._map){
-      const bearing=map._map.getBearing();
-      const inner=this._element.firstElementChild;
-      if(inner) inner.style.transform="rotate("+(((heading-bearing)%360+360)%360)+"deg)";
-    }
-  }
-}
-
-class DVPolyline{
-  constructor(points,options={}){
-    this.points=points||[]; this.options=options; this.id="dv-route-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-  }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      if(m.getSource(this.id)) m.removeSource(this.id);
-      if(m.getLayer(this.id)) m.removeLayer(this.id);
-      m.addSource(this.id,{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates:this.points.map(p=>[p[1],p[0]])}}});
-      m.addLayer({id:this.id,type:"line",source:this.id,layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":this.options.color||"#087a3d","line-width":this.options.weight||6,"line-opacity":this.options.opacity==null?.9:this.options.opacity}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  bringToFront(){ return this; }
-  remove(){ if(!this._map) return; const m=this._map._map; try{if(m.getLayer(this.id))m.removeLayer(this.id);if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
-}
-
-class DVGeoJSONLayer{
-  constructor(feature,options={}){ this.feature=feature; this.options=options; this.id="dv-zone-"+Date.now()+"-"+Math.random().toString(36).slice(2); this._bounds=dvBoundsFromGeometry(feature&&feature.geometry); }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      const style=this.options.style||{};
-      const fillId=this.id+"-fill";
-      const lineId=this.id+"-line";
-      m.addSource(this.id,{type:"geojson",data:this.feature});
-      m.addLayer({id:fillId,type:"fill",source:this.id,paint:{"fill-color":style.fillColor||"#7acb91","fill-opacity":style.fillOpacity==null?.30:style.fillOpacity}});
-      m.addLayer({id:lineId,type:"line",source:this.id,paint:{"line-color":style.color||"#087a3d","line-width":style.weight||3,"line-opacity":1}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  getBounds(){
-    const b=this._bounds;
-    return {isValid:()=>!!b,_dv:b};
-  }
-  remove(){ if(!this._map)return; const m=this._map._map; try{if(m.getLayer(this.id+"-fill"))m.removeLayer(this.id+"-fill");if(m.getLayer(this.id+"-line"))m.removeLayer(this.id+"-line");if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
-}
-
-class DVMap{
-  constructor(){
-    this._map=new maplibregl.Map({
-      container:"map",
-      style:"https://tiles.openfreemap.org/styles/liberty",
-      center:[-58.3809,-34.7777],
-      zoom:13,
-      pitch:0,
-      bearing:0,
-      antialias:true,
-      dragRotate:true,
-      touchZoomRotate:true,
-      touchPitch:true,
-      pitchWithRotate:true,
-      attributionControl:true
-    });
-
-    this._map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-left");
-    this._map.addControl(new DVPitchControl(),"top-left");
-
-    this._map.on("load",()=>{
-      dvMapReady=true;
-      dvMejorarEtiquetasCalles();
-        while(dvMapPending.length) dvMapPending.shift()();
-    });
-
-    this._map.on("rotate",()=>{
-      if(recorridoMarker) recorridoMarker.updateScreenRotation();
-    });
-  }
-  on(event,fn){
-    this._map.on(event,fn); return this;
-  }
-  setView(latlng,zoom,options={}){
-    const center=[latlng[1],latlng[0]];
-    const action=options&&options.animate?"easeTo":"jumpTo";
-    this._map[action]({center,zoom}); return this;
-  }
-  panTo(latlng,options={}){
-    this._map.easeTo({center:[latlng[1],latlng[0]],duration:options.duration?options.duration*1000:450}); return this;
-  }
-  fitBounds(bounds,options={}){
-    if(!bounds || !bounds._dv) return this;
-    this._map.fitBounds([bounds._dv.sw,bounds._dv.ne],{padding:options.padding||25,duration:500}); return this;
-  }
-  removeLayer(layer){ if(layer&&typeof layer.remove==="function") layer.remove(); return this; }
-  setBearing(b){ this._map.easeTo({bearing:Number(b)||0,duration:300}); return this; }
-  getBearing(){ return this._map.getBearing(); }
-  setPitch(p){ this._map.easeTo({pitch:Math.max(0,Math.min(70,Number(p)||0)),duration:300}); return this; }
-  getPitch(){ return this._map.getPitch(); }
-}
-
-class DVPitchControl{
-  onAdd(mapInstance){
-    this._map=mapInstance;
-    const c=document.createElement("div"); c.className="maplibregl-ctrl maplibregl-ctrl-group dv-pitch-control";
-    c.innerHTML='<button type="button" title="Inclinar mapa">▲</button><button type="button" title="Bajar mapa">▼</button><button type="button" title="Vista 3D / Norte">3D</button>';
-    const [up,down,threeD]=c.querySelectorAll("button");
-    up.onclick=()=>this._map.easeTo({pitch:Math.min(70,this._map.getPitch()+10),duration:250});
-    down.onclick=()=>this._map.easeTo({pitch:Math.max(0,this._map.getPitch()-10),duration:250});
-    threeD.onclick=()=>this._map.easeTo({pitch:this._map.getPitch()>5?0:45,duration:350});
-    this._container=c; return c;
-  }
-  onRemove(){this._container?.parentNode?.removeChild(this._container); this._map=undefined;}
-}
-
-function dvMejorarEtiquetasCalles(){
-  try{
-    const m=map._map;
-    const layers=(m.getStyle().layers||[]);
-    layers.forEach(layer=>{
-      const id=String(layer.id||"").toLowerCase();
-      if(layer.type!=="symbol" || !layer.layout || !layer.layout["text-field"]) return;
-      if(!(id.includes("road")||id.includes("street")||id.includes("highway")||id.includes("path")||id.includes("transport"))) return;
-      const size=layer.layout["text-size"];
-      if(typeof size==="number") m.setLayoutProperty(layer.id,"text-size",size*1.25);
-      else if(size) m.setLayoutProperty(layer.id,"text-size",["*",size,1.25]);
-    });
-  }catch(e){ console.warn("Etiquetas 25%:",e); }
-}
-
-
-const map = new DVMap();
-
-/* Compatibilidad mínima con el código existente. */
-const L={
-  layerGroup:()=>new DVLayerGroup(),
-  divIcon:opts=>opts,
-  marker:(pos,opts)=>new DVMarker(pos,opts),
-  polyline:(points,opts)=>new DVPolyline(points,opts),
-  geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
-};
-
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-
-/* =====================================================
-   MARCADORES DE RECLAMOS + MAPA GIRATORIO
-   DIA VERDE
-===================================================== */
-let reclamosMarkersLayer = null;
-let mapaRotacion = 0;
-let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
-
-function asegurarCapaReclamos(){
-  if(!map) return null;
-  if(!reclamosMarkersLayer){
-    reclamosMarkersLayer = L.layerGroup().addTo(map);
-  }
-  return reclamosMarkersLayer;
-}
-
-function escaparHTML(valor){
-  return String(valor ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-}
-
-function iconoReclamoMedioAmbiente(estado){
-  const s = String(estado || "").toLowerCase();
-  let clase = "pendiente";
-  let simbolo = "♻";
-
-  if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
-    clase = "realizado";
-  }else if(s.includes("suspend")){
-    clase = "suspendido";
-  }else if(s.includes("espera") || s.includes("definir")){
-    clase = "amarillo";
-  }else if(s.includes("rechaz") || s.includes("anulad")){
-    clase = "rojo";
-  }
-
-  return L.divIcon({
-    className:"dv-reclamo-icon",
-    html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
-    iconSize:[36,44],
-    iconAnchor:[18,43],
-    popupAnchor:[0,-40]
-  });
-}
-
-function popupReclamoMedioAmbiente(d){
-  const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
-
-  // El estado visual se toma del histórico real de evidencias.
-  // Así, cuando se registra un reclamo, el popup cambia a "Realizado".
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-
-  const estado = realizado ? "Realizado" : "Pendiente";
-
-  return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
-      (realizado ? '🟢 ' : '⚪ ')+
-      escaparHTML(estado)+
-    '</div>'+
-    '</div>';
-}
-
-function obtenerLatLngReclamo(d){
-  const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
-  const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
-  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
-    return [lat,lng];
-  }
-  return null;
-}
-
-/*
- * Agrega un reclamo al mapa cuando el registro ya trae coordenadas.
- * Si el Sheet todavía no tiene lat/lng, no inventamos una posición.
- */
-function agregarMarcadorReclamo(d){
-  const pos = obtenerLatLngReclamo(d);
-  if(!pos) return null;
-
-  const layer = asegurarCapaReclamos();
-  if(!layer) return null;
-
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-
-  const estado = realizado ? "Realizado" : "Pendiente";
-
-  const marker = L.marker(pos,{
-    icon:iconoReclamoMedioAmbiente(estado),
-    zIndexOffset:100
-  });
-
-  marker.__dvReclamoData = d;
-  marker.bindPopup(popupReclamoMedioAmbiente(d));
-  marker.addTo(layer);
-  return marker;
-}
-
-function refrescarEstadosMarcadoresReclamos(){
-  if(!reclamosMarkersLayer) return;
-
-  reclamosMarkersLayer.eachLayer(marker => {
-    const d = marker.__dvReclamoData;
-    if(!d) return;
-
-    const realizado = typeof estaRealizadaHoy === "function"
-      ? estaRealizadaHoy(d)
-      : false;
-
-    marker.setIcon(
-      iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
-    );
-    marker.setPopupContent(popupReclamoMedioAmbiente(d));
-  });
-}
-
-function limpiarMarcadoresReclamos(){
-  if(reclamosMarkersLayer){
-    reclamosMarkersLayer.clearLayers();
-  }
-}
-
-/*
- * Permite pasar cualquier array de reclamos a la capa.
- * Se usa solamente si el render existente dispone de coordenadas.
- */
-function mostrarMarcadoresReclamos(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)) return;
-
-  lista.forEach(d => agregarMarcadorReclamo(d));
-}
-
-function cargarCacheGeocoding(){
-  try{
-    return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
-  }catch(e){
-    return {};
-  }
-}
-
-function guardarCacheGeocoding(cache){
-  try{
-    localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
-  }catch(e){}
-}
-
-function claveGeocoding(d){
-  return normalizar(
-    `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
-  );
-}
-
-async function geocodificarDireccion(d){
-  const directa=obtenerLatLngReclamo(d);
-  if(directa) return directa;
-
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
-  }
-
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
-
-  try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
-    return [lat,lng];
-  }catch(error){
-    console.warn("Geocodificación:",q,error);
-    return null;
-  }
-}
-
-async function mostrarMarcadoresGeocodificados(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)||!lista.length) return;
-
-  const generacion=++geocodingGeneration;
-  const capa=asegurarCapaReclamos();
-  if(!capa) return;
-
-  // Primero mostramos inmediatamente los que ya tengan coordenadas/cache.
-  const pendientes=[];
-  for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
-      agregarMarcadorReclamo(d);
-    }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
-      if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
-      }else{
-        pendientes.push(d);
-      }
-    }
-  }
-
-  // Geocodificación progresiva para no congelar la aplicación.
-  const limite=3;
-  let indice=0;
-
-  async function trabajador(){
-    while(indice<pendientes.length){
-      if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-
-      if(generacion!==geocodingGeneration) return;
-
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
-      }
-      // Pequeña pausa para no saturar el servicio de geocodificación.
-      await new Promise(r=>setTimeout(r,350));
-    }
-  }
-
-  await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
-  );
-}
-
-/* ---------- Rotación / inclinación del mapa ---------- */
-function resetearRotacionMapa(){
-  if(map && map._map){
-    map._map.easeTo({bearing:0,pitch:0,duration:350});
-  }
-}
+).addTo(map);
 
 
 /* =====================================================
@@ -1889,32 +1631,50 @@ document.getElementById(
 }
 
 /* =====================================================
-   RECORRIDO GPS - WEB APP / PWA
-   Usa el GPS del navegador sin interferir con las
-   evidencias. Guarda puntos localmente durante el día.
+   RECORRIDO GPS
 ===================================================== */
-
 function guardarRecorridoLocal(){
-  try{
-    localStorage.setItem(
-      getRouteStorageKey(),
-      JSON.stringify({
-        activo:recorridoActivo,
-        zona:recorridoZona,
-        inicio:recorridoInicio,
-        puntos:recorridoPuntos
-      })
-    );
-  }catch(error){
-    console.error("Guardar recorrido:",error);
-  }
+  try{localStorage.setItem(ROUTE_STORAGE_KEY,JSON.stringify({activo:recorridoActivo,zona:recorridoZona,inicio:recorridoInicio,puntos:recorridoPuntos}));}catch(error){console.error(error);}
 }
+function borrarRecorridoLocal(){try{localStorage.removeItem(ROUTE_STORAGE_KEY);}catch(error){console.error(error);}}
+function dibujarRecorrido(){
+  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;}
+  if(recorridoPuntos.length<2)return;
+  recorridoLayer=L.polyline(recorridoPuntos.map(p=>[p.lat,p.lng]),{color:"#087a3d",weight:6,opacity:.9,lineCap:"round",lineJoin:"round"}).addTo(map);
+  recorridoLayer.bringToFront();
+}
+function actualizarEstadoRecorrido(texto,activo=false){routeStatus.innerHTML=texto;
+  routeStatus.classList.toggle("active",activo);}
+function actualizarBotonesRecorrido(){const hayZona=!!selectedZone;startRoute.disabled=!hayZona||recorridoActivo;stopRoute.disabled=!recorridoActivo;}
+function mostrarPosicionRecorrido(lat,lng,precision){
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-function borrarRecorridoLocal(){
-  try{
-    localStorage.removeItem(getRouteStorageKey());
-  }catch(error){
-    console.error("Borrar recorrido:",error);
+  if(recorridoMarker){
+    recorridoMarker.setLatLng([lat,lng]);
+    recorridoMarker.bringToFront();
+  }else{
+    recorridoMarker=L.circleMarker(
+      [lat,lng],
+      {
+        radius:9,
+        color:"#ffffff",
+        weight:3,
+        fillColor:"#087a3d",
+        fillOpacity:1
+      }
+    ).addTo(map);
+    recorridoMarker.bindTooltip("🚛 Vehículo",{permanent:false});
+  }
+
+  // Centrar solamente al recibir la primera posición.
+  if(recorridoPuntos.length===1){
+    map.setView([lat,lng],Math.max(map.getZoom(),16),{animate:true});
+  }
+
+  if(precision){
+    recorridoMarker.bindPopup(
+      "🚛 <strong>Vehículo</strong><br>📍 GPS del teléfono<br>📡 Precisión ±"+Math.round(precision)+" m"
+    );
   }
 }
 
@@ -1924,388 +1684,99 @@ function distanciaMetros(a,b){
   const p2=b.lat*Math.PI/180;
   const dp=(b.lat-a.lat)*Math.PI/180;
   const dl=(b.lng-a.lng)*Math.PI/180;
-  const x=
-    Math.sin(dp/2)**2+
+  const x=Math.sin(dp/2)**2+
     Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
   return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-function dibujarRecorrido(){
-  if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
-    recorridoLayer=null;
-  }
-
-  if(recorridoPuntos.length<2)return;
-
-  recorridoLayer=L.polyline(
-    recorridoPuntos.map(p=>[p.lat,p.lng]),
-    {
-      color:"#087a3d",
-      weight:6,
-      opacity:.9,
-      lineCap:"round",
-      lineJoin:"round"
-    }
-  ).addTo(map);
-
-  recorridoLayer.bringToFront();
-}
-
-function actualizarEstadoRecorrido(texto,activo=false){
-  routeStatus.innerHTML=texto;
-  routeStatus.classList.toggle("active",activo);
-}
-
-function actualizarBotonesRecorrido(){
-  const hayZona=!!selectedZone;
-  startRoute.disabled=!hayZona||recorridoActivo;
-  stopRoute.disabled=!recorridoActivo;
-}
-
-function normalizarRumbo(grados){
-  let r=Number(grados);
-  if(!Number.isFinite(r)) return null;
-  r=((r%360)+360)%360;
-  return r;
-}
-
-function suavizarRumbo(nuevo){
-  nuevo=normalizarRumbo(nuevo);
-  if(nuevo===null) return recorridoHeading;
-
-  if(recorridoHeading===null){
-    recorridoHeading=nuevo;
-    return recorridoHeading;
-  }
-
-  let delta=((nuevo-recorridoHeading+540)%360)-180;
-
-  // Ignora pequeñas oscilaciones del GPS.
-  if(Math.abs(delta)<4) return recorridoHeading;
-
-  // Suavizado: evita que el vehículo pegue giros bruscos.
-  recorridoHeading=normalizarRumbo(
-    recorridoHeading + delta*0.35
-  );
-
-  return recorridoHeading;
-}
-
-function crearIconoVehiculo(rumbo){
-  const rot=normalizarRumbo(rumbo);
-  return L.divIcon({
-    className:"dia-verde-vehiculo-icon",
-    html:
-      '<div class="dv-truck-3d" style="transform:rotate('+(rot===null?0:rot)+'deg);">'+
-        '<svg viewBox="0 0 86 70" width="58" height="58" aria-label="Vehículo DIA VERDE">'+
-          '<defs><linearGradient id="dvTruckTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eaff72"/><stop offset="1" stop-color="#7bcf3a"/></linearGradient><linearGradient id="dvTruckSide" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#58a92d"/><stop offset="1" stop-color="#23731f"/></linearGradient></defs>'+
-          '<path d="M9 22 43 7 76 22 43 38Z" fill="url(#dvTruckTop)" stroke="#145b22" stroke-width="2"/>'+
-          '<path d="M9 22v27l34 18V38Z" fill="#36a52b" stroke="#145b22" stroke-width="2"/>'+
-          '<path d="M43 38v29l33-18V22Z" fill="url(#dvTruckSide)" stroke="#145b22" stroke-width="2"/>'+
-          '<path d="M51 27 69 21v17l-18 6Z" fill="#bfe7f2" stroke="#145b22" stroke-width="1.5"/>'+
-          '<circle cx="24" cy="51" r="6" fill="#222" stroke="#fff" stroke-width="2"/><circle cx="58" cy="51" r="6" fill="#222" stroke="#fff" stroke-width="2"/>'+
-          '<path d="M15 35 36 45v8L15 42Z" fill="#f6f6f6" opacity=".85"/>'+
-        '</svg>'+ 
-      '</div>',
-    iconSize:[58,58],
-    iconAnchor:[29,29]
-  });
-}
-
-function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
-
-  const heading=recorridoHeading;
-
-  if(forzarZoom){
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-    map._map.easeTo({
-      center:[lng,lat],
-      zoom:18,
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
-      pitch:45,
-      duration:800
-    });
-    return;
-  }
-
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map._map.easeTo({
-      center:[lng,lat],
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
-      pitch:45,
-      duration:450
-    });
-  }
-}
-
-function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
-  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-
-  const heading=suavizarRumbo(rumbo);
-
-  if(recorridoMarker) recorridoMarker._heading=heading;
-
-  if(!recorridoMarker){
-    recorridoMarker=L.marker(
-      [lat,lng],
-      {
-        icon:crearIconoVehiculo(heading),
-        zIndexOffset:1000
-      }
-    ).addTo(map);
-
-    recorridoMarker.bindTooltip(
-      "🚛 Vehículo",
-      {permanent:false}
-    );
-    recorridoMarker._heading=heading;
-    recorridoMarker.updateScreenRotation();
-  }else{
-    recorridoMarker.setLatLng([lat,lng]);
-    if(heading!==null){
-      recorridoMarker.setIcon(crearIconoVehiculo(heading));
-    }
-    recorridoMarker.setZIndexOffset(1000);
-    recorridoMarker.bringToFront();
-    recorridoMarker.updateScreenRotation();
-  }
-
-  recorridoMarker.bindPopup(
-    "🚛 <strong>Vehículo</strong><br>"+
-    "📍 Ubicación GPS del teléfono<br>"+
-    "🌐 Lat: "+lat.toFixed(6)+"<br>"+
-    "🌐 Lng: "+lng.toFixed(6)+
-    (Number.isFinite(precision)
-      ? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
-      : "")+
-    (heading!==null
-      ? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
-      : "")
-  );
-
-  activarSeguimientoVisual(lat,lng,forzarZoom);
-}
-
 function registrarPuntoRecorrido(position){
   const c=position.coords;
-
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
-  const precision=Number(c.accuracy);
+  const precision=Number(c.accuracy||9999);
 
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)){
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+  // No usamos posiciones con error mayor a 80 m.
+  if(precision>80){
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>"+
+      "📡 GPS del teléfono: señal imprecisa (±"+Math.round(precision)+" m). Esperando una lectura mejor...",
+      true
+    );
     return;
   }
-
-  // Mostramos SIEMPRE la posición que entrega el teléfono.
-  // No descartamos la coordenada por un valor de accuracy alto.
-  mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
 
   const punto={
     lat:lat,
     lng:lng,
     hora:new Date().toISOString(),
-    precision:Number.isFinite(precision)?precision:null
+    precision:precision
   };
 
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
 
-  if(ultimo){
-    const distancia=distanciaMetros(ultimo,punto);
-    const ahora=Date.now();
-    const antes=new Date(ultimo.hora).getTime();
-    const segundos=Math.max(1,(ahora-antes)/1000);
-    const velocidad=distancia/segundos;
+  // Mostrar siempre la ubicación actual del teléfono.
+  mostrarPosicionRecorrido(lat,lng,precision);
 
-    // Evita registrar la misma posición repetidamente.
-    if(distancia<3){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
-      return;
-    }
-
-    // Solo descartamos saltos físicamente imposibles.
-    if(velocidad>50){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS recibido"+
-        "<br>⚠️ Salto de ubicación descartado"+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
-      return;
-    }
+  // No sumar puntos si prácticamente no hubo movimiento.
+  if(ultimo && distanciaMetros(ultimo,punto)<3){
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>"+
+      "📍 Posición GPS actualizada · Puntos registrados: "+recorridoPuntos.length+
+      "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
+      true
+    );
+    return;
   }
 
-  /*
-    CAMBIO CLAVE:
-    Ya NO descartamos el punto porque accuracy sea 150, 500 o 2000 m.
-    Si el navegador entrega una coordenada, la usamos.
-  */
   recorridoPuntos.push(punto);
-
   dibujarRecorrido();
   guardarRecorridoLocal();
 
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS activo · Puntos registrados: "+
-    recorridoPuntos.length+
-    "<br>🌐 Lat: "+lat.toFixed(6)+
-    " · Lng: "+lng.toFixed(6)+
-    "<br>📡 Precisión informada: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
+    "📍 GPS del teléfono conectado · Puntos registrados: "+recorridoPuntos.length+
+    "<br>📡 Precisión GPS: ±"+Math.round(precision)+" m",
     true
   );
 }
 
 function manejarErrorRecorrido(error){
-  console.error("GPS recorrido:",error);
-
-  let mensaje="⚠️ No se pudo obtener la ubicación.";
-
-  if(error&&error.code===1){
-    mensaje=
-      "⚠️ Permiso de ubicación denegado."+
-      "<br>Permití la ubicación para DIA VERDE.";
-  }else if(error&&error.code===2){
-    mensaje=
-      "⚠️ El dispositivo no pudo determinar la ubicación."+
-      "<br>Seguimos intentando.";
-  }else if(error&&error.code===3){
-    mensaje=
-      "⚠️ El GPS tardó demasiado en responder."+
-      "<br>Seguimos intentando.";
-  }
-
-  actualizarEstadoRecorrido(
-    mensaje+
-    (recorridoActivo
-      ? "<br>El recorrido continúa activo."
-      : ""),
-    recorridoActivo
-  );
+  console.error("GPS recorrido:",error);let mensaje="⚠️ No se pudo obtener la ubicación.";
+  if(error&&error.code===1)mensaje="⚠️ Permiso de ubicación denegado. Activá la ubicación del dispositivo para registrar el recorrido.";
+  else if(error&&error.code===2)mensaje="⚠️ No se pudo determinar la ubicación. Mové el vehículo a un lugar con mejor señal GPS.";
+  else if(error&&error.code===3)mensaje="⚠️ El GPS tardó demasiado en responder. Seguimos intentando.";
+  actualizarEstadoRecorrido(mensaje+(recorridoActivo?"<br>El recorrido continúa activo.":""),recorridoActivo);
 }
-
 function iniciarSeguimientoGPS(){
-  if(!navigator.geolocation){
-    actualizarEstadoRecorrido(
-      "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
-    );
-    return false;
-  }
-
-  if(recorridoWatchId!==null){
-    navigator.geolocation.clearWatch(recorridoWatchId);
-    recorridoWatchId=null;
-  }
-
-  /*
-    Pedimos primero una posición inmediata.
-    Esto es independiente de la evidencia.
-  */
-  navigator.geolocation.getCurrentPosition(
+  if(!navigator.geolocation){actualizarEstadoRecorrido("❌ Este dispositivo no permite obtener ubicación GPS.");return false;}
+  if(recorridoWatchId!==null)navigator.geolocation.clearWatch(recorridoWatchId);
+  recorridoWatchId=navigator.geolocation.watchPosition(
     registrarPuntoRecorrido,
     manejarErrorRecorrido,
     {
       enableHighAccuracy:true,
-      timeout:20000,
-      maximumAge:0
+      maximumAge:0,
+      timeout:15000
     }
   );
-
-  /*
-    Después mantenemos seguimiento continuo.
-  */
-  recorridoWatchId=
-    navigator.geolocation.watchPosition(
-      registrarPuntoRecorrido,
-      manejarErrorRecorrido,
-      {
-        enableHighAccuracy:true,
-        maximumAge:0,
-        timeout:20000
-      }
-    );
-
   return true;
 }
-
-let dvWakeLock=null;
-
-async function activarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
-  }catch(e){}
-  try{
-    if("wakeLock" in navigator && !dvWakeLock){
-      dvWakeLock=await navigator.wakeLock.request("screen");
-      dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
-    }
-  }catch(e){ console.warn("Wake Lock:",e); }
-}
-
-async function liberarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
-  }catch(e){}
-  try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
-}
-
 function iniciarRecorrido(){
-  if(!selectedZone){
-    alert("Primero seleccioná una zona.");
-    return;
-  }
-
-  if(recorridoActivo)return;
-
-  recorridoActivo=true;
-  recorridoHeading=null;
-  mapaSiguiendoVehiculo=true;
-  mapaUsuarioMovio=false;
-  recorridoZona=selectedZone;
-  recorridoInicio=new Date().toISOString();
-  recorridoPuntos=[];
-  activarPantallaEncendida();
-
-  if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
-    recorridoLayer=null;
-  }
-
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-
+  if(!selectedZone){alert("Primero seleccioná una zona.");return;} if(recorridoActivo)return;
+  recorridoActivo=true;recorridoZona=selectedZone;recorridoInicio=new Date().toISOString();recorridoPuntos=[];
+  if(recorridoLayer){map.removeLayer(recorridoLayer);recorridoLayer=null;} if(recorridoMarker){map.removeLayer(recorridoMarker);recorridoMarker=null;}
+  if(!iniciarSeguimientoGPS()){recorridoActivo=false;actualizarBotonesRecorrido();return;}
+  guardarRecorridoLocal();
   actualizarBotonesRecorrido();
-
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 Solicitando ubicación GPS del teléfono...",
+    "📍 Solicitando ubicación al GPS del teléfono...",
     true
   );
-
-  if(!iniciarSeguimientoGPS()){
-    recorridoActivo=false;
-    actualizarBotonesRecorrido();
-    return;
-  }
-
-  guardarRecorridoLocal();
   mostrarToast("🚛 Recorrido iniciado");
 }
-
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
 
@@ -2316,10 +1787,10 @@ function finalizarRecorrido(){
 
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
-
   recorridoActivo=false;
-  liberarPantallaEncendida();
 
+  /* El marcador verde representa la posición ACTUAL del vehículo.
+     Al finalizar, se elimina para no mostrar una ubicación vieja. */
   if(recorridoMarker){
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
@@ -2329,82 +1800,24 @@ function finalizarRecorrido(){
   actualizarBotonesRecorrido();
 
   actualizarEstadoRecorrido(
-    "✅ <strong>Recorrido finalizado</strong><br>"+
-    "Zona: "+esc(zonaFinal)+
-    "<br>📍 Puntos registrados: "+cantidad+
+    "✅ <strong>Recorrido finalizado</strong><br>Zona: "+
+    esc(zonaFinal)+
+    "<br>📍 Puntos registrados: "+
+    cantidad+
     "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
   );
 
   mostrarToast("✅ Recorrido finalizado");
 }
-
 function recuperarRecorrido(){
   try{
-    const guardado=
-      localStorage.getItem(getRouteStorageKey());
-
-    if(!guardado)return;
-
-    const estado=JSON.parse(guardado);
-
-    if(
-      !estado||
-      !estado.activo||
-      !estado.zona
-    )return;
-
-    const inicio=
-      estado.inicio
-      ?new Date(estado.inicio)
-      :null;
-
-    const ahora=new Date();
-
-    if(
-      !inicio||
-      inicio.toDateString()!==ahora.toDateString()
-    ){
-      borrarRecorridoLocal();
-      return;
-    }
-
-    recorridoActivo=true;
-    recorridoZona=estado.zona;
-    recorridoInicio=estado.inicio;
-    recorridoPuntos=
-      Array.isArray(estado.puntos)
-      ?estado.puntos
-      :[];
-
-    dibujarRecorrido();
-    actualizarBotonesRecorrido();
-
-    if(recorridoPuntos.length){
-      const ultimo=
-        recorridoPuntos[recorridoPuntos.length-1];
-
-      mostrarPosicionRecorrido(
-        ultimo.lat,
-        ultimo.lng,
-        ultimo.precision
-      );
-    }
-
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Recorrido recuperado: "+
-      recorridoPuntos.length+
-      " puntos.<br>"+
-      "El GPS continúa registrando nuevas posiciones.",
-      true
-    );
-
-    iniciarSeguimientoGPS();
-
-  }catch(error){
-    console.error("Recuperar recorrido:",error);
-    borrarRecorridoLocal();
-  }
+    const guardado=localStorage.getItem(ROUTE_STORAGE_KEY);if(!guardado)return;const estado=JSON.parse(guardado);if(!estado||!estado.activo||!estado.zona)return;
+    const inicio=estado.inicio?new Date(estado.inicio):null,ahora=new Date();
+    if(!inicio||inicio.toDateString()!==ahora.toDateString()){borrarRecorridoLocal();return;}
+    recorridoActivo=true;recorridoZona=estado.zona;recorridoInicio=estado.inicio;recorridoPuntos=Array.isArray(estado.puntos)?estado.puntos:[];dibujarRecorrido();actualizarBotonesRecorrido();
+    if(recorridoPuntos.length){const ultimo=recorridoPuntos[recorridoPuntos.length-1];mostrarPosicionRecorrido(ultimo.lat,ultimo.lng);}
+    actualizarEstadoRecorrido("🔴 <strong>Recorrido en curso</strong><br>📍 Recorrido recuperado: "+recorridoPuntos.length+" puntos.<br>El GPS continúa registrando cuando el dispositivo entregue una nueva posición.",true);iniciarSeguimientoGPS();
+  }catch(error){console.error(error);borrarRecorridoLocal();}
 }
 
 /* =====================================================
@@ -2898,11 +2311,8 @@ actualizarHora();
 if(selectedZone){
 
 render();
-refrescarEstadosMarcadoresReclamos();
 
 }
-
-refrescarEstadosMarcadoresReclamos();
 
 }
 )
@@ -2933,7 +2343,6 @@ statusText.textContent =
 if(selectedZone){
 
 render();
-refrescarEstadosMarcadoresReclamos();
 
 }
 
@@ -3365,10 +2774,6 @@ direcciones.slice(
 100
 );
 
-// Marcadores de reclamos de la zona seleccionada.
-// Se geocodifican una sola vez y luego quedan guardados en el teléfono.
-mostrarMarcadoresGeocodificados(todas);
-
 
 list.innerHTML =
 currentVisibleDirections
@@ -3690,44 +3095,69 @@ takeEvidence.style.display = "block";
    COMPRIMIR FOTO
 ===================================================== */
 
-function comprimirImagen(file){
+function comprimirImagen(
+file
+){
 
-return new Promise((resolve,reject) => {
+return new Promise(
+(resolve,reject) => {
 
-const reader = new FileReader();
+const reader =
+new FileReader();
 
-reader.onload = event => {
 
-const img = new Image();
+reader.onload =
+event => {
 
-img.onload = () => {
+const img =
+new Image();
 
-let width = img.naturalWidth || img.width;
-let height = img.naturalHeight || img.height;
 
-const maxWidth = 1000;
+img.onload =
+() => {
+
+let width =
+img.width;
+
+let height =
+img.height;
+
+
+const maxWidth =
+1400;
+
 
 if(width > maxWidth){
 
-height = Math.round(
-height * maxWidth / width
+height =
+height *
+maxWidth /
+width;
+
+width =
+maxWidth;
+
+}
+
+
+const canvas =
+document.createElement(
+"canvas"
 );
 
-width = maxWidth;
 
-}
+canvas.width =
+width;
 
-const canvas = document.createElement("canvas");
+canvas.height =
+height;
 
-canvas.width = width;
-canvas.height = height;
 
-const ctx = canvas.getContext("2d");
+const ctx =
+canvas.getContext(
+"2d"
+);
 
-if(!ctx){
-reject(new Error("No se pudo procesar la fotografía."));
-return;
-}
 
 ctx.drawImage(
 img,
@@ -3737,29 +3167,37 @@ width,
 height
 );
 
-const resultado = canvas.toDataURL(
+
+resolve(
+canvas.toDataURL(
 "image/jpeg",
-0.65
+0.78
+)
 );
 
-canvas.width = 1;
-canvas.height = 1;
+};
 
-resolve(resultado);
+
+img.onerror =
+reject;
+
+
+img.src =
+event.target.result;
 
 };
 
-img.onerror = reject;
 
-img.src = event.target.result;
+reader.onerror =
+reject;
 
-};
 
-reader.onerror = reject;
+reader.readAsDataURL(
+file
+);
 
-reader.readAsDataURL(file);
-
-});
+}
+);
 
 }
 
@@ -4274,7 +3712,6 @@ document.addEventListener(
 
 if(!document.hidden){
 
-if(recorridoActivo) activarPantallaEncendida();
 cargarEvidenciasHoy();
 
 }
@@ -4282,110 +3719,6 @@ cargarEvidenciasHoy();
 }
 );
 
-</script>
-
-
-<script id="diaverde-auth">
-/* ================= USUARIOS DIA VERDE =================
-   Opción 1: usuarios definidos localmente en el index.
-   Cambiá esta lista para agregar/quitar usuarios.
-========================================================= */
-const DV_USUARIOS = [
-  { usuario:"admin",  password:"diaverde2026", nombre:"Administrador" },
-  { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
-  { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
-];
-
-const DV_SESSION_KEY = "diaVerdeSesionV1";
-const DV_USER_KEY = "diaVerdeUsuarioV1";
-
-function dvUsuarioActual(){
-  try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
-  catch(e){ return null; }
-}
-
-function dvMostrarAplicacion(usuario){
-  const overlay = document.getElementById("dvLoginOverlay");
-  const bar = document.getElementById("dvUserBar");
-  const name = document.getElementById("dvUserName");
-  if(overlay) overlay.style.display = "none";
-  if(bar) bar.style.display = "flex";
-  if(name) name.textContent = usuario.nombre || usuario.usuario;
-}
-
-function dvMostrarLogin(){
-  const overlay = document.getElementById("dvLoginOverlay");
-  const bar = document.getElementById("dvUserBar");
-  if(overlay) overlay.style.display = "flex";
-  if(bar) bar.style.display = "none";
-}
-
-function dvIniciarSesion(){
-  const user = (document.getElementById("dvLoginUser").value || "").trim();
-  const pass = document.getElementById("dvLoginPass").value || "";
-  const error = document.getElementById("dvLoginError");
-
-  const encontrado = DV_USUARIOS.find(
-    u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass
-  );
-
-  if(!encontrado){
-    if(error) error.textContent = "Usuario o contraseña incorrectos.";
-    return;
-  }
-
-  localStorage.setItem(DV_SESSION_KEY, "1");
-  localStorage.setItem(DV_USER_KEY, JSON.stringify({
-    usuario: encontrado.usuario,
-    nombre: encontrado.nombre
-  }));
-
-  if(error) error.textContent = "";
-  dvMostrarAplicacion(encontrado);
-
-  // Recuperar estado ya guardado sin alterar CGM/zonas/reclamos.
-  try {
-    if(typeof recuperarRecorrido === "function") recuperarRecorrido();
-  } catch(e) {
-    console.error("Recuperación de recorrido:", e);
-  }
-}
-
-function dvCerrarSesion(){
-  localStorage.removeItem(DV_SESSION_KEY);
-  localStorage.removeItem(DV_USER_KEY);
-  dvMostrarLogin();
-  const u = document.getElementById("dvLoginUser");
-  const p = document.getElementById("dvLoginPass");
-  if(u) u.value = "";
-  if(p) p.value = "";
-  if(u) u.focus();
-}
-
-function dvComprobarSesion(){
-  const sesion = localStorage.getItem(DV_SESSION_KEY);
-  const usuario = dvUsuarioActual();
-  if(sesion === "1" && usuario){
-    dvMostrarAplicacion(usuario);
-  }else{
-    dvMostrarLogin();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-  const btn = document.getElementById("dvLoginBtn");
-  const logout = document.getElementById("dvLogout");
-  const pass = document.getElementById("dvLoginPass");
-
-  if(btn) btn.addEventListener("click", dvIniciarSesion);
-  if(logout) logout.addEventListener("click", dvCerrarSesion);
-
-  if(pass) pass.addEventListener("keydown", function(e){
-    if(e.key === "Enter") dvIniciarSesion();
-  });
-
-  dvComprobarSesion();
-});
 </script>
 
 </body>
