@@ -55,38 +55,18 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 
 
 
-<style id="dv-navigation-mode">
-/* Modo navegación: agranda el mapa sin ocultar el resto de la WebApp. */
-.map-card{position:relative}
-.map-wrap{position:relative;width:100%;height:clamp(520px,70vh,760px)}
-#map{width:100%;height:100%;min-height:520px;border-radius:14px;overflow:hidden}
-#dvCenterButton{
-  position:absolute!important;
-  right:16px!important;
-  bottom:18px!important;
-  z-index:10000!important;
-  display:none;
-  padding:12px 18px!important;
-  border:0!important;
-  border-radius:24px!important;
-  font-size:15px!important;
-  font-weight:800!important;
-  line-height:1!important;
-  background:#087a3d!important;
-  color:#fff!important;
-  box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
-  cursor:pointer!important;
-}
-#dvCenterButton.dv-visible{display:block!important}
-@media(max-width:600px){
-  .map-wrap{height:68vh;min-height:460px;max-height:none}
-  #map{min-height:460px}
-  .map-card{padding:10px}
-  .card-title{margin-bottom:10px}
-  #dvCenterButton{right:12px!important;bottom:14px!important}
-}
-</style>
 
+
+<style id="dv-navigation-pro-css">
+.map-card{position:relative;}
+.map-wrap{position:relative;width:100%;height:clamp(500px,64vh,760px);overflow:hidden;border-radius:14px;}
+#map{width:100%;height:100%;min-height:0;border-radius:14px;overflow:hidden;}
+#dvCenterButton{position:absolute!important;right:14px!important;bottom:18px!important;z-index:2147483647!important;display:none!important;border:0!important;border-radius:999px!important;padding:11px 17px!important;font-size:15px!important;font-weight:800!important;line-height:1!important;background:#087a3d!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.30)!important;cursor:pointer!important;}
+#dvCenterButton.dv-visible{display:block!important;}
+.route-controls{margin-top:12px!important;display:flex!important;gap:10px!important;flex-wrap:wrap!important;align-items:center!important;}
+.route-status{margin-top:12px!important;}
+@media(max-width:600px){.map-card{padding:10px!important;}.map-wrap{height:64vh;min-height:500px;max-height:760px;}.route-btn{min-height:52px!important;font-size:14px!important;}}
+</style>
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -210,7 +190,6 @@ Esperando datos...
 </aside>
 <section>
 <div class="card map-card">
-<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div class="card-title">
 <div class="card-title-icon">
 🗺️
@@ -225,18 +204,19 @@ Seleccioná una zona para visualizar su área.
 </div>
 </div>
 <div class="map-wrap">
+<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div
 class="zone-badge"
 id="zoneBadge"
 style="display:none"
 ></div>
 <div id="map"></div>
+</div>
 <div class="route-controls">
 <button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
 <button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button>
+</div>
 <div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div>
-</div>
-</div>
 </div>
 <div class="card results">
 <div class="results-head">
@@ -486,7 +466,10 @@ class DVMarker{
     this._element.style.pointerEvents="auto";
     this._element.style.cursor="pointer";
     this._setIcon(options.icon || {html:"",className:"",iconSize:[36,36],iconAnchor:[18,18]});
-    this._marker=new maplibregl.Marker({element:this._element,anchor:"center"}).setLngLat([latlng[1],latlng[0]]);
+    const size=options.icon&&options.icon.iconSize ? options.icon.iconSize : [36,36];
+     const anchorPx=options.icon&&options.icon.iconAnchor ? options.icon.iconAnchor : [size[0]/2,size[1]/2];
+     const anchor=Math.abs(anchorPx[0]-size[0]/2)<2 && anchorPx[1]>=size[1]-2 ? "bottom" : "center";
+     this._marker=new maplibregl.Marker({element:this._element,anchor:anchor}).setLngLat([latlng[1],latlng[0]]);
   }
   _setIcon(icon){
     this._icon=icon;
@@ -1030,29 +1013,27 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng) || !map._map) return;
   const heading=recorridoHeading;
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
+  }
+  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    const h=map._map.getContainer().clientHeight||600;
+    const padding={top:0,right:0,bottom:Math.round(h*.24),left:0};
     map._map.easeTo({
       center:[lng,lat],
       zoom:18,
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
+      bearing:Number.isFinite(heading)?heading:map._map.getBearing(),
       pitch:45,
-      duration:800
-    });
-    return;
-  }
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map._map.easeTo({
-      center:[lng,lat],
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
-      pitch:45,
-      duration:450
+      padding:padding,
+      duration:forzarZoom?700:450,
+      essential:true
     });
   }
 }
+
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
   if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
   const heading=suavizarRumbo(rumbo);
@@ -2569,95 +2550,6 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 
-(function(){
-  const dvCenterButton = document.getElementById("dvCenterButton");
-  let dvUserMovedMap = false;
-  let dvLastNativeLocation = null;
-
-  function dvShowCenterButton(){
-    if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
-    dvUserMovedMap = true;
-  }
-
-  function dvHideCenterButton(){
-    if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
-    dvUserMovedMap = false;
-  }
-
-  function dvCenterOnVehicle(){
-    const p = dvLastNativeLocation;
-    if(!p || !window.map) return;
-
-    try{
-      const center = [Number(p.lng), Number(p.lat)];
-
-      if(typeof window.map.stop === "function") window.map.stop();
-
-      if(typeof window.map.easeTo === "function"){
-        window.map.easeTo({
-          center:center,
-          zoom:16.8,
-          pitch:45,
-          bearing:Number(p.bearing || 0),
-          duration:450,
-          essential:true
-        });
-      }else{
-        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
-        if(typeof window.map.setPitch === "function") window.map.setPitch(45);
-        if(typeof window.map.setBearing === "function") window.map.setBearing(Number(p.bearing || 0));
-      }
-
-      dvHideCenterButton();
-    }catch(e){}
-  }
-
-  if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
-
-  window.dvRegisterNativeLocationForCenter = function(p){
-    if(p) dvLastNativeLocation = p;
-  };
-
-  function dvWatchMapInteraction(){
-    if(!window.map || typeof window.map.on !== "function") return false;
-
-    if(!window.__dvCenterInteractionBound){
-      window.__dvCenterInteractionBound = true;
-
-      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
-        window.map.on(ev, dvShowCenterButton);
-      });
-    }
-    return true;
-  }
-
-  let tries = 0;
-  const timer = setInterval(function(){
-    if(dvWatchMapInteraction() || ++tries > 40) clearInterval(timer);
-  },250);
-
-  window.dvCenterOnVehicle = dvCenterOnVehicle;
-})();
-
-
-
-(function(){
-  if(window.__dvNativeCenterBridgeInstalled) return;
-  window.__dvNativeCenterBridgeInstalled = true;
-
-  const oldOnNativeLocation = window.onNativeLocation;
-  window.onNativeLocation = function(p){
-    try{
-      if(window.dvRegisterNativeLocationForCenter){
-        window.dvRegisterNativeLocationForCenter(p);
-      }
-    }catch(e){}
-    if(typeof oldOnNativeLocation === "function"){
-      return oldOnNativeLocation.apply(this, arguments);
-    }
-  };
-})();
-
 </script>
 
 <script>
@@ -2731,112 +2623,54 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
-<script id="dv-navigation-location-bridge">
-(function(){
-  if(window.__dvNavigationBridgeInstalled)return;
-  window.__dvNavigationBridgeInstalled=true;
-
-  const old=window.onNativeLocation;
-  window.onNativeLocation=function(p){
-    try{
-      if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p);
-    }catch(e){}
-    if(typeof old==="function")return old.apply(this,arguments);
-  };
-})();
-</script>
 
 
-<script id="dv-navigation-mode-js">
+
+<script id="dv-navigation-pro-js">
 (function(){
   let last=null;
   let bound=false;
-
-  function mapReady(){
-    return window.map && typeof window.map.on==="function";
-  }
-
-  function showCenter(){
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.add("dv-visible");
-  }
-
-  function hideCenter(){
+  function getMap(){return window.map||null;}
+  function centerVehicle(){
+    const map=getMap();
+    if(!map||!map._map||!last)return;
+    const lat=Number(last.lat),lng=Number(last.lng);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    const bearing=Number.isFinite(Number(last.bearing))?Number(last.bearing):map._map.getBearing();
+    const h=map._map.getContainer().clientHeight||600;
+    map._map.stop();
+    map._map.easeTo({center:[lng,lat],zoom:18,bearing:bearing,pitch:45,padding:{top:0,right:0,bottom:Math.round(h*.24),left:0},duration:500,essential:true});
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
     const b=document.getElementById("dvCenterButton");
     if(b)b.classList.remove("dv-visible");
   }
-
-  function centerVehicle(){
-    if(!last || !window.map)return;
-    const center=[Number(last.lng),Number(last.lat)];
-    const bearing=Number(last.bearing||0);
-
-    try{
-      if(typeof window.map.stop==="function")window.map.stop();
-      if(typeof window.map.easeTo==="function"){
-        window.map.easeTo({
-          center:center,
-          zoom:17,
-          pitch:45,
-          bearing:bearing,
-          duration:500,
-          essential:true
-        });
-      }else{
-        window.map.setCenter(center);
-        window.map.setZoom(17);
-        window.map.setPitch(45);
-        window.map.setBearing(bearing);
-      }
-      hideCenter();
-    }catch(e){}
+  function showCenter(){
+    if(typeof recorridoActivo!=="undefined"&&!recorridoActivo)return;
+    const b=document.getElementById("dvCenterButton");
+    if(b)b.classList.add("dv-visible");
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
   }
-
-  window.dvRegisterNativeLocationForCenter=function(p){
-    if(p){
-      last=p;
-      window.__dvLastNavigationLocation=p;
-    }
-  };
-  window.dvCenterOnVehicle=centerVehicle;
-
   function bind(){
-    if(bound || !mapReady())return false;
+    const map=getMap();
+    if(!map||typeof map.on!=="function")return false;
+    if(bound)return true;
     bound=true;
-
-    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
-      window.map.on(ev,showCenter);
-    });
-
+    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(ev=>map.on(ev,showCenter));
     const b=document.getElementById("dvCenterButton");
     if(b)b.addEventListener("click",centerVehicle);
     return true;
   }
-
-  let tries=0;
-  const timer=setInterval(function(){
-    if(bind() || ++tries>80)clearInterval(timer);
-  },250);
-})();
-</script>
-
-
-<script id="dv-navigation-native-bridge">
-(function(){
-  if(window.__dvNavigationNativeBridgeInstalled)return;
-  window.__dvNavigationNativeBridgeInstalled=true;
-
+  window.dvRegisterNativeLocationForCenter=function(p){if(p)last=p;};
   const previous=window.onNativeLocation;
   window.onNativeLocation=function(p){
-    try{
-      if(window.dvRegisterNativeLocationForCenter)
-        window.dvRegisterNativeLocationForCenter(p);
-    }catch(e){}
-    if(typeof previous==="function")
-      return previous.apply(this,arguments);
+    if(p)last=p;
+    if(typeof previous==="function")return previous.apply(this,arguments);
   };
+  const timer=setInterval(function(){if(bind())clearInterval(timer);},200);
+  window.dvCenterOnVehicle=centerVehicle;
 })();
 </script>
-
 </body>
 </html>
