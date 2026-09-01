@@ -38,7 +38,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 .dv-reclamo-pin{width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));}.dv-reclamo-pin::before{content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;border:3px solid #fff;box-sizing:border-box;}.dv-reclamo-pin span{position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;}.dv-reclamo-pin.realizado::before{background:#66bb6a}.dv-reclamo-pin.suspendido::before{background:#8d6e63}.dv-reclamo-pin.amarillo::before{background:#f9a825}.dv-reclamo-pin.rojo::before{background:#c62828}.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
 </style>
 <style id="dia-verde-map-3d-css">
-.dv-truck-3d{width:52px;height:52px;display:flex;align-items:center;justify-content:center;filter:none;transform-origin:center center;transition:transform .25s ease}.dv-map-marker{will-change:transform}.dv-pitch-control button{font-weight:900;font-size:13px}.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
+.dv-navigation-arrow{width:52px;height:52px;display:flex;align-items:center;justify-content:center;filter:none;transform-origin:center center;transition:transform .25s ease}.dv-map-marker{will-change:transform}.dv-pitch-control button{font-weight:900;font-size:13px}.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
 </style>
 
 <style id="dv-map-pins-fix">
@@ -60,6 +60,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 .map-card{position:relative}
 .map-wrap{position:relative;width:100%;height:clamp(520px,70vh,760px)}
 #map{width:100%;height:100%;min-height:520px;border-radius:14px;overflow:hidden}
+.route-controls{position:relative;z-index:2;margin-top:12px}
 #dvCenterButton{
   position:absolute!important;
   right:16px!important;
@@ -88,7 +89,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   pointer-events:auto;
 }
 .maplibregl-marker.dv-map-marker > .dv-reclamo-pin,
-.maplibregl-marker.dv-map-marker > .dv-truck-3d{
+.maplibregl-marker.dv-map-marker > .dv-navigation-arrow{
   pointer-events:auto;
 }
 @media(max-width:600px){
@@ -223,7 +224,6 @@ Esperando datos...
 </aside>
 <section>
 <div class="card map-card">
-<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
 <div class="card-title">
 <div class="card-title-icon">
 🗺️
@@ -244,6 +244,8 @@ id="zoneBadge"
 style="display:none"
 ></div>
 <div id="map"></div>
+<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
+</div>
 <div class="route-controls">
 <button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
 <button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button>
@@ -761,11 +763,43 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+function dvUsuarioManipuloMapa(e){
+  return !!(e && e.originalEvent);
+}
+map.on("dragstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("rotatestart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("pitchstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let mapaSiguiendoVehiculo = false;
+let mapaUsuarioMovio = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1126,47 +1160,44 @@ function suavizarRumbo(nuevo){
 }
 function crearIconoVehiculo(rumbo){
   const rot=normalizarRumbo(rumbo);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="52" height="52" aria-label="Camión reciclable">'+
-    '<g transform="translate(8 5)" stroke="#14532d" stroke-width="2" stroke-linejoin="round">'+
-    '<path fill="#27ae60" d="M8 10h32v34H8z"/>'+
-    '<path fill="#4ade80" d="M12 14h24v7H12z" stroke="none"/>'+
-    '<path fill="#16a34a" d="M40 23h9l7 8v13H40z"/>'+
-    '<path fill="#c7f9dc" d="M43 26h6l4 5h-10z"/>'+
-    '<text x="24" y="37" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#fff" stroke="none">♻</text>'+
-    '<circle fill="#222" cx="17" cy="49" r="5"/><circle fill="#222" cx="46" cy="49" r="5"/>'+
-    '</g></svg>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="54" height="54" aria-label="Posición del vehículo">'+
+    '<path d="M32 4 L52 54 L32 43 L12 54 Z" fill="#19a85b" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>'+
+    '<path d="M32 10 L44 45 L32 38 L20 45 Z" fill="#39d477"/>'+
+    '</svg>';
   return L.divIcon({
     className:"dia-verde-vehiculo-icon",
-    html:'<div class="dv-truck-3d" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
-    iconSize:[52,52],
-    iconAnchor:[26,26]
+    html:'<div class="dv-navigation-arrow" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
+    iconSize:[54,54],
+    iconAnchor:[27,27] 
   });
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
   const heading=recorridoHeading;
+  const target={
+    center:[lng,lat],
+    zoom:18,
+    bearing:Number.isFinite(heading)?heading:map.getBearing(),
+    pitch:45,
+    offset:[0,120],
+    duration:forzarZoom?700:350,
+    essential:true
+  };
+
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
-    map._map.easeTo({
-      center:[lng,lat],
-      zoom:18,
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
-      pitch:45,
-      duration:800
-    });
+    map._map.stop();
+    map._map.easeTo(target);
     return;
   }
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map._map.easeTo({
-      center:[lng,lat],
-      bearing:Number.isFinite(heading)?heading:map.getBearing(),
-      pitch:45,
-      duration:450
-    });
+
+  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    map._map.easeTo(target);
   }
 }
+
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
   if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
   const heading=suavizarRumbo(rumbo);
@@ -1180,7 +1211,7 @@ function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false)
       }
     ).addTo(map);
     recorridoMarker.bindTooltip(
-      "🚛 Vehículo",
+      "📍 Posición del vehículo",
       {permanent:false}
     );
     recorridoMarker._heading=heading;
@@ -1195,7 +1226,7 @@ function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false)
     recorridoMarker.updateScreenRotation();
   }
   recorridoMarker.bindPopup(
-    "🚛 <strong>Vehículo</strong><br>"+
+    "📍 <strong>Posición del vehículo</strong><br>"+
     "📍 Ubicación GPS del teléfono<br>"+
     "🌐 Lat: "+lat.toFixed(6)+"<br>"+
     "🌐 Lng: "+lng.toFixed(6)+
@@ -1354,6 +1385,13 @@ function iniciarRecorrido(){
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
   activarPantallaEncendida();
+  try{
+    if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+      AndroidGPS.startTracking();
+    }
+  }catch(e){
+    console.warn("GPS nativo no disponible:",e);
+  }
   if(recorridoLayer){
     map.removeLayer(recorridoLayer);
     recorridoLayer=null;
@@ -1374,7 +1412,7 @@ function iniciarRecorrido(){
     return;
   }
   guardarRecorridoLocal();
-  mostrarToast("🚛 Recorrido iniciado");
+  mostrarToast("🟢 Recorrido iniciado · navegación activa");
 }
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
@@ -1385,6 +1423,13 @@ function finalizarRecorrido(){
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
   recorridoActivo=false;
+  try{
+    if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
+      AndroidGPS.stopTracking();
+    }
+  }catch(e){
+    console.warn("No se pudo detener GPS nativo:",e);
+  }
   liberarPantallaEncendida();
   if(recorridoMarker){
     map.removeLayer(recorridoMarker);
@@ -1449,6 +1494,11 @@ function recuperarRecorrido(){
       "El GPS continúa registrando nuevas posiciones.",
       true
     );
+    try{
+      if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+        AndroidGPS.startTracking();
+      }
+    }catch(e){}
     iniciarSeguimientoGPS();
   }catch(error){
     console.error("Recuperar recorrido:",error);
@@ -2703,6 +2753,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!p || !window.map) return;
 
     try{
+      if(typeof window.mapaSiguiendoVehiculo !== "undefined") window.mapaSiguiendoVehiculo = true;
+      if(typeof window.mapaUsuarioMovio !== "undefined") window.mapaUsuarioMovio = false;
       const center = [Number(p.lng), Number(p.lat)];
 
       if(typeof window.map.stop === "function") window.map.stop();
@@ -2713,6 +2765,7 @@ document.addEventListener("DOMContentLoaded", function(){
           zoom:16.8,
           pitch:45,
           bearing:Number(p.bearing || 0),
+          offset:[0,120],
           duration:450,
           essential:true
         });
@@ -2774,24 +2827,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </script>
 
-<script>
-(function(){
-  window.dvCamionReciclableSVG = function(){
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" width="72" height="48" aria-label="Camión de reciclaje">' +
-      '<defs><linearGradient id="dvTruckG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#43d17a"/><stop offset="1" stop-color="#087f3f"/></linearGradient></defs>' +
-      '<g stroke="#123" stroke-width="3" stroke-linejoin="round">' +
-      '<path fill="url(#dvTruckG)" d="M7 17h67v40H7z"/>' +
-      '<path fill="#20a85a" d="M74 29h24l14 14v14H74z"/>' +
-      '<path fill="#bdebd0" d="M82 33h14l9 10H82z"/>' +
-      '<path fill="#fff" d="M22 28h38v10H22z"/>' +
-      '<path fill="none" stroke="#fff" d="M27 49c4-8 10-8 14 0m4 0c4-8 10-8 14 0"/>' +
-      '<circle fill="#222" cx="29" cy="61" r="9"/><circle fill="#777" cx="29" cy="61" r="4"/>' +
-      '<circle fill="#222" cx="91" cy="61" r="9"/><circle fill="#777" cx="91" cy="61" r="4"/>' +
-      '</g></svg>';
-  };
-})();
-</script>
-
 
 <script id="dv-navigation-location-bridge">
 (function(){
@@ -2799,6 +2834,33 @@ document.addEventListener("DOMContentLoaded", function(){
   window.__dvNavigationBridgeInstalled=true;
 
   const old=window.onNativeLocation;
+  // GPS NATIVO -> RECORRIDO + SEGUIMIENTO EN TIEMPO REAL
+  window.dvSetNavigationLocation=function(p){
+    if(p && window.dvRegisterNativeLocationForCenter){
+      window.dvRegisterNativeLocationForCenter(p);
+    }
+    if(!p || !recorridoActivo) return;
+    const lat=Number(p.lat);
+    const lng=Number(p.lng);
+    const accuracy=Number(p.accuracy);
+    const speed=Number(p.speed);
+    const bearing=Number(p.bearing);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+    // El GPS nativo pasa a ser la fuente principal de navegación.
+    // Reutilizamos el mismo registrador para conservar recorrido,
+    // persistencia, filtros de saltos y actualización visual.
+    registrarPuntoRecorrido({
+      coords:{
+        latitude:lat,
+        longitude:lng,
+        accuracy:Number.isFinite(accuracy)?accuracy:null,
+        speed:Number.isFinite(speed)?speed:null,
+        heading:Number.isFinite(bearing)?bearing:null
+      }
+    });
+  };
+
   window.onNativeLocation=function(p){
     try{
       if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p);
@@ -2841,6 +2903,7 @@ document.addEventListener("DOMContentLoaded", function(){
           zoom:17,
           pitch:45,
           bearing:bearing,
+          offset:[0,120],
           duration:500,
           essential:true
         });
@@ -2882,23 +2945,6 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 
-
-<script id="dv-navigation-native-bridge">
-(function(){
-  if(window.__dvNavigationNativeBridgeInstalled)return;
-  window.__dvNavigationNativeBridgeInstalled=true;
-
-  const previous=window.onNativeLocation;
-  window.onNativeLocation=function(p){
-    try{
-      if(window.dvRegisterNativeLocationForCenter)
-        window.dvRegisterNativeLocationForCenter(p);
-    }catch(e){}
-    if(typeof previous==="function")
-      return previous.apply(this,arguments);
-  };
-})();
-</script>
 
 </body>
 </html>
