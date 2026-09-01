@@ -2670,7 +2670,13 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function dvAplicarCentrado(p){
-    if(!p || !window.map) return false;
+    // FALLA ORIGINAL:
+    // el mapa se declara como `const map = new DVMap()`, pero esta función
+    // buscaba `window.map`. Por eso siempre encontraba undefined y salía
+    // por `if(!p || !window.map) return false`.
+    const mapa = (typeof map !== "undefined") ? map : window.map;
+
+    if(!p || !mapa) return false;
 
     const lat = Number(p.lat);
     const lng = Number(p.lng);
@@ -2680,20 +2686,10 @@ document.addEventListener("DOMContentLoaded", function(){
     const bearing = Number.isFinite(Number(p.bearing)) ? Number(p.bearing) : 0;
 
     try{
-      if(typeof window.map.stop === "function") window.map.stop();
+      if(typeof mapa.stop === "function") mapa.stop();
 
-      if(typeof window.map.easeTo === "function"){
-        window.map.easeTo({
-          center:center,
-          zoom:16.8,
-          pitch:45,
-          bearing:bearing,
-          offset:[0,120],
-          duration:450,
-          essential:true
-        });
-      }else if(window.map._map && typeof window.map._map.easeTo === "function"){
-        window.map._map.easeTo({
+      if(typeof mapa.easeTo === "function"){
+        mapa.easeTo({
           center:center,
           zoom:16.8,
           pitch:45,
@@ -2703,10 +2699,10 @@ document.addEventListener("DOMContentLoaded", function(){
           essential:true
         });
       }else{
-        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
-        if(typeof window.map.setPitch === "function") window.map.setPitch(45);
-        if(typeof window.map.setBearing === "function") window.map.setBearing(bearing);
-        if(typeof window.map.setZoom === "function") window.map.setZoom(16.8);
+        if(typeof mapa.setCenter === "function") mapa.setCenter(center);
+        if(typeof mapa.setPitch === "function") mapa.setPitch(45);
+        if(typeof mapa.setBearing === "function") mapa.setBearing(bearing);
+        if(typeof mapa.setZoom === "function") mapa.setZoom(16.8);
       }
 
       dvHideCenterButton();
@@ -2755,7 +2751,18 @@ document.addEventListener("DOMContentLoaded", function(){
   if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
 
   window.dvRegisterNativeLocationForCenter = function(p){
-    if(p) dvLastNativeLocation = p;
+    if(!p) return;
+    const lat = Number(p.lat);
+    const lng = Number(p.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng)){
+      dvLastNativeLocation = {
+        lat:lat,
+        lng:lng,
+        accuracy:Number.isFinite(Number(p.accuracy)) ? Number(p.accuracy) : null,
+        speed:Number.isFinite(Number(p.speed)) ? Number(p.speed) : null,
+        bearing:Number.isFinite(Number(p.bearing)) ? Number(p.bearing) : 0
+      };
+    }
   };
 
   // GPS propio de la AppWeb: mantiene disponible la última posición.
