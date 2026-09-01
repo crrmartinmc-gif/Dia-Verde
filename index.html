@@ -102,7 +102,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   #map{min-height:460px}
   .map-card{padding:10px}
   .card-title{margin-bottom:10px}
-  #dvCenterButton{right:12px!important;bottom:14px!important}
+  #dvCenterButton{left:12px!important;right:auto!important;bottom:12px!important;width:auto!important;max-width:max-content!important}
 }
 </style>
 
@@ -761,6 +761,7 @@ function dvMejorarEtiquetasCalles(){
   }catch(e){ console.warn("Etiquetas 25%:",e); }
 }
 const map = new DVMap();
+window.map = map;
 const L={
   layerGroup:()=>new DVLayerGroup(),
   divIcon:opts=>opts,
@@ -803,8 +804,8 @@ map.on("click",function(e){
 });
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
-let mapaSiguiendoVehiculo = false;
-let mapaUsuarioMovio = false;
+var mapaSiguiendoVehiculo = false;
+var mapaUsuarioMovio = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1386,6 +1387,8 @@ function iniciarRecorrido(){
   recorridoHeading=null;
   mapaSiguiendoVehiculo=true;
   mapaUsuarioMovio=false;
+  const dvCenterBtnInicio=document.getElementById("dvCenterButton");
+  if(dvCenterBtnInicio) dvCenterBtnInicio.classList.add("dv-visible");
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
@@ -1428,6 +1431,10 @@ function finalizarRecorrido(){
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
   recorridoActivo=false;
+  const dvCenterBtnFin=document.getElementById("dvCenterButton");
+  if(dvCenterBtnFin) dvCenterBtnFin.classList.remove("dv-visible");
+  mapaSiguiendoVehiculo=false;
+  mapaUsuarioMovio=false;
   try{
     if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
       AndroidGPS.stopTracking();
@@ -2799,7 +2806,7 @@ document.addEventListener("DOMContentLoaded", function(){
         if(typeof window.map.setBearing === "function") window.map.setBearing(bearing);
       }
 
-      // El botón queda disponible durante el recorrido.
+      // El botón queda disponible durante todo el recorrido.
       if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     }catch(e){
       console.warn("Centrar vehículo:",e);
@@ -2900,75 +2907,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
 <script id="dv-navigation-mode-js">
 (function(){
-  let last=null;
-  let bound=false;
-
-  function mapReady(){
-    return window.map && typeof window.map.on==="function";
-  }
-
-  function showCenter(){
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.add("dv-visible");
-  }
-
-  function hideCenter(){
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.remove("dv-visible");
-  }
-
-  function centerVehicle(){
-    if(!last || !window.map)return;
-    const center=[Number(last.lng),Number(last.lat)];
-    const bearing=Number(last.bearing||0);
-
-    try{
-      if(typeof window.map.stop==="function")window.map.stop();
-      if(typeof window.map.easeTo==="function"){
-        window.map.easeTo({
-          center:center,
-          zoom:17,
-          pitch:45,
-          bearing:bearing,
-          offset:[0,120],
-          duration:500,
-          essential:true
-        });
-      }else{
-        window.map.setCenter(center);
-        window.map.setZoom(17);
-        window.map.setPitch(45);
-        window.map.setBearing(bearing);
-      }
-      hideCenter();
-    }catch(e){}
-  }
-
-  window.dvRegisterNativeLocationForCenter=function(p){
-    if(p){
-      last=p;
-      window.__dvLastNavigationLocation=p;
-    }
-  };
-  window.dvCenterOnVehicle=centerVehicle;
-
-  function bind(){
-    if(bound || !mapReady())return false;
-    bound=true;
-
-    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
-      window.map.on(ev,showCenter);
-    });
-
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.addEventListener("click",window.dvCenterOnVehicle);
-    return true;
-  }
-
-  let tries=0;
-  const timer=setInterval(function(){
-    if(bind() || ++tries>80)clearInterval(timer);
-  },250);
+  // La navegación principal ya está implementada arriba.
+  // Este bloque solo conserva una referencia al último GPS para
+  // compatibilidad y no registra un segundo click handler.
+  window.dvNavigationModeReady = true;
 })();
 </script>
 
