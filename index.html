@@ -1475,88 +1475,118 @@ function recuperarRecorrido(){
     borrarRecorridoLocal();
   }
 }
-function cargarDatos(){
-statusText.textContent =
-"Cargando direcciones...";
-const callback =
-"handleSheets_"+Date.now();
-window[callback] =
-response => {
-try{
-const rows =
-(response.table.rows || [])
-.map(
-row =>
-(row.c || [])
-.map(
-cell =>
-cell &&
-cell.v != null
-?
-String(cell.v)
-:
-""
-)
-);
-data = [];
-rows.forEach(
-row => {
+function parseCSVGoogle(text){
+const rows=[];
+let row=[],field="",quoted=false;
+for(let i=0;i<text.length;i++){
+const ch=text[i];
+if(quoted){
+if(ch==='"' && text[i+1]==='"'){field+='"';i++;}
+else if(ch==='"'){quoted=false;}
+else field+=ch;
+}else{
+if(ch==='"')quoted=true;
+else if(ch===','){row.push(field);field="";}
+else if(ch==='\n'){row.push(field);rows.push(row);row=[];field="";}
+else if(ch!=='\r')field+=ch;
+}
+}
+if(field!==""||row.length){row.push(field);rows.push(row);}
+return rows;
+}
+function procesarFilasSheets(rows){
+data=[];
+rows.forEach(row=>{
 agregar(row,0,1,2,"Llavallol");
 agregar(row,3,4,5,"Banfield");
 agregar(row,6,7,8,"Temperley");
 agregar(row,9,10,null,"Turdera");
 agregar(row,11,12,13,"Lomas");
-}
-);
+});
 cargarCGMs();
 actualizarZonasPorCGM();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
 }
-catch(error){
-console.error(error);
-statusText.textContent =
-"Error al cargar";
-list.innerHTML =
-'<div class="error">' +
-'Error al cargar las direcciones.' +
-'</div>';
+function cargarDatos(){
+statusText.textContent="Cargando direcciones...";
+const base="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?gid="+GID+"&t="+Date.now();
+let terminado=false;
+const timeout=setTimeout(()=>{
+if(!terminado){
+terminado=true;
+statusText.textContent="Error de conexión con Google Sheets";
+list.innerHTML='<div class="error">No se pudo obtener las direcciones de Google Sheets.<br><br>Revisá que la hoja esté compartida y disponible públicamente.</div>';
 }
-delete window[callback];
-const script =
-document.getElementById(callback);
-if(script)
-script.remove();
-};
-const script =
-document.createElement("script");
-script.id =
-callback;
-script.src =
-"https://docs.google.com/spreadsheets/d/" +
-SHEET_ID +
-"/gviz/tq?tqx=responseHandler:" +
-callback +
-"&gid=" +
-GID +
-"&t=" +
-Date.now();
-script.onerror =
-() => {
-statusText.textContent =
-"Error de conexión";
-list.innerHTML =
-'<div class="error">' +
-'No se pudo conectar con Google Sheets.' +
-'</div>';
-delete window[callback];
-script.remove();
-};
-document.body.appendChild(
-script
+},15000);
+
+fetch(base+"&tqx=out:csv",{cache:"no-store"})
+.then(r=>{
+if(!r.ok)throw new Error("HTTP "+r.status);
+return r.text();
+})
+.then(text=>{
+if(terminado)return;
+const rows=parseCSVGoogle(text);
+if(!rows.length)throw new Error("La hoja devolvió 0 filas");
+const primera=rows[0].map(v=>normalizar(v));
+const pareceEncabezado=primera.some(v=>
+["calle","numero","número","zona","llavallol","banfield","temperley","lomas"]
+.some(k=>v.includes(k))
 );
+procesarFilasSheets(pareceEncabezado?rows.slice(1):rows);
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Datos cargados correctamente";
+})
+.catch(error=>{
+console.warn("CSV Sheets no disponible, probando JSONP:",error);
+if(terminado)return;
+
+const callback="handleSheets_"+Date.now();
+window[callback]=response=>{
+try{
+const rows=(response.table.rows||[]).map(row=>
+(row.c||[]).map(cell=>cell&&cell.v!=null?String(cell.v):"")
+);
+if(!rows.length)throw new Error("Google Sheets devolvió 0 filas");
+procesarFilasSheets(rows);
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Datos cargados correctamente";
+}catch(e){
+console.error(e);
+if(!terminado){
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Error al cargar datos";
+list.innerHTML='<div class="error">Google Sheets respondió, pero los datos no pudieron procesarse.</div>';
 }
+}finally{
+delete window[callback];
+const old=document.getElementById(callback);
+if(old)old.remove();
+}
+};
+
+const script=document.createElement("script");
+script.id=callback;
+script.src=base+"&tqx=responseHandler:"+callback;
+script.onerror=()=>{
+if(!terminado){
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Error de conexión con Google Sheets";
+list.innerHTML='<div class="error">No se pudo conectar con Google Sheets.</div>';
+}
+delete window[callback];
+script.remove();
+};
+document.body.appendChild(script);
+});
+}
+
 function cargarCGMs(){
 const cgms =
 [...new Set(
@@ -2318,49 +2348,22 @@ reader.readAsDataURL(file);
 }
 async function prepararEvidencia(file){
 try{
-
-evidenciaBase64 = await comprimirImagen(file);
-evidencePreview.src = evidenciaBase64;
-evidencePreview.style.display = "block";
-
-let ubicacionObtenida = false;
-try{
-
-
-if(nativeLocation && nativeLocation !== "null"){
-const location = JSON.parse(nativeLocation);
-if(Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))){
-
-
-const precision = Number(location.accuracy || 0);
-
-"✅ Ubicación obtenida" +
-
-
-"<br>📡 Precisión: ±" + Math.round(precision) + " m";
-sendEvidence.disabled = false;
-ubicacionObtenida = true;
-}
-}
-}
+  if(!file){
+    alert("No se seleccionó ninguna fotografía.");
+    return;
+  }
+  gpsBox.innerHTML = "📷 Procesando fotografía...";
+  evidenciaBase64 = await comprimirImagen(file);
+  evidencePreview.src = evidenciaBase64;
+  evidencePreview.style.display = "block";
+  gpsBox.innerHTML = "📷 Fotografía lista para registrar.";
+  sendEvidence.disabled = false;
 }catch(error){
-console.warn("GPS nativo no disponible:", error);
-}
-if(!ubicacionObtenida){
-if(!navigator.geolocation){
-
-"⚠️ No se pudo obtener la ubicación GPS.<br><br>" +
-"Este dispositivo no permite obtener ubicación.";
-sendEvidence.disabled = true;
-return;
-}
-}
-}catch(error){
-console.error("Error preparando evidencia:",error);
-
-"❌ No se pudo procesar la fotografía.<br><br>" +
-"Revisá la fotografía e intentá nuevamente.";
-sendEvidence.disabled = true;
+  console.error("Error preparando evidencia:",error);
+  gpsBox.innerHTML =
+    "❌ No se pudo procesar la fotografía.<br><br>" +
+    "Revisá la fotografía e intentá nuevamente.";
+  sendEvidence.disabled = true;
 }
 }
 async function enviarEvidencia(){
@@ -2369,15 +2372,6 @@ return;
 if(!evidenciaBase64){
 alert(
 "Primero sacá la fotografía."
-);
-return;
-}
-if(
-
-
-){
-alert(
-"No se pudo obtener la ubicación GPS."
 );
 return;
 }
@@ -2411,10 +2405,6 @@ zona:
 selectedZone,
 direccion:
 `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
-latitud:
-
-longitud:
-
 foto:
 evidenciaBase64
 };
