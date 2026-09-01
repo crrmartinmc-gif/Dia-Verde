@@ -1144,27 +1144,34 @@ function crearIconoVehiculo(rumbo){
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+  // Mientras el recorrido está activo, el GPS mantiene la cámara siguiendo
+  // al vehículo. El vehículo queda en la zona inferior para mostrar más
+  // camino por delante.
   const heading=recorridoHeading;
+  const bearingActual=map.getBearing();
+  const bearing=Number.isFinite(heading) ? heading : bearingActual;
+
   const target={
     center:[lng,lat],
     zoom:18,
-    bearing:Number.isFinite(heading)?heading:map.getBearing(),
+    bearing:bearing,
     pitch:45,
     offset:[0,120],
-    duration:forzarZoom?700:350,
+    duration:forzarZoom?700:450,
     essential:true
   };
 
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
-    map._map.stop();
-    map._map.easeTo(target);
+    map.stop();
+    map.easeTo(target);
     return;
   }
 
   if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map._map.easeTo(target);
+    map.easeTo(target);
   }
 }
 
@@ -1502,6 +1509,7 @@ agregar(row,3,4,5,"Banfield");
 agregar(row,6,7,8,"Temperley");
 agregar(row,9,10,null,"Turdera");
 agregar(row,11,12,13,"Lomas");
+agregar(row,14,15,16,"Santa Catalina");
 });
 cargarCGMs();
 actualizarZonasPorCGM();
@@ -2662,6 +2670,10 @@ document.addEventListener("DOMContentLoaded", function(){
   function dvShowCenterButton(){
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap = true;
+    if(typeof mapaSiguiendoVehiculo !== "undefined"){
+      mapaSiguiendoVehiculo=false;
+      mapaUsuarioMovio=true;
+    }
   }
 
   function dvHideCenterButton(){
@@ -2705,6 +2717,11 @@ document.addEventListener("DOMContentLoaded", function(){
         if(typeof mapa.setZoom === "function") mapa.setZoom(16.8);
       }
 
+      // "Centrar" no solo centra: reactiva el modo navegación.
+      if(recorridoActivo){
+        mapaSiguiendoVehiculo=true;
+        mapaUsuarioMovio=false;
+      }
       dvHideCenterButton();
       return true;
     }catch(e){
@@ -2793,13 +2810,14 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function dvWatchMapInteraction(){
-    if(!window.map || typeof window.map.on !== "function") return false;
+    const mapa = (typeof map !== "undefined") ? map : window.map;
+    if(!mapa || typeof mapa.on !== "function") return false;
 
     if(!window.__dvCenterInteractionBound){
       window.__dvCenterInteractionBound = true;
 
       ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
-        window.map.on(ev, dvShowCenterButton);
+        mapa.on(ev, dvShowCenterButton);
       });
     }
     return true;
