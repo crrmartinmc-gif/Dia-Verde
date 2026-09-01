@@ -30,6 +30,8 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   box-shadow:0 3px 12px rgba(0,0,0,.28);
   cursor:pointer;
   min-height:42px;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
 }
 #dvCenterButton.dv-visible{display:block}
 
@@ -1250,10 +1252,21 @@ function registrarPuntoRecorrido(position){
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
   const precision=Number(c.accuracy);
+  const headingRaw=Number(c.heading);
   if(!Number.isFinite(lat)||!Number.isFinite(lng)){
     return;
   }
-  mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
+  window.__dvLastNavigationLocation={
+    lat:lat,
+    lng:lng,
+    bearing:Number.isFinite(headingRaw)?headingRaw:0,
+    accuracy:Number.isFinite(precision)?precision:null
+  };
+  mostrarPosicionRecorrido(
+    lat,lng,precision,
+    Number.isFinite(headingRaw)?headingRaw:null,
+    recorridoPuntos.length===0
+  );
   const punto={
     lat:lat,
     lng:lng,
@@ -2766,11 +2779,11 @@ document.addEventListener("DOMContentLoaded", function(){
     // Último recurso: tomar el último punto ya guardado del recorrido.
     if(!p && Array.isArray(window.recorridoPuntos) && window.recorridoPuntos.length){
       const q = window.recorridoPuntos[window.recorridoPuntos.length-1];
-      if(q && q.coords){
+      if(q){
         p = {
-          lat:Number(q.coords.latitude),
-          lng:Number(q.coords.longitude),
-          bearing:Number(q.coords.heading || 0)
+          lat:Number(q.lat),
+          lng:Number(q.lng),
+          bearing:Number(q.heading || window.recorridoHeading || 0)
         };
       }
     }
