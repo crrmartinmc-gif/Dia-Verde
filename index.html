@@ -12,6 +12,25 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 :root{--verde:#087a3d;--verde-oscuro:#04552b;--verde-claro:#e9f7ed;--texto:#193329;--gris:#728078;--fondo:#f3f7f4;--borde:#dce9e0;--blanco:#fff;}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto);}header{background:linear-gradient( 135deg, var(--verde-oscuro), var(--verde) );color:white;padding:24px 28px;box-shadow:0 4px 20px #0002;}.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px;}.brand{display:flex;align-items:center;gap:15px;}.logo{width:58px;height:58px;border-radius:50%;background:white;display:grid;place-items:center;font-size:29px;}h1{margin:0;font-size:28px;}.sub{margin-top:5px;font-size:15px;}.status{display:flex;align-items:center;gap:10px;font-size:13px;}.status-icon{width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;font-size:20px;}main{max-width:1200px;margin:auto;padding:22px;}.layout{display:grid;grid-template-columns:300px 1fr;gap:18px;}.card{background:white;border:1px solid #e5eee8;border-radius:18px;box-shadow:0 8px 30px #163a2614;}.sidebar{padding:20px;}.section-label{color:var(--verde);font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}label{display:block;font-weight:700;margin-bottom:8px;}select, input{width:100%;min-height:48px;border:1px solid #d5e0d9;border-radius:10px;padding:11px 13px;font-size:15px;color:var(--texto);background:white;outline:none;}select:focus, input:focus{border-color:#72bb8b;box-shadow:0 0 0 3px #087a3d1a;}.refresh{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:10px;background:var(--verde);color:white;font-weight:800;cursor:pointer;}.refresh:hover{background:var(--verde-oscuro);}.info-box{margin-top:18px;padding:15px;border:1px solid #c9e7d1;border-radius:12px;background:#f4fbf6;color:#40534a;font-size:13px;line-height:1.55;}.stats{margin-top:25px;}.stat{border:1px solid var(--borde);border-radius:13px;padding:14px;margin-top:9px;display:flex;align-items:center;gap:12px;}.stat-icon{width:42px;height:42px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.stat small{display:block;color:var(--gris);}.stat strong{font-size:22px;}.update{margin-top:24px;font-size:13px;color:#4d5d54;line-height:1.5;}.map-card{padding:18px;}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;}.card-title-icon{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.card-title h2{margin:0;font-size:21px;}.card-title p{margin:3px 0 0;color:var(--gris);font-size:13px;}.map-wrap{position:relative;}#map{height:500px;border-radius:14px;overflow:hidden;}.zone-badge{position:absolute;z-index:1000;left:50%;top:20px;transform:translateX(-50%);background:var(--verde);color:white;padding:9px 16px;border-radius:10px;font-weight:800;box-shadow:0 5px 15px #0003;pointer-events:none;}.results{margin-top:18px;padding:18px;}.results-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;}.count-pill{background:var(--verde-claro);color:var(--verde);padding:8px 13px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;}.search{margin-bottom:12px;}.address-list{display:grid;border:1px solid #e1e9e4;border-radius:13px;overflow:hidden;}.address{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border-bottom:1px solid #e7eee9;background:white;}.address:last-child{border-bottom:0;}.address:hover{background:#fbfdfb;}.address-left{display:flex;align-items:center;gap:12px;min-width:0;}.pin{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;flex:0 0 auto;}.address strong{display:block;font-size:15px;}.address small{display:block;margin-top:4px;color:var(--gris);}.address-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.maps, .evidence-btn{display:inline-block;text-decoration:none;border:1px solid #8bcaa1;color:var(--verde);background:white;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;}.maps:hover, .evidence-btn:hover{background:var(--verde-claro);}.evidence-btn.done{background:var(--verde-claro);border-color:#63b57f;}.empty, .loading{text-align:center;padding:35px;color:var(--gris);}.error{background:#fff0f0;color:#a52222;padding:15px;border-radius:10px;}.modal-backdrop{position:fixed;inset:0;background:#062b17aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:3000;}.modal-backdrop.show{display:flex;}.evidence-modal{width:min(520px,100%);background:white;border-radius:20px;box-shadow:0 20px 60px #0004;padding:22px;}.evidence-modal h3{margin:0 0 5px;font-size:21px;}.evidence-modal p{margin:0 0 18px;color:var(--gris);font-size:13px;}.evidence-preview{width:100%;max-height:280px;object-fit:cover;border-radius:14px;background:#edf3ef;display:none;margin-bottom:15px;}.gps-box{padding:12px;border-radius:12px;background:#f4fbf6;border:1px solid #c9e7d1;font-size:13px;line-height:1.55;margin-bottom:15px;}.modal-actions{display:flex;gap:10px;}.modal-actions button{flex:1;min-height:46px;border-radius:10px;font-weight:800;cursor:pointer;}.cancel-btn{border:1px solid #d5e0d9;background:white;color:#53625a;}.send-btn{border:0;background:var(--verde);color:white;}.send-btn:disabled{opacity:.5;cursor:not-allowed;}.toast{position:fixed;right:20px;bottom:20px;z-index:4000;background:var(--verde-oscuro);color:white;padding:13px 16px;border-radius:12px;box-shadow:0 8px 25px #0003;display:none;font-size:13px;font-weight:700;}.toast.show{display:block;}footer{margin-top:20px;background:var(--verde-oscuro);color:white;padding:22px;}.footer-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;gap:15px;align-items:center;}footer span{opacity:.9;font-size:13px;}@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px;}.sidebar .stats, .sidebar .update{grid-column:1/-1;margin-top:0;}}@media(max-width:600px){header{padding:18px;}.header-inner{align-items:flex-start;}.status{display:none;}.logo{width:48px;height:48px;font-size:24px;}h1{font-size:23px;}.sub{font-size:13px;}main{padding:12px;}.sidebar{display:block;}.info-box, .stats, .update{margin-top:18px!important;}#map{height:100%;min-height:460px;}.address{align-items:flex-start;flex-direction:column;}.address-actions{width:100%;}.maps, .evidence-btn{flex:1;text-align:center;}.footer-inner{flex-direction:column;text-align:center;}}.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}.route-btn:disabled{opacity:.5;cursor:not-allowed}.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
 
+#dvCenterButton{
+  display:block;
+  position:absolute;
+  left:12px;
+  right:auto;
+  bottom:12px;
+  z-index:1000;
+  border:0;
+  border-radius:999px;
+  padding:9px 13px;
+  font-weight:800;
+  font-size:13px;
+  background:#087f3f;
+  color:#fff;
+  box-shadow:0 3px 12px rgba(0,0,0,.28);
+  cursor:pointer;
+}
+#dvCenterButton.dv-visible{display:block}
+
 </style>
 <style id="diaverde-auth-css">
 #dvLoginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#087a3d,#04552b);padding:20px;}#dvLoginBox{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.25);}#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}#dvLoginBtn{width:100%;min-height:48px;border:0;border-radius:10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer;}#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}#dvUserBar{display:none;align-items:center;gap:10px;margin-left:auto;}#dvUserName{font-weight:800}#dvLogout{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;}
@@ -45,15 +64,15 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 .route-controls{position:relative;z-index:2;margin-top:12px}
 #dvCenterButton{
   position:absolute!important;
-  left:14px!important;
+  left:12px!important;
   right:auto!important;
   bottom:14px!important;
   z-index:10000!important;
-  display:none;
+  display:block!important;
   padding:9px 13px!important;
   border:0!important;
-  border-radius:20px!important;
-  font-size:13px!important;
+  border-radius:24px!important;
+  font-size:15px!important;
   font-weight:800!important;
   line-height:1!important;
   background:#087a3d!important;
@@ -80,7 +99,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   #map{min-height:460px}
   .map-card{padding:10px}
   .card-title{margin-bottom:10px}
-  #dvCenterButton{left:12px!important;right:auto!important;bottom:12px!important}
+  #dvCenterButton{left:12px!important;right:auto!important;bottom:14px!important}
 }
 </style>
 
@@ -314,7 +333,7 @@ class="gps-box"
 id="gpsBox"
 >
 Primero sacá la fotografía.
-La ubicación GPS no se guarda en la evidencia.
+Luego se obtendrá automáticamente la ubicación GPS.
 </div>
 <input
 id="cameraInput"
@@ -385,6 +404,8 @@ let currentVisibleDirections = [];
 let evidenciasHoy = [];
 let evidenciaActual = null;
 let evidenciaBase64 = "";
+let evidenciaLat = "";
+let evidenciaLng = "";
 const cgm =
 document.getElementById("cgm");
 const zone =
@@ -1457,168 +1478,83 @@ function recuperarRecorrido(){
 function cargarDatos(){
 statusText.textContent =
 "Cargando direcciones...";
-
 const callback =
 "handleSheets_"+Date.now();
-
-let terminado = false;
-let timeoutId = null;
-
-function limpiar(){
-  clearTimeout(timeoutId);
-  delete window[callback];
-  const oldScript =
-    document.getElementById(callback);
-  if(oldScript) oldScript.remove();
-}
-
-function mostrarDatosLocal(){
-  try{
-    const cache =
-      JSON.parse(
-        localStorage.getItem("diaVerdeDatosV1") || "null"
-      );
-    if(!Array.isArray(cache) || !cache.length)
-      return false;
-
-    data = cache;
-    cargarCGMs();
-    actualizarZonasPorCGM();
-    actualizarContadores();
-    statusText.textContent =
-      "Datos locales (sin conexión)";
-    lastUpdate.textContent =
-      "Últimos datos guardados en este dispositivo";
-    return true;
-  }catch(error){
-    console.warn("Cache de direcciones:",error);
-    return false;
-  }
-}
-
-function finalizarConError(mensaje){
-  if(terminado) return;
-  terminado = true;
-  limpiar();
-
-  if(!mostrarDatosLocal()){
-    statusText.textContent =
-      "Error de conexión";
-    list.innerHTML =
-      '<div class="error">' +
-      esc(mensaje) +
-      '<br><br>' +
-      'Verificá que Google Sheets esté disponible y que el GID configurado sea el de la hoja de direcciones.' +
-      '</div>';
-  }
-}
-
 window[callback] =
 response => {
-  if(terminado) return;
-  try{
-    if(!response || !response.table){
-      throw new Error(
-        response && response.errors
-          ? JSON.stringify(response.errors)
-          : "Google Sheets no devolvió una tabla de datos."
-      );
-    }
-
-    const rows =
-      (response.table.rows || [])
-      .map(
-        row =>
-        (row.c || [])
-        .map(
-          cell =>
-          cell &&
-          cell.v != null
-            ? String(cell.v)
-            : ""
-        )
-      );
-
-    data = [];
-    rows.forEach(
-      row => {
-        agregar(row,0,1,2,"Llavallol");
-        agregar(row,3,4,5,"Banfield");
-        agregar(row,6,7,8,"Temperley");
-        agregar(row,9,10,null,"Turdera");
-        agregar(row,11,12,13,"Lomas");
-      }
-    );
-
-    if(!data.length){
-      throw new Error(
-        "Google Sheets respondió correctamente pero no se encontraron direcciones."
-      );
-    }
-
-    localStorage.setItem(
-      "diaVerdeDatosV1",
-      JSON.stringify(data)
-    );
-
-    cargarCGMs();
-    actualizarZonasPorCGM();
-    actualizarContadores();
-    actualizarHora();
-    statusText.textContent =
-      "Datos cargados correctamente";
-
-    terminado = true;
-    limpiar();
-    cargarEvidenciasHoy();
-
-  }catch(error){
-    console.error(
-      "Carga de Google Sheets:",
-      error
-    );
-    finalizarConError(
-      "No se pudieron cargar las direcciones."
-    );
-  }
+try{
+const rows =
+(response.table.rows || [])
+.map(
+row =>
+(row.c || [])
+.map(
+cell =>
+cell &&
+cell.v != null
+?
+String(cell.v)
+:
+""
+)
+);
+data = [];
+rows.forEach(
+row => {
+agregar(row,0,1,2,"Llavallol");
+agregar(row,3,4,5,"Banfield");
+agregar(row,6,7,8,"Temperley");
+agregar(row,9,10,null,"Turdera");
+agregar(row,11,12,13,"Lomas");
+}
+);
+cargarCGMs();
+actualizarZonasPorCGM();
+actualizarContadores();
+actualizarHora();
+cargarEvidenciasHoy();
+}
+catch(error){
+console.error(error);
+statusText.textContent =
+"Error al cargar";
+list.innerHTML =
+'<div class="error">' +
+'Error al cargar las direcciones.' +
+'</div>';
+}
+delete window[callback];
+const script =
+document.getElementById(callback);
+if(script)
+script.remove();
 };
-
 const script =
 document.createElement("script");
-
 script.id =
 callback;
-script.async =
-true;
 script.src =
 "https://docs.google.com/spreadsheets/d/" +
 SHEET_ID +
-"/gviz/tq?tqx=out:json;responseHandler:" +
-encodeURIComponent(callback) +
+"/gviz/tq?tqx=responseHandler:" +
+callback +
 "&gid=" +
-encodeURIComponent(GID) +
+GID +
 "&t=" +
 Date.now();
-
 script.onerror =
 () => {
-  finalizarConError(
-    "No se pudo conectar con Google Sheets."
-  );
+statusText.textContent =
+"Error de conexión";
+list.innerHTML =
+'<div class="error">' +
+'No se pudo conectar con Google Sheets.' +
+'</div>';
+delete window[callback];
+script.remove();
 };
-
 document.body.appendChild(
 script
-);
-
-timeoutId =
-setTimeout(
-() => {
-  finalizarConError(
-    "Google Sheets no respondió a tiempo."
-  );
-},
-12000
 );
 }
 function cargarCGMs(){
@@ -2236,6 +2172,10 @@ evidenciaActual =
 item;
 evidenciaBase64 =
 "";
+evidenciaLat =
+"";
+evidenciaLng =
+"";
 evidenceAddress.textContent =
 `${item.calle} ${item.numero || ""} — ${selectedZone}`;
 evidencePreview.style.display =
@@ -2243,12 +2183,10 @@ evidencePreview.style.display =
 evidencePreview.src =
 "";
 gpsBox.innerHTML =
-"📷 Primero sacá la fotografía. El GPS no forma parte de la evidencia.";
+"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
 sendEvidence.disabled =
 true;
 takeEvidence.style.display =
-"block";
-sendEvidence.style.display =
 "block";
 evidenceBackdrop.classList.add(
 "show"
@@ -2291,6 +2229,8 @@ function verEvidencia(item){
   }
   evidenciaActual = item;
   evidenciaBase64 = "";
+  evidenciaLat = evidencia.latitud || "";
+  evidenciaLng = evidencia.longitud || "";
   evidenceAddress.textContent =
     `${direccion} — ${selectedCgm} — ${selectedZone}`;
   if(evidencia.foto){
@@ -2306,8 +2246,10 @@ function verEvidencia(item){
   gpsBox.innerHTML =
     "✅ Evidencia registrada hoy." +
     "<br><br>" +
-    "📷 Fotografía registrada." +
-    "<br>📍 Sin coordenadas GPS en la evidencia.";
+    (evidencia.latitud && evidencia.longitud
+      ? "📍 Latitud: " + evidencia.latitud +
+        "<br>Longitud: " + evidencia.longitud
+      : "📍 Sin coordenadas registradas.");
   sendEvidence.style.display = "none";
   takeEvidence.style.display = "none";
   evidenceBackdrop.classList.add("show");
@@ -2319,6 +2261,10 @@ evidenceBackdrop.classList.remove(
 evidenciaActual =
 null;
 evidenciaBase64 =
+"";
+evidenciaLat =
+"";
+evidenciaLng =
 "";
 cameraInput.value =
 "";
@@ -2372,28 +2318,81 @@ reader.readAsDataURL(file);
 }
 async function prepararEvidencia(file){
 try{
+gpsBox.innerHTML = "📷 Procesando fotografía...";
+evidenciaBase64 = await comprimirImagen(file);
+evidencePreview.src = evidenciaBase64;
+evidencePreview.style.display = "block";
+gpsBox.innerHTML = "📍 Obteniendo ubicación GPS...";
+let ubicacionObtenida = false;
+try{
+if(window.AndroidGPS && typeof AndroidGPS.getLastLocation === "function"){
+const nativeLocation = AndroidGPS.getLastLocation();
+if(nativeLocation && nativeLocation !== "null"){
+const location = JSON.parse(nativeLocation);
+if(Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))){
+evidenciaLat = Number(location.lat);
+evidenciaLng = Number(location.lng);
+const precision = Number(location.accuracy || 0);
 gpsBox.innerHTML =
-"📷 Procesando fotografía...";
-evidenciaBase64 =
-await comprimirImagen(file);
-evidencePreview.src =
-evidenciaBase64;
-evidencePreview.style.display =
-"block";
-gpsBox.innerHTML =
-"✅ Fotografía lista. Podés registrar la evidencia.";
-sendEvidence.disabled =
-false;
+"✅ Ubicación obtenida" +
+"<br>Latitud: " + evidenciaLat.toFixed(6) +
+"<br>Longitud: " + evidenciaLng.toFixed(6) +
+"<br>📡 Precisión: ±" + Math.round(precision) + " m";
+sendEvidence.disabled = false;
+ubicacionObtenida = true;
+}
+}
+}
 }catch(error){
-console.error(
-"Error preparando evidencia:",
-error
+console.warn("GPS nativo no disponible:", error);
+}
+if(!ubicacionObtenida){
+if(!navigator.geolocation){
+gpsBox.innerHTML =
+"⚠️ No se pudo obtener la ubicación GPS.<br><br>" +
+"Este dispositivo no permite obtener ubicación.";
+sendEvidence.disabled = true;
+return;
+}
+navigator.geolocation.getCurrentPosition(
+position => {
+evidenciaLat = position.coords.latitude;
+evidenciaLng = position.coords.longitude;
+const precision = Number(position.coords.accuracy || 0);
+gpsBox.innerHTML =
+"✅ Ubicación obtenida" +
+"<br>Latitud: " + evidenciaLat.toFixed(6) +
+"<br>Longitud: " + evidenciaLng.toFixed(6) +
+"<br>📡 Precisión: ±" + Math.round(precision) + " m";
+sendEvidence.disabled = false;
+},
+error => {
+console.error("GPS evidencia:",error);
+let detalle = "Activá la ubicación del dispositivo e intentá nuevamente.";
+if(error && error.code === 1){
+detalle = "El navegador no tiene permiso para usar la ubicación.";
+}else if(error && error.code === 2){
+detalle = "El dispositivo no pudo determinar la ubicación.";
+}else if(error && error.code === 3){
+detalle = "El GPS tardó demasiado en responder.";
+}
+gpsBox.innerHTML =
+"⚠️ No se pudo obtener la ubicación GPS.<br><br>" + detalle;
+sendEvidence.disabled = true;
+},
+{
+enableHighAccuracy:true,
+timeout:20000,
+maximumAge:0
+}
 );
+}
+}catch(error){
+console.error("Error preparando evidencia:",error);
 gpsBox.innerHTML =
 "❌ No se pudo procesar la fotografía.<br><br>" +
 "Revisá la fotografía e intentá nuevamente.";
-sendEvidence.disabled =
-true;
+sendEvidence.disabled = true;
 }
 }
 async function enviarEvidencia(){
@@ -2402,6 +2401,15 @@ return;
 if(!evidenciaBase64){
 alert(
 "Primero sacá la fotografía."
+);
+return;
+}
+if(
+!evidenciaLat ||
+!evidenciaLng
+){
+alert(
+"No se pudo obtener la ubicación GPS."
 );
 return;
 }
@@ -2436,9 +2444,9 @@ selectedZone,
 direccion:
 `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
 latitud:
-"",
+evidenciaLat,
 longitud:
-"",
+evidenciaLng,
 foto:
 evidenciaBase64
 };
@@ -2604,370 +2612,228 @@ cargarEvidenciasHoy();
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
-  { usuario:"admin",  password:"diaverde2026", nombre:"Administrador" },
-  { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
-  { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
+  { usuario:"Ale",       password:"boca",          nombre:"Ale" },
+  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde" },
+  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
+  { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
+  { usuario:"Francocrr", password:"boca",          nombre:"Pablo Vazques" },
+  { usuario:"chofer",    password:"comodin",       nombre:"Comodin" },
+  { usuario:"CarliDT",   password:"banfield",      nombre:"Carli" }
 ];
-
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
-
 function dvUsuarioActual(){
-  try{
-    return JSON.parse(
-      localStorage.getItem(DV_USER_KEY) || "null"
-    );
-  }catch(e){
-    return null;
-  }
+  try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
+  catch(e){ return null; }
 }
-
 function dvMostrarAplicacion(usuario){
-  const overlay =
-    document.getElementById("dvLoginOverlay");
-  const bar =
-    document.getElementById("dvUserBar");
-  const name =
-    document.getElementById("dvUserName");
-
+  const overlay = document.getElementById("dvLoginOverlay");
+  const bar = document.getElementById("dvUserBar");
+  const name = document.getElementById("dvUserName");
   if(overlay) overlay.style.display = "none";
   if(bar) bar.style.display = "flex";
-  if(name) name.textContent =
-    usuario.nombre || usuario.usuario;
+  if(name) name.textContent = usuario.nombre || usuario.usuario;
 }
-
 function dvMostrarLogin(){
-  const overlay =
-    document.getElementById("dvLoginOverlay");
-  const bar =
-    document.getElementById("dvUserBar");
-
+  const overlay = document.getElementById("dvLoginOverlay");
+  const bar = document.getElementById("dvUserBar");
   if(overlay) overlay.style.display = "flex";
   if(bar) bar.style.display = "none";
 }
-
 function dvIniciarSesion(){
-  const user =
-    (document.getElementById("dvLoginUser").value || "").trim();
-  const pass =
-    document.getElementById("dvLoginPass").value || "";
-  const error =
-    document.getElementById("dvLoginError");
-
-  const encontrado =
-    DV_USUARIOS.find(
-      u =>
-        u.usuario.toLowerCase() === user.toLowerCase() &&
-        u.password === pass
-    );
-
+  const user = (document.getElementById("dvLoginUser").value || "").trim();
+  const pass = document.getElementById("dvLoginPass").value || "";
+  const error = document.getElementById("dvLoginError");
+  const encontrado = DV_USUARIOS.find(
+    u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass
+  );
   if(!encontrado){
-    if(error)
-      error.textContent =
-        "Usuario o contraseña incorrectos.";
+    if(error) error.textContent = "Usuario o contraseña incorrectos.";
     return;
   }
-
-  localStorage.setItem(
-    DV_SESSION_KEY,
-    "1"
-  );
-
-  localStorage.setItem(
-    DV_USER_KEY,
-    JSON.stringify({
-      usuario:encontrado.usuario,
-      nombre:encontrado.nombre
-    })
-  );
-
+  localStorage.setItem(DV_SESSION_KEY, "1");
+  localStorage.setItem(DV_USER_KEY, JSON.stringify({
+    usuario: encontrado.usuario,
+    nombre: encontrado.nombre
+  }));
   if(error) error.textContent = "";
-
   dvMostrarAplicacion(encontrado);
-
-  try{
-    if(typeof recuperarRecorrido === "function")
-      recuperarRecorrido();
-  }catch(e){
-    console.error(
-      "Recuperación de recorrido:",
-      e
-    );
+  try {
+    if(typeof recuperarRecorrido === "function") recuperarRecorrido();
+  } catch(e) {
+    console.error("Recuperación de recorrido:", e);
   }
 }
-
 function dvCerrarSesion(){
-  localStorage.removeItem(
-    DV_SESSION_KEY
-  );
-  localStorage.removeItem(
-    DV_USER_KEY
-  );
-
+  localStorage.removeItem(DV_SESSION_KEY);
+  localStorage.removeItem(DV_USER_KEY);
   dvMostrarLogin();
-
-  const u =
-    document.getElementById("dvLoginUser");
-  const p =
-    document.getElementById("dvLoginPass");
-
+  const u = document.getElementById("dvLoginUser");
+  const p = document.getElementById("dvLoginPass");
   if(u) u.value = "";
   if(p) p.value = "";
   if(u) u.focus();
 }
-
 function dvComprobarSesion(){
-  const sesion =
-    localStorage.getItem(DV_SESSION_KEY);
-  const usuario =
-    dvUsuarioActual();
-
+  const sesion = localStorage.getItem(DV_SESSION_KEY);
+  const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
   }else{
     dvMostrarLogin();
   }
 }
-
-document.addEventListener(
-"DOMContentLoaded",
-function(){
-  const btn =
-    document.getElementById("dvLoginBtn");
-  const logout =
-    document.getElementById("dvLogout");
-  const pass =
-    document.getElementById("dvLoginPass");
-
-  if(btn)
-    btn.addEventListener(
-      "click",
-      dvIniciarSesion
-    );
-
-  if(logout)
-    logout.addEventListener(
-      "click",
-      dvCerrarSesion
-    );
-
-  if(pass)
-    pass.addEventListener(
-      "keydown",
-      function(e){
-        if(e.key === "Enter")
-          dvIniciarSesion();
-      }
-    );
-
+document.addEventListener("DOMContentLoaded", function(){
+  const btn = document.getElementById("dvLoginBtn");
+  const logout = document.getElementById("dvLogout");
+  const pass = document.getElementById("dvLoginPass");
+  if(btn) btn.addEventListener("click", dvIniciarSesion);
+  if(logout) logout.addEventListener("click", dvCerrarSesion);
+  if(pass) pass.addEventListener("keydown", function(e){
+    if(e.key === "Enter") dvIniciarSesion();
+  });
   dvComprobarSesion();
 });
 
-/* =========================================================
-   CENTRAR + GPS NATIVO
-   Un solo puente para evitar dobles listeners y dobles callbacks.
-   ========================================================= */
+
 (function(){
+  const dvCenterButton = document.getElementById("dvCenterButton");
+  let dvUserMovedMap = false;
+  let dvLastNativeLocation = null;
 
-  const centerButton =
-    document.getElementById("dvCenterButton");
-
-  let lastNativeLocation = null;
-  let centerBound = false;
-
-  function showCenterButton(){
-    if(centerButton)
-      centerButton.classList.add(
-        "dv-visible"
-      );
+  function dvShowCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
+    dvUserMovedMap = true;
   }
 
-  function hideCenterButton(){
-    if(centerButton)
-      centerButton.classList.remove(
-        "dv-visible"
-      );
+  function dvHideCenterButton(){
+    if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
+    dvUserMovedMap = false;
   }
 
-  function registerNativeLocation(p){
-    if(!p) return;
-    lastNativeLocation = p;
-    window.__dvLastNavigationLocation = p;
-  }
-
-  window.dvRegisterNativeLocationForCenter =
-    registerNativeLocation;
-
-  function centerVehicle(){
-    const p =
-      lastNativeLocation ||
-      window.__dvLastNavigationLocation;
-
-    if(!p || !window.map)
-      return;
-
-    const lat = Number(p.lat);
-    const lng = Number(p.lng);
-
-    if(!Number.isFinite(lat) ||
-       !Number.isFinite(lng))
-      return;
-
-    const bearing =
-      Number.isFinite(Number(p.bearing))
-        ? Number(p.bearing)
-        : 0;
+  function dvCenterOnVehicle(){
+    const p = dvLastNativeLocation;
+    if(!p || !window.map) return;
 
     try{
-      if(typeof window.map.stop === "function")
-        window.map.stop();
+      const center = [Number(p.lng), Number(p.lat)];
+
+      if(typeof window.map.stop === "function") window.map.stop();
 
       if(typeof window.map.easeTo === "function"){
         window.map.easeTo({
-          center:[lng,lat],
-          zoom:17,
+          center:center,
+          zoom:16.8,
           pitch:45,
-          bearing:bearing,
+          bearing:Number(p.bearing || 0),
           offset:[0,120],
-          duration:500,
+          duration:450,
           essential:true
         });
       }else{
-        if(typeof window.map.setCenter === "function")
-          window.map.setCenter([lng,lat]);
-
-        if(typeof window.map.setZoom === "function")
-          window.map.setZoom(17);
-
-        if(typeof window.map.setPitch === "function")
-          window.map.setPitch(45);
-
-        if(typeof window.map.setBearing === "function")
-          window.map.setBearing(bearing);
+        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
+        if(typeof window.map.setPitch === "function") window.map.setPitch(45);
+        if(typeof window.map.setBearing === "function") window.map.setBearing(Number(p.bearing || 0));
       }
 
-      mapaSiguiendoVehiculo = true;
-      mapaUsuarioMovio = false;
-      hideCenterButton();
-
-    }catch(e){
-      console.error(
-        "Centrar vehículo:",
-        e
-      );
-    }
+      dvHideCenterButton();
+    }catch(e){}
   }
 
-  window.dvCenterOnVehicle =
-    centerVehicle;
+  if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
 
-  function bindMapInteractions(){
-    if(
-      centerBound ||
-      !window.map ||
-      typeof window.map.on !== "function"
-    )
-      return false;
+  window.dvRegisterNativeLocationForCenter = function(p){
+    if(p) dvLastNativeLocation = p;
+  };
 
-    centerBound = true;
+  function dvWatchMapInteraction(){
+    if(!window.map || typeof window.map.on !== "function") return false;
 
-    [
-      "dragstart",
-      "zoomstart",
-      "rotatestart",
-      "pitchstart"
-    ].forEach(
-      eventName =>
-        window.map.on(
-          eventName,
-          showCenterButton
-        )
-    );
+    if(!window.__dvCenterInteractionBound){
+      window.__dvCenterInteractionBound = true;
 
-    if(centerButton){
-      centerButton.addEventListener(
-        "click",
-        centerVehicle
-      );
+      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+        window.map.on(ev, dvShowCenterButton);
+      });
     }
-
     return true;
   }
 
   let tries = 0;
-  const timer =
-    setInterval(
-      function(){
-        if(
-          bindMapInteractions() ||
-          ++tries > 80
-        ){
-          clearInterval(timer);
-        }
-      },
-      250
-    );
+  const timer = setInterval(function(){
+    if(dvWatchMapInteraction() || ++tries > 40) clearInterval(timer);
+  },250);
 
-  /* Único puente GPS nativo -> WebApp. */
-  window.dvSetNavigationLocation =
-    function(p){
-      if(!p) return;
+  window.dvCenterOnVehicle = dvCenterOnVehicle;
+})();
 
-      registerNativeLocation(p);
 
-      if(!recorridoActivo)
-        return;
 
-      const lat =
-        Number(p.lat);
-      const lng =
-        Number(p.lng);
-      const accuracy =
-        Number(p.accuracy);
-      const speed =
-        Number(p.speed);
-      const bearing =
-        Number(p.bearing);
+(function(){
+  if(window.__dvNativeCenterBridgeInstalled) return;
+  window.__dvNativeCenterBridgeInstalled = true;
 
-      if(
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng)
-      )
-        return;
-
-      registrarPuntoRecorrido({
-        coords:{
-          latitude:lat,
-          longitude:lng,
-          accuracy:
-            Number.isFinite(accuracy)
-              ? accuracy
-              : null,
-          speed:
-            Number.isFinite(speed)
-              ? speed
-              : null,
-          heading:
-            Number.isFinite(bearing)
-              ? bearing
-              : null
-        }
-      });
-    };
-
-  window.onNativeLocation =
-    function(p){
-      try{
-        window.dvSetNavigationLocation(p);
-      }catch(e){
-        console.error(
-          "GPS nativo:",
-          e
-        );
+  const oldOnNativeLocation = window.onNativeLocation;
+  window.onNativeLocation = function(p){
+    try{
+      if(window.dvRegisterNativeLocationForCenter){
+        window.dvRegisterNativeLocationForCenter(p);
       }
-    };
+    }catch(e){}
+    if(typeof oldOnNativeLocation === "function"){
+      return oldOnNativeLocation.apply(this, arguments);
+    }
+  };
+})();
 
+</script>
+
+
+<script id="dv-navigation-location-bridge">
+(function(){
+  if(window.__dvNavigationBridgeInstalled)return;
+  window.__dvNavigationBridgeInstalled=true;
+
+  const old=window.onNativeLocation;
+  // GPS NATIVO -> RECORRIDO + SEGUIMIENTO EN TIEMPO REAL
+  window.dvSetNavigationLocation=function(p){
+    if(p && window.dvRegisterNativeLocationForCenter){
+      window.dvRegisterNativeLocationForCenter(p);
+    }
+    if(!p || !recorridoActivo) return;
+    const lat=Number(p.lat);
+    const lng=Number(p.lng);
+    const accuracy=Number(p.accuracy);
+    const speed=Number(p.speed);
+    const bearing=Number(p.bearing);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+    // El GPS nativo pasa a ser la fuente principal de navegación.
+    // Reutilizamos el mismo registrador para conservar recorrido,
+    // persistencia, filtros de saltos y actualización visual.
+    registrarPuntoRecorrido({
+      coords:{
+        latitude:lat,
+        longitude:lng,
+        accuracy:Number.isFinite(accuracy)?accuracy:null,
+        speed:Number.isFinite(speed)?speed:null,
+        heading:Number.isFinite(bearing)?bearing:null
+      }
+    });
+  };
+
+  window.onNativeLocation=function(p){
+    try{
+      if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p);
+    }catch(e){}
+    if(typeof old==="function")return old.apply(this,arguments);
+  };
 })();
 </script>
+
+
+
+
+
 </body>
 </html>
