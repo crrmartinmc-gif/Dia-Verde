@@ -15,18 +15,21 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 #dvCenterButton{
   display:none;
   position:absolute;
-  right:12px;
+  left:12px;
   bottom:12px;
-  z-index:1000;
+  right:auto;
+  z-index:10000;
   border:0;
   border-radius:999px;
-  padding:10px 15px;
+  padding:9px 13px;
   font-weight:800;
-  font-size:14px;
-  background:#087f3f;
+  font-size:13px;
+  line-height:1;
+  background:#087a3d;
   color:#fff;
   box-shadow:0 3px 12px rgba(0,0,0,.28);
   cursor:pointer;
+  min-height:42px;
 }
 #dvCenterButton.dv-visible{display:block}
 
@@ -63,16 +66,18 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 .route-controls{position:relative;z-index:2;margin-top:12px}
 #dvCenterButton{
   position:absolute!important;
-  right:16px!important;
-  bottom:18px!important;
+  left:12px!important;
+  right:auto!important;
+  bottom:12px!important;
   z-index:10000!important;
   display:none;
-  padding:12px 18px!important;
+  padding:9px 13px!important;
   border:0!important;
-  border-radius:24px!important;
-  font-size:15px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
   font-weight:800!important;
   line-height:1!important;
+  min-height:42px!important;
   background:#087a3d!important;
   color:#fff!important;
   box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
@@ -331,7 +336,6 @@ class="gps-box"
 id="gpsBox"
 >
 Primero sacá la fotografía.
-Luego se obtendrá automáticamente la ubicación GPS.
 </div>
 <input
 id="cameraInput"
@@ -763,11 +767,43 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+function dvUsuarioManipuloMapa(e){
+  return !!(e && e.originalEvent);
+}
+map.on("dragstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("rotatestart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("pitchstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let mapaSiguiendoVehiculo = false;
+let mapaUsuarioMovio = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1161,7 +1197,7 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
     return;
   }
 
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
     map._map.easeTo(target);
   }
 }
@@ -1380,7 +1416,7 @@ function iniciarRecorrido(){
     return;
   }
   guardarRecorridoLocal();
-  mostrarToast("🚛 Recorrido iniciado");
+  mostrarToast("🟢 Recorrido iniciado · navegación activa");
 }
 function finalizarRecorrido(){
   if(!recorridoActivo)return;
@@ -2166,29 +2202,29 @@ list.innerHTML +=
 function abrirEvidencia(
 item
 ){
-evidenciaActual =
-item;
-evidenciaBase64 =
-"";
-evidenciaLat =
-"";
-evidenciaLng =
-"";
-evidenceAddress.textContent =
-`${item.calle} ${item.numero || ""} — ${selectedZone}`;
-evidencePreview.style.display =
-"none";
-evidencePreview.src =
-"";
-gpsBox.innerHTML =
-"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
-sendEvidence.disabled =
-true;
-takeEvidence.style.display =
-"block";
-evidenceBackdrop.classList.add(
-"show"
-);
+ evidenciaActual =
+ item;
+ evidenciaBase64 =
+ "";
+ evidenciaLat =
+ "";
+ evidenciaLng =
+ "";
+ evidenceAddress.textContent =
+ `${item.calle} ${item.numero || ""} — ${selectedZone}`;
+ evidencePreview.style.display =
+ "none";
+ evidencePreview.src =
+ "";
+ gpsBox.innerHTML =
+ "📷 Sacá la fotografía y luego tocá Registrar.";
+ sendEvidence.disabled =
+ true;
+ takeEvidence.style.display =
+ "block";
+ evidenceBackdrop.classList.add(
+ "show"
+ );
 }
 function convertirUrlImagenDrive(url){
   const texto=String(url||"").trim();
@@ -2227,8 +2263,8 @@ function verEvidencia(item){
   }
   evidenciaActual = item;
   evidenciaBase64 = "";
-  evidenciaLat = evidencia.latitud || "";
-  evidenciaLng = evidencia.longitud || "";
+  evidenciaLat = "";
+  evidenciaLng = "";
   evidenceAddress.textContent =
     `${direccion} — ${selectedCgm} — ${selectedZone}`;
   if(evidencia.foto){
@@ -2242,12 +2278,7 @@ function verEvidencia(item){
     evidencePreview.style.display = "none";
   }
   gpsBox.innerHTML =
-    "✅ Evidencia registrada hoy." +
-    "<br><br>" +
-    (evidencia.latitud && evidencia.longitud
-      ? "📍 Latitud: " + evidencia.latitud +
-        "<br>Longitud: " + evidencia.longitud
-      : "📍 Sin coordenadas registradas.");
+    "✅ Evidencia registrada hoy.";
   sendEvidence.style.display = "none";
   takeEvidence.style.display = "none";
   evidenceBackdrop.classList.add("show");
@@ -2314,84 +2345,39 @@ reader.onerror = reject;
 reader.readAsDataURL(file);
 });
 }
-async function prepararEvidencia(file){
-try{
-gpsBox.innerHTML = "📷 Procesando fotografía...";
-evidenciaBase64 = await comprimirImagen(file);
-evidencePreview.src = evidenciaBase64;
-evidencePreview.style.display = "block";
-gpsBox.innerHTML = "📍 Obteniendo ubicación GPS...";
-let ubicacionObtenida = false;
-try{
-if(window.AndroidGPS && typeof AndroidGPS.getLastLocation === "function"){
-const nativeLocation = AndroidGPS.getLastLocation();
-if(nativeLocation && nativeLocation !== "null"){
-const location = JSON.parse(nativeLocation);
-if(Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))){
-evidenciaLat = Number(location.lat);
-evidenciaLng = Number(location.lng);
-const precision = Number(location.accuracy || 0);
-gpsBox.innerHTML =
-"✅ Ubicación obtenida" +
-"<br>Latitud: " + evidenciaLat.toFixed(6) +
-"<br>Longitud: " + evidenciaLng.toFixed(6) +
-"<br>📡 Precisión: ±" + Math.round(precision) + " m";
-sendEvidence.disabled = false;
-ubicacionObtenida = true;
-}
-}
-}
-}catch(error){
-console.warn("GPS nativo no disponible:", error);
-}
-if(!ubicacionObtenida){
-if(!navigator.geolocation){
-gpsBox.innerHTML =
-"⚠️ No se pudo obtener la ubicación GPS.<br><br>" +
-"Este dispositivo no permite obtener ubicación.";
-sendEvidence.disabled = true;
-return;
-}
-navigator.geolocation.getCurrentPosition(
-position => {
-evidenciaLat = position.coords.latitude;
-evidenciaLng = position.coords.longitude;
-const precision = Number(position.coords.accuracy || 0);
-gpsBox.innerHTML =
-"✅ Ubicación obtenida" +
-"<br>Latitud: " + evidenciaLat.toFixed(6) +
-"<br>Longitud: " + evidenciaLng.toFixed(6) +
-"<br>📡 Precisión: ±" + Math.round(precision) + " m";
-sendEvidence.disabled = false;
-},
-error => {
-console.error("GPS evidencia:",error);
-let detalle = "Activá la ubicación del dispositivo e intentá nuevamente.";
-if(error && error.code === 1){
-detalle = "El navegador no tiene permiso para usar la ubicación.";
-}else if(error && error.code === 2){
-detalle = "El dispositivo no pudo determinar la ubicación.";
-}else if(error && error.code === 3){
-detalle = "El GPS tardó demasiado en responder.";
-}
-gpsBox.innerHTML =
-"⚠️ No se pudo obtener la ubicación GPS.<br><br>" + detalle;
-sendEvidence.disabled = true;
-},
-{
-enableHighAccuracy:true,
-timeout:20000,
-maximumAge:0
-}
-);
-}
-}catch(error){
-console.error("Error preparando evidencia:",error);
-gpsBox.innerHTML =
-"❌ No se pudo procesar la fotografía.<br><br>" +
-"Revisá la fotografía e intentá nuevamente.";
-sendEvidence.disabled = true;
-}
+async function prepararEvidencia(
+file
+){
+ try{
+   gpsBox.innerHTML =
+     "📷 Procesando fotografía...";
+
+   evidenciaBase64 =
+     await comprimirImagen(file);
+
+   evidencePreview.src =
+     evidenciaBase64;
+   evidencePreview.style.display =
+     "block";
+
+   // La evidencia NO requiere GPS.
+   // El GPS del recorrido continúa funcionando de forma independiente.
+   evidenciaLat = "";
+   evidenciaLng = "";
+
+   gpsBox.innerHTML =
+     "✅ Fotografía lista." +
+     "<br>Podés tocar <strong>Registrar</strong>.";
+
+   sendEvidence.disabled =
+     false;
+ }
+ catch(error){
+   console.error("Procesando evidencia:",error);
+   gpsBox.innerHTML =
+     "❌ No se pudo procesar la fotografía.";
+   sendEvidence.disabled = true;
+ }
 }
 async function enviarEvidencia(){
 if(!evidenciaActual)
@@ -2610,13 +2596,9 @@ cargarEvidenciasHoy();
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
-  { usuario:"Ale",  password:"boca", nombre:"Ale" },
-  { usuario:"admin", password:"banfield09", nombre:"Dia Verde" },
-  { usuario:"Pablo", password:"independiente", nombre:"Pablo Vazques" },
-  { usuario:"Franco", password:"independiente", nombre:"Franco Sorcinelli" },
-  { usuario:"Francocrr", password:"boca", nombre:"Pablo Vazques" },
-  { usuario:"chofer", password:"comodin", nombre:"Comodin" },
-  { usuario:"CarliDT", password:"banfield", nombre:"Carli" }
+  { usuario:"admin",  password:"diaverde2026", nombre:"Administrador" },
+  { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
+  { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
 ];
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
@@ -2710,32 +2692,56 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function dvCenterOnVehicle(){
-    const p = dvLastNativeLocation;
+    let p = dvLastNativeLocation || window.__dvLastNavigationLocation || null;
+
+    // Último recurso: tomar el último punto ya guardado del recorrido.
+    if(!p && Array.isArray(window.recorridoPuntos) && window.recorridoPuntos.length){
+      const q = window.recorridoPuntos[window.recorridoPuntos.length-1];
+      if(q && q.coords){
+        p = {
+          lat:Number(q.coords.latitude),
+          lng:Number(q.coords.longitude),
+          bearing:Number(q.coords.heading || 0)
+        };
+      }
+    }
+
     if(!p || !window.map) return;
 
     try{
-      const center = [Number(p.lng), Number(p.lat)];
+      if(typeof window.mapaSiguiendoVehiculo !== "undefined") window.mapaSiguiendoVehiculo = true;
+      if(typeof window.mapaUsuarioMovio !== "undefined") window.mapaUsuarioMovio = false;
+
+      const lat = Number(p.lat);
+      const lng = Number(p.lng);
+      const bearing = Number.isFinite(Number(p.bearing)) ? Number(p.bearing) : 0;
+
+      if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
       if(typeof window.map.stop === "function") window.map.stop();
 
       if(typeof window.map.easeTo === "function"){
         window.map.easeTo({
-          center:center,
-          zoom:16.8,
+          center:[lng,lat],
+          zoom:17,
           pitch:45,
-          bearing:Number(p.bearing || 0),
+          bearing:bearing,
           offset:[0,120],
           duration:450,
           essential:true
         });
       }else{
-        if(typeof window.map.setCenter === "function") window.map.setCenter(center);
+        if(typeof window.map.setCenter === "function") window.map.setCenter([lng,lat]);
+        if(typeof window.map.setZoom === "function") window.map.setZoom(17);
         if(typeof window.map.setPitch === "function") window.map.setPitch(45);
-        if(typeof window.map.setBearing === "function") window.map.setBearing(Number(p.bearing || 0));
+        if(typeof window.map.setBearing === "function") window.map.setBearing(bearing);
       }
 
-      dvHideCenterButton();
-    }catch(e){}
+      // El botón queda disponible durante el recorrido.
+      if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
+    }catch(e){
+      console.warn("Centrar vehículo:",e);
+    }
   }
 
   if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
@@ -2893,7 +2899,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 
     const b=document.getElementById("dvCenterButton");
-    if(b)b.addEventListener("click",centerVehicle);
+    if(b)b.addEventListener("click",window.dvCenterOnVehicle);
     return true;
   }
 
