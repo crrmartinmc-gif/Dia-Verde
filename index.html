@@ -64,7 +64,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 #dvCenterButton{
   position:absolute!important;
   right:16px!important;
-  bottom:18px!important;
+  bottom:72px!important;
   z-index:10000!important;
   display:none;
   padding:12px 18px!important;
@@ -75,8 +75,15 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   line-height:1!important;
   background:#087a3d!important;
   color:#fff!important;
-  box-shadow:0 3px 12px rgba(0,0,0,.30)!important;
+  box-shadow:0 4px 14px rgba(0,0,0,.30)!important;
   cursor:pointer!important;
+  border:0!important;
+  border-radius:999px!important;
+  min-width:52px!important;
+  min-height:52px!important;
+  padding:0 15px!important;
+  font-size:14px!important;
+  font-weight:800!important;
 }
 #dvCenterButton.dv-visible{display:block!important}
 
@@ -97,7 +104,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   #map{min-height:460px}
   .map-card{padding:10px}
   .card-title{margin-bottom:10px}
-  #dvCenterButton{right:12px!important;bottom:14px!important}
+  #dvCenterButton{right:12px!important;bottom:70px!important}
 }
 </style>
 
@@ -244,7 +251,7 @@ id="zoneBadge"
 style="display:none"
 ></div>
 <div id="map"></div>
-<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
+<button id="dvCenterButton" type="button" aria-label="Volver a seguir el vehículo">📍 Seguir vehículo</button>
 </div>
 <div class="route-controls">
 <button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
@@ -1381,6 +1388,8 @@ function iniciarRecorrido(){
   recorridoHeading=null;
   mapaSiguiendoVehiculo=true;
   mapaUsuarioMovio=false;
+  const dvCenterBtnInicio=document.getElementById("dvCenterButton");
+  if(dvCenterBtnInicio) dvCenterBtnInicio.classList.add("dv-visible");
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
@@ -1423,6 +1432,10 @@ function finalizarRecorrido(){
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
   recorridoActivo=false;
+  const dvCenterBtnFin=document.getElementById("dvCenterButton");
+  if(dvCenterBtnFin) dvCenterBtnFin.classList.remove("dv-visible");
+  mapaSiguiendoVehiculo=false;
+  mapaUsuarioMovio=false;
   try{
     if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
       AndroidGPS.stopTracking();
@@ -1469,6 +1482,10 @@ function recuperarRecorrido(){
       return;
     }
     recorridoActivo=true;
+    const dvCenterBtnRecuperado=document.getElementById("dvCenterButton");
+    if(dvCenterBtnRecuperado) dvCenterBtnRecuperado.classList.add("dv-visible");
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
     recorridoZona=estado.zona;
     recorridoInicio=estado.inicio;
     recorridoPuntos=
