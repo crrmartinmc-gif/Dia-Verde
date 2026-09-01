@@ -404,7 +404,8 @@ let currentVisibleDirections = [];
 let evidenciasHoy = [];
 let evidenciaActual = null;
 let evidenciaBase64 = "";
-
+let evidenciaLat = "";
+let evidenciaLng = "";
 const cgm =
 document.getElementById("cgm");
 const zone =
@@ -2317,16 +2318,280 @@ reader.readAsDataURL(file);
 }
 async function prepararEvidencia(file){
 try{
-gpsBoxfunction prepararEvidencia(){
-  const input = document.getElementById("evidenceFile");
-  if(!input){
-    alert("No se encontró el selector de fotografía.");
+
+evidenciaBase64 = await comprimirImagen(file);
+evidencePreview.src = evidenciaBase64;
+evidencePreview.style.display = "block";
+
+let ubicacionObtenida = false;
+try{
+
+
+if(nativeLocation && nativeLocation !== "null"){
+const location = JSON.parse(nativeLocation);
+if(Number.isFinite(Number(location.lat)) && Number.isFinite(Number(location.lng))){
+
+
+const precision = Number(location.accuracy || 0);
+
+"✅ Ubicación obtenida" +
+
+
+"<br>📡 Precisión: ±" + Math.round(precision) + " m";
+sendEvidence.disabled = false;
+ubicacionObtenida = true;
+}
+}
+}
+}catch(error){
+console.warn("GPS nativo no disponible:", error);
+}
+if(!ubicacionObtenida){
+if(!navigator.geolocation){
+
+"⚠️ No se pudo obtener la ubicación GPS.<br><br>" +
+"Este dispositivo no permite obtener ubicación.";
+sendEvidence.disabled = true;
+return;
+}
+}
+}catch(error){
+console.error("Error preparando evidencia:",error);
+
+"❌ No se pudo procesar la fotografía.<br><br>" +
+"Revisá la fotografía e intentá nuevamente.";
+sendEvidence.disabled = true;
+}
+}
+async function enviarEvidencia(){
+if(!evidenciaActual)
+return;
+if(!evidenciaBase64){
+alert(
+"Primero sacá la fotografía."
+);
+return;
+}
+if(
+
+
+){
+alert(
+"No se pudo obtener la ubicación GPS."
+);
+return;
+}
+sendEvidence.disabled =
+true;
+sendEvidence.textContent =
+"Enviando...";
+const ahora =
+new Date();
+const fecha =
+ahora.toLocaleDateString(
+"es-AR"
+);
+const hora =
+ahora.toLocaleTimeString(
+"es-AR",
+{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+const datos = {
+fecha:
+fecha,
+hora:
+hora,
+cgm:
+selectedCgm,
+zona:
+selectedZone,
+direccion:
+`${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
+latitud:
+
+longitud:
+
+foto:
+evidenciaBase64
+};
+try{
+await fetch(
+APPS_SCRIPT_URL,
+{
+method:"POST",
+mode:"no-cors",
+headers:{
+"Content-Type":
+"text/plain;charset=utf-8"
+},
+body:
+JSON.stringify(
+datos
+)
+}
+);
+cerrarEvidencia();
+mostrarToast(
+"📷 Evidencia enviada. Actualizando..."
+);
+setTimeout(
+() => {
+cargarEvidenciasHoy();
+},
+2000
+);
+}
+catch(error){
+console.error(error);
+alert(
+"No se pudo enviar la evidencia."
+);
+}
+finally{
+sendEvidence.disabled =
+false;
+sendEvidence.textContent =
+"✓ Registrar";
+}
+}
+list.addEventListener(
+"click",
+event => {
+const button =
+event.target.closest(
+".evidence-btn"
+);
+if(!button)
+return;
+const index =
+Number(
+button.dataset.evidenceIndex
+);
+const item =
+currentVisibleDirections[index];
+if(item){
+abrirEvidencia(
+item
+);
+}
+}
+);
+cameraInput.addEventListener(
+"change",
+async () => {
+if(
+cameraInput.files &&
+cameraInput.files[0]
+){
+await prepararEvidencia(
+cameraInput.files[0]
+);
+}
+}
+);
+takeEvidence.addEventListener(
+"click",
+() => {
+cameraInput.click();
+}
+);
+sendEvidence.addEventListener(
+"click",
+enviarEvidencia
+);
+cancelEvidence.addEventListener(
+"click",
+cerrarEvidencia
+);
+evidenceBackdrop.addEventListener(
+"click",
+event => {
+if(
+event.target ===
+evidenceBackdrop
+){
+cerrarEvidencia();
+}
+}
+);
+startRoute.addEventListener("click",iniciarRecorrido);
+stopRoute.addEventListener("click",finalizarRecorrido);
+cgm.addEventListener(
+"change",
+() => {
+selectedCgm =
+cgm.value;
+selectedZone =
+"";
+search.value =
+"";
+actualizarZonasPorCGM();
+render();
+}
+);
+zone.addEventListener(
+"change",
+() => {
+  if(recorridoActivo && zone.value !== recorridoZona){
+    zone.value=recorridoZona;
+    selectedZone=recorridoZona;
+    alert("Finalizá el recorrido actual antes de cambiar de zona.");
     return;
   }
-
-  input.value = "";
-  input.click();
-}"null"); }
+  if(!recorridoActivo && recorridoMarker){
+    map.removeLayer(recorridoMarker);
+    recorridoMarker=null;
+  }
+  render();
+  actualizarBotonesRecorrido();
+}
+);
+search.addEventListener(
+"input",
+render
+);
+refresh.addEventListener(
+"click",
+() => {
+cargarDatos();
+}
+);
+cargarMapa();
+cargarDatos();
+setInterval(
+() => {
+cargarDatos();
+},
+5 * 60 * 1000
+);
+document.addEventListener(
+"visibilitychange",
+() => {
+if(!document.hidden){
+if(recorridoActivo) activarPantallaEncendida();
+cargarEvidenciasHoy();
+}
+}
+);
+</script>
+<script id="diaverde-auth">
+const DV_USUARIOS = [
+  { usuario:"Ale",       password:"boca",          nombre:"Ale" },
+  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde" },
+  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
+  { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
+  { usuario:"Francocrr", password:"boca",          nombre:"Pablo Vazques" },
+  { usuario:"chofer",    password:"comodin",       nombre:"Comodin" },
+  { usuario:"CarliDT",   password:"banfield",      nombre:"Carli" }
+];
+const DV_SESSION_KEY = "diaVerdeSesionV1";
+const DV_USER_KEY = "diaVerdeUsuarioV1";
+function dvUsuarioActual(){
+  try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
   catch(e){ return null; }
 }
 function dvMostrarAplicacion(usuario){
