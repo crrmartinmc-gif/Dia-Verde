@@ -336,6 +336,7 @@ class="gps-box"
 id="gpsBox"
 >
 Primero sacá la fotografía.
+Luego se obtendrá automáticamente la ubicación GPS.
 </div>
 <input
 id="cameraInput"
@@ -2202,29 +2203,29 @@ list.innerHTML +=
 function abrirEvidencia(
 item
 ){
- evidenciaActual =
- item;
- evidenciaBase64 =
- "";
- evidenciaLat =
- "";
- evidenciaLng =
- "";
- evidenceAddress.textContent =
- `${item.calle} ${item.numero || ""} — ${selectedZone}`;
- evidencePreview.style.display =
- "none";
- evidencePreview.src =
- "";
- gpsBox.innerHTML =
- "📷 Sacá la fotografía y luego tocá Registrar.";
- sendEvidence.disabled =
- true;
- takeEvidence.style.display =
- "block";
- evidenceBackdrop.classList.add(
- "show"
- );
+evidenciaActual =
+item;
+evidenciaBase64 =
+"";
+evidenciaLat =
+"";
+evidenciaLng =
+"";
+evidenceAddress.textContent =
+`${item.calle} ${item.numero || ""} — ${selectedZone}`;
+evidencePreview.style.display =
+"none";
+evidencePreview.src =
+"";
+gpsBox.innerHTML =
+"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
+sendEvidence.disabled =
+true;
+takeEvidence.style.display =
+"block";
+evidenceBackdrop.classList.add(
+"show"
+);
 }
 function convertirUrlImagenDrive(url){
   const texto=String(url||"").trim();
@@ -2263,8 +2264,8 @@ function verEvidencia(item){
   }
   evidenciaActual = item;
   evidenciaBase64 = "";
-  evidenciaLat = "";
-  evidenciaLng = "";
+  evidenciaLat = evidencia.latitud || "";
+  evidenciaLng = evidencia.longitud || "";
   evidenceAddress.textContent =
     `${direccion} — ${selectedCgm} — ${selectedZone}`;
   if(evidencia.foto){
@@ -2278,7 +2279,12 @@ function verEvidencia(item){
     evidencePreview.style.display = "none";
   }
   gpsBox.innerHTML =
-    "✅ Evidencia registrada hoy.";
+    "✅ Evidencia registrada hoy." +
+    "<br><br>" +
+    (evidencia.latitud && evidencia.longitud
+      ? "📍 Latitud: " + evidencia.latitud +
+        "<br>Longitud: " + evidencia.longitud
+      : "📍 Sin coordenadas registradas.");
   sendEvidence.style.display = "none";
   takeEvidence.style.display = "none";
   evidenceBackdrop.classList.add("show");
@@ -2348,36 +2354,28 @@ reader.readAsDataURL(file);
 async function prepararEvidencia(
 file
 ){
- try{
-   gpsBox.innerHTML =
-     "📷 Procesando fotografía...";
-
-   evidenciaBase64 =
-     await comprimirImagen(file);
-
-   evidencePreview.src =
-     evidenciaBase64;
-   evidencePreview.style.display =
-     "block";
-
-   // La evidencia NO requiere GPS.
-   // El GPS del recorrido continúa funcionando de forma independiente.
-   evidenciaLat = "";
-   evidenciaLng = "";
-
-   gpsBox.innerHTML =
-     "✅ Fotografía lista." +
-     "<br>Podés tocar <strong>Registrar</strong>.";
-
-   sendEvidence.disabled =
-     false;
- }
- catch(error){
-   console.error("Procesando evidencia:",error);
-   gpsBox.innerHTML =
-     "❌ No se pudo procesar la fotografía.";
-   sendEvidence.disabled = true;
- }
+try{
+gpsBox.innerHTML =
+"📷 Procesando fotografía...";
+evidenciaBase64 =
+await comprimirImagen(
+file
+);
+evidencePreview.src =
+evidenciaBase64;
+evidencePreview.style.display =
+"block";
+gpsBox.innerHTML =
+"📍 Obteniendo ubicación GPS...";
+gpsBox.innerHTML =
+"📷 Procesando fotografía...";
+sendEvidence.disabled =
+false;
+catch(error){
+console.error(error);
+gpsBox.innerHTML =
+"❌ No se pudo procesar la fotografía.";
+}
 }
 async function enviarEvidencia(){
 if(!evidenciaActual)
@@ -2385,15 +2383,6 @@ return;
 if(!evidenciaBase64){
 alert(
 "Primero sacá la fotografía."
-);
-return;
-}
-if(
-!evidenciaLat ||
-!evidenciaLng
-){
-alert(
-"No se pudo obtener la ubicación GPS."
 );
 return;
 }
@@ -2427,10 +2416,6 @@ zona:
 selectedZone,
 direccion:
 `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
-latitud:
-evidenciaLat,
-longitud:
-evidenciaLng,
 foto:
 evidenciaBase64
 };
