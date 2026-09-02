@@ -1168,25 +1168,21 @@ function crearIconoVehiculo(rumbo){
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  const heading=recorridoHeading;
-  const bearingActual=map.getBearing();
-  const bearing=Number.isFinite(heading) ? heading : bearingActual;
+  const heading=Number(recorridoHeading);
+  const bearing=Number.isFinite(heading) ? heading : Number(map.getBearing())||0;
 
   const target={
     center:[lng,lat],
     zoom:18,
-    bearing:bearing,
     pitch:45,
+    bearing:bearing,
     offset:[0,120],
     duration:forzarZoom?700:450,
     essential:true
   };
 
-  if(!forzarZoom && (!mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
+  if(!forzarZoom && (!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
 
-  // La cámara está siendo movida por el GPS, no por el usuario.
-  // Los eventos drag/zoom/rotate/pitch de esta animación no deben
-  // apagar el seguimiento.
   mapaMoviendoAutomatico=true;
   mapaSiguiendoVehiculo=true;
 
@@ -1194,19 +1190,19 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
     map.stop();
     map.easeTo(target);
 
-    const liberarGuardia=function(){
+    // La animación de MapLibre genera zoomstart/rotatestart/pitchstart.
+    // Esos eventos NO significan que el usuario haya movido el mapa.
+    const liberar=function(){
       mapaMoviendoAutomatico=false;
-      try{ map.off("moveend",liberarGuardia); }catch(e){}
     };
-
     if(typeof map.once==="function"){
-      map.once("moveend",liberarGuardia);
+      map.once("moveend",liberar);
     }else{
-      setTimeout(liberarGuardia, Math.max(500,target.duration+100));
+      setTimeout(liberar,Math.max(800,target.duration+250));
     }
   }catch(e){
     mapaMoviendoAutomatico=false;
-    console.warn("Seguimiento cámara:",e);
+    console.warn("Seguimiento automático de cámara:",e);
   }
 }
 
@@ -2703,6 +2699,10 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvLastNativeLocation = null;
 
   function dvShowCenterButton(){
+    // Ignorar los eventos generados por la cámara automática.
+    // Solo una interacción real del usuario debe sacar al mapa del seguimiento.
+    if(typeof mapaMoviendoAutomatico !== "undefined" && mapaMoviendoAutomatico) return;
+
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap = true;
     if(typeof mapaSiguiendoVehiculo !== "undefined"){
