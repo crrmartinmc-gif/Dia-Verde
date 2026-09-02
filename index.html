@@ -49,7 +49,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   right:auto!important;
   bottom:14px!important;
   z-index:10000!important;
-  display:none;
+  display:block!important;
   padding:9px 13px!important;
   border:0!important;
   border-radius:20px!important;
@@ -1124,19 +1124,18 @@ function crearIconoVehiculo(rumbo){
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
+  // Primer punto GPS: entrar automáticamente en modo navegación.
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
 
-    // Entrada al modo navegación: inclinación 35°.
     map.setView([lat,lng],18,{animate:true});
     try{ map.setPitch(35); }catch(e){}
     return;
   }
 
-  // Seguimiento continuo usando el DVMap que ya funciona.
-  // No modifica GPS, Sheets, CGM, reclamos ni registro.
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+  // Cada actualización GPS acompaña al vehículo.
+  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
     map.panTo([lat,lng],{
       animate:true,
       duration:.45
@@ -1326,6 +1325,7 @@ function iniciarRecorrido(){
   if(recorridoActivo)return;
   recorridoActivo=true;
   recorridoHeading=null;
+  modoCamaraNavegacion=true;
   mapaSiguiendoVehiculo=true;
   mapaUsuarioMovio=false;
   recorridoZona=selectedZone;
@@ -2804,55 +2804,36 @@ function(){
     if(!p || !window.map)
       return;
 
-    const lat = Number(p.lat);
-    const lng = Number(p.lng);
+    const lat=Number(p.lat);
+    const lng=Number(p.lng);
 
-    if(!Number.isFinite(lat) ||
-       !Number.isFinite(lng))
+    if(!Number.isFinite(lat)||!Number.isFinite(lng))
       return;
 
-    const bearing =
-      Number.isFinite(Number(p.bearing))
-        ? Number(p.bearing)
-        : 0;
-
     try{
-      if(typeof window.map.stop === "function")
+      mapaSiguiendoVehiculo=true;
+      mapaUsuarioMovio=false;
+
+      if(typeof window.map.stop==="function")
         window.map.stop();
 
-      if(typeof window.map.easeTo === "function"){
-        window.map.easeTo({
-          center:[lng,lat],
-          zoom:17,
-          pitch:45,
-          bearing:bearing,
-          offset:[0,120],
-          duration:500,
-          essential:true
-        });
-      }else{
-        if(typeof window.map.setCenter === "function")
-          window.map.setCenter([lng,lat]);
-
-        if(typeof window.map.setZoom === "function")
-          window.map.setZoom(17);
-
-        if(typeof window.map.setPitch === "function")
-          window.map.setPitch(45);
-
-        if(typeof window.map.setBearing === "function")
-          window.map.setBearing(bearing);
+      if(typeof window.map.setView==="function"){
+        window.map.setView(
+          [lat,lng],
+          18,
+          {animate:true}
+        );
+      }else if(typeof window.map.setCenter==="function"){
+        window.map.setCenter([lng,lat]);
+        if(typeof window.map.setZoom==="function")
+          window.map.setZoom(18);
       }
 
-      mapaSiguiendoVehiculo = true;
-      mapaUsuarioMovio = false;
-      hideCenterButton();
+      if(typeof window.map.setPitch==="function")
+        window.map.setPitch(35);
 
     }catch(e){
-      console.error(
-        "Centrar vehículo:",
-        e
-      );
+      console.error("Centrar vehículo:",e);
     }
   }
 
