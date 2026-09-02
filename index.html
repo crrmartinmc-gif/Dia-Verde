@@ -1172,43 +1172,21 @@ function crearIconoVehiculo(rumbo){
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  if(!forzarZoom && (!recorridoActivo || !modoCamaraNavegacion ||
-                     !mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
-
-  const heading=recorridoHeading;
-  const bearingActual=map.getBearing();
-  const bearing=Number.isFinite(heading) ? heading : bearingActual;
-
-  const target={
-    center:[lng,lat],
-    zoom:18,
-    pitch:35,
-    bearing:bearing,
-    offset:[0,120],
-    duration:forzarZoom?700:450,
-    essential:true
-  };
-
-  mapaMoviendoAutomatico=true;
-  mapaSiguiendoVehiculo=true;
-
-  try{
-    map.stop();
-    map.easeTo(target);
-
-    const liberarGuardia=function(){
-      mapaMoviendoAutomatico=false;
-      try{ map.off("moveend",liberarGuardia); }catch(e){}
-    };
-
-    if(typeof map.once==="function"){
-      map.once("moveend",liberarGuardia);
-    }else{
-      setTimeout(liberarGuardia,Math.max(600,target.duration+150));
+  // Al comenzar el recorrido: acercamiento tipo navegación.
+  if(forzarZoom){
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
+    map.setView([lat,lng],18,{animate:true});
+    // Dejamos la inclinación en 35° sin crear un segundo controlador de cámara.
+    if(map._map && typeof map._map.easeTo === "function"){
+      map._map.easeTo({pitch:35,duration:300,essential:true});
     }
-  }catch(e){
-    mapaMoviendoAutomatico=false;
-    console.warn("Seguimiento cámara:",e);
+    return;
+  }
+
+  // Seguimiento probado: el DVMap mueve la cámara al nuevo punto GPS.
+  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    map.panTo([lat,lng],{animate:true,duration:.45});
   }
 }
 
@@ -2708,14 +2686,16 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvUserMovedMap = false;
   let dvLastNativeLocation = null;
 
-  function dvShowCenterButton(){
-    if(typeof mapaMoviendoAutomatico !== "undefined" && mapaMoviendoAutomatico) return;
+  function dvShowCenterButton(e){
+    if(typeof recorridoActivo!=="undefined" && recorridoActivo){
+      if(e && e.originalEvent){
+        mapaUsuarioMovio=true;
+        mapaSiguiendoVehiculo=false;
+      }
+      return;
+    }
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap=true;
-    if(typeof mapaSiguiendoVehiculo !== "undefined"){
-      mapaSiguiendoVehiculo=false;
-      mapaUsuarioMovio=true;
-    }
   }
 map.on("dragstart",dvShowCenterButton);
 
@@ -2747,7 +2727,7 @@ map.on("dragstart",dvShowCenterButton);
         mapa.easeTo({
           center:center,
           zoom:16.8,
-          pitch:45,
+          pitch:35,
           bearing:bearing,
           offset:[0,120],
           duration:450,
@@ -2755,7 +2735,7 @@ map.on("dragstart",dvShowCenterButton);
         });
       }else{
         if(typeof mapa.setCenter === "function") mapa.setCenter(center);
-        if(typeof mapa.setPitch === "function") mapa.setPitch(45);
+        if(typeof mapa.setPitch === "function") mapa.setPitch(35);
         if(typeof mapa.setBearing === "function") mapa.setBearing(bearing);
         if(typeof mapa.setZoom === "function") mapa.setZoom(16.8);
       }
@@ -2915,7 +2895,7 @@ map.on("dragstart",dvShowCenterButton);
     const bearing=Number(p.bearing);
     if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-    // El GPS nativo pasa a ser la fuente principal de navegación.
+
     // Reutilizamos el mismo registrador para conservar recorrido,
     // persistencia, filtros de saltos y actualización visual.
     registrarPuntoRecorrido({
