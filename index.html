@@ -372,6 +372,29 @@ id="toast"
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script>
+// ===== V21 SINCRONIZACION RAPIDA PC + MOVIL =====
+const DV21_SYNC_MS=3000;
+let dv21SyncBusy=false;
+
+async function dv21SyncEvidencias(){
+  if(dv21SyncBusy || typeof cargarEvidenciasHoy!=="function") return;
+  dv21SyncBusy=true;
+  try{
+    // Reuse the existing official server loader so URLs, parameters and
+    // authorization remain unchanged.
+    await cargarEvidenciasHoy();
+  }catch(e){
+    console.warn("V21 sync:",e);
+  }finally{
+    dv21SyncBusy=false;
+  }
+}
+
+function dv21StartSync(){
+  if(window.dv21Timer) clearInterval(window.dv21Timer);
+  window.dv21Timer=setInterval(dv21SyncEvidencias,DV21_SYNC_MS);
+}
+
 // ===== V20 SYNC MERGE =====
 function dv20EvidenceKey(e){
   if(!e)return"";
@@ -3061,3 +3084,5 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </body>
 </html>
+
+<script>dv21StartSync();</script>
