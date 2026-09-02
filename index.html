@@ -758,17 +758,43 @@ function dvMejorarEtiquetasCalles(){
   }catch(e){ console.warn("Etiquetas 25%:",e); }
 }
 const map = new DVMap();
-const L={
-  layerGroup:()=>new DVLayerGroup(),
-  divIcon:opts=>opts,
-  marker:(pos,opts)=>new DVMarker(pos,opts),
-  polyline:(points,opts)=>new DVPolyline(points,opts),
-  geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
-};
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+
+function dvUsuarioManipuloMapa(e){
+  return !!(e && e.originalEvent);
+}
+
+map.on("dragstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("rotatestart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("pitchstart",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(e){
+  if(recorridoActivo && dvUsuarioManipuloMapa(e)){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
-let mapaMoviendoAutomatico = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1142,44 +1168,28 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-  if(!forzarZoom && (!recorridoActivo || !mapaSiguiendoVehiculo)) return;
-
-  const heading=Number(recorridoHeading);
-  const bearing=Number.isFinite(heading) ? heading : (Number(map.getBearing())||0);
-
-  mapaMoviendoAutomatico=true;
-
-  const options={
+  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+  const heading=recorridoHeading;
+  const target={
     center:[lng,lat],
     zoom:18,
+    bearing:Number.isFinite(heading)?heading:map.getBearing(),
     pitch:45,
-    bearing:bearing,
     offset:[0,120],
-    duration:forzarZoom ? 650 : 300,
+    duration:forzarZoom?700:350,
     essential:true
   };
 
-  try{
-    // No detener la animación anterior: cada GPS actualiza suavemente
-    // la cámara y mantiene el vehículo como centro de navegación.
-    if(typeof map.easeTo==="function"){
-      map.easeTo(options);
-    }else if(typeof map.setView==="function"){
-      map.setView([lat,lng],18,{animate:false});
-      if(typeof map.setPitch==="function") map.setPitch(45);
-      if(typeof map.setBearing==="function") map.setBearing(bearing);
-    }
-
+  if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
+    map._map.stop();
+    map._map.easeTo(target);
+    return;
+  }
 
-    setTimeout(function(){
-      mapaMoviendoAutomatico=false;
-    },Math.max(450,options.duration+150));
-  }catch(e){
-    mapaMoviendoAutomatico=false;
-    console.warn("Seguimiento automático:",e);
+  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
+    map._map.easeTo(target);
   }
 }
 
@@ -2675,8 +2685,8 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvUserMovedMap = false;
   let dvLastNativeLocation = null;
 
-  function dvShowCenterButton(){
-    if(typeof mapaMoviendoAutomatico !== "undefined" && mapaMoviendoAutomatico) return;
+  function dvShowCenterButton(e){
+    if(!dvUsuarioManipuloMapa(e)) return;
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap = true;
     if(typeof mapaSiguiendoVehiculo !== "undefined"){
@@ -2826,9 +2836,9 @@ map.on("dragstart",dvShowCenterButton);
 
     if(!window.__dvCenterInteractionBound){
       window.__dvCenterInteractionBound = true;
-      // Solo un arrastre manual cancela el seguimiento.
-      // Zoom, rotación y pitch pueden ser generados por la cámara automática.
-      mapa.on("dragstart", dvShowCenterButton);
+      ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+        mapa.on(ev, dvShowCenterButton);
+      });
     }
     return true;
   }
