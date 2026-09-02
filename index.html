@@ -765,9 +765,33 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+let dvNavCameraMoving = false;
+
+map.on("dragstart",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(){
+  // easeTo() del modo navegación también dispara zoomstart.
+  // No debemos confundirlo con un zoom manual del usuario.
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("moveend",function(){
+  if(dvNavCameraMoving){
+    dvNavCameraMoving=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
@@ -1204,6 +1228,7 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
     try{
       // Una sola operación de MapLibre establece TODO el estado de navegación.
       map.stop();
+      dvNavCameraMoving=true;
       map.easeTo({
         center:[lng,lat],
         zoom:17,
@@ -1254,6 +1279,7 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   try{
     // Modo navegación: centro adelantado, inclinación 35° y giro
     // siguiendo el sentido de marcha.
+    dvNavCameraMoving=true;
     map.easeTo({
       center:[lng,lat],
       zoom:17,
