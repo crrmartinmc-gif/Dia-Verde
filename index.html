@@ -372,40 +372,31 @@ id="toast"
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script>
-// ===== V19 PERSISTENCIA LOCAL =====
-const DV19_DAY_KEY=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
-const DV19_ROUTE_KEY=()=>`diaVerde_recorrido_${DV19_DAY_KEY()}`;
-const DV19_EVID_KEY=()=>`diaVerde_evidencias_${DV19_DAY_KEY()}`;
-function dv19Load(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-function dv19Save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-function dv19PersistRoute(){
-  if(typeof recorridoPuntos==="undefined")return;
-  dv19Save(DV19_ROUTE_KEY(),{day:DV19_DAY_KEY(),active:!!recorridoActivo,puntos:recorridoPuntos,updatedAt:Date.now()});
+// ===== V20 SYNC MERGE =====
+function dv20EvidenceKey(e){
+  if(!e)return"";
+  return [e.direccion||e.address||e.Direccion||"",e.zona||e.cgm||e.CGM||"",
+    e.usuario||e.Usuario||"",e.fecha||e.Fecha||"",e.hora||e.Hora||"",
+    e.timestamp||e.Timestamp||""].join("|").toLowerCase().trim();
 }
-function dv19RestoreRoute(){
-  const v=dv19Load(DV19_ROUTE_KEY(),null);
-  if(!v||v.day!==DV19_DAY_KEY()||!Array.isArray(v.puntos)||!v.puntos.length)return;
-  recorridoPuntos=v.puntos;
-  if(v.active){recorridoActivo=true;mapaSiguiendoVehiculo=true;}
+function dv20MergeEvidence(serverList){
+  const local=Array.isArray(evidenciasHoy)?evidenciasHoy:[];
+  const server=Array.isArray(serverList)?serverList:[];
+  const map=new Map();
+  server.forEach(e=>{const k=dv20EvidenceKey(e);if(k)map.set(k,e)});
+  local.forEach(e=>{const k=dv20EvidenceKey(e);if(k)map.set(k,e)});
+  evidenciasHoy=[...map.values()];
+  try{localStorage.setItem(`diaVerde_evidencias_${DV19_DAY_KEY()}`,
+    JSON.stringify(evidenciasHoy.map(e=>({...e,day:DV19_DAY_KEY(),_local:true}))));}catch(e){}
+  return evidenciasHoy;
 }
-function dv19FinishRoute(){
-  const v=dv19Load(DV19_ROUTE_KEY(),null);
-  if(v){v.active=false;v.updatedAt=Date.now();dv19Save(DV19_ROUTE_KEY(),v)}
-}
-function dv19DailyGuard(){
-  const d=DV19_DAY_KEY();
-  if(window.dv19Day&&window.dv19Day!==d){
-    try{recorridoActivo=false;recorridoPuntos=[]}catch(e){}
-  }
-  window.dv19Day=d;
-}
-function dv19InstallLifecycle(){
-  dv19DailyGuard();
-  dv19RestoreRoute();
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")dv19PersistRoute();else{dv19DailyGuard();dv19RestoreRoute()}});
-  window.addEventListener("pagehide",dv19PersistRoute);
-  window.addEventListener("beforeunload",dv19PersistRoute);
-  setInterval(dv19DailyGuard,30000);
+function dv20MarkLocalEvidence(e){
+  if(!e)return;
+  const k=dv20EvidenceKey(e);
+  evidenciasHoy=(Array.isArray(evidenciasHoy)?evidenciasHoy:[])
+    .filter(x=>dv20EvidenceKey(x)!==k);
+  evidenciasHoy.push({...e,_local:true,day:DV19_DAY_KEY()});
+  try{localStorage.setItem(`diaVerde_evidencias_${DV19_DAY_KEY()}`,JSON.stringify(evidenciasHoy));}catch(err){}
 }
 
 const SHEET_ID =
@@ -1423,7 +1414,6 @@ function registrarPuntoRecorrido(position){
     }
   }
   recorridoPuntos.push(punto);
-  dv19PersistRoute();
   dibujarRecorrido();
   guardarRecorridoLocal();
   actualizarEstadoRecorrido(
@@ -1512,8 +1502,6 @@ async function liberarPantallaEncendida(){
   try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
-  window.dv19Day=DV19_DAY_KEY();
-  dv19PersistRoute();
   dvNavReset();
   if(!selectedZone){
     alert("Primero seleccioná una zona.");
@@ -1588,8 +1576,6 @@ function finalizarRecorrido(){
     "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
   );
   mostrarToast("✅ Recorrido finalizado");
-
-  dv19FinishRoute();
 }
 function recuperarRecorrido(){
   try{
@@ -3075,5 +3061,3 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </body>
 </html>
-
-<script>dv19InstallLifecycle();</script>
