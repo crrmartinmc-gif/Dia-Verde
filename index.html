@@ -765,11 +765,34 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+map.on("dragstart",function(){
+  if(recorridoActivo && !mapaMoviendoAutomatico){
+    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(){
+  if(recorridoActivo && !mapaMoviendoAutomatico){
+    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("rotatestart",function(){
+  if(recorridoActivo && !mapaMoviendoAutomatico){
+    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("pitchstart",function(){
+  if(recorridoActivo && !mapaMoviendoAutomatico){
+    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(){
+  if(recorridoActivo && !mapaMoviendoAutomatico){
+    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let mapaMoviendoAutomatico = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1145,9 +1168,6 @@ function crearIconoVehiculo(rumbo){
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  // Mientras el recorrido está activo, el GPS mantiene la cámara siguiendo
-  // al vehículo. El vehículo queda en la zona inferior para mostrar más
-  // camino por delante.
   const heading=recorridoHeading;
   const bearingActual=map.getBearing();
   const bearing=Number.isFinite(heading) ? heading : bearingActual;
@@ -1162,16 +1182,31 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
     essential:true
   };
 
-  if(forzarZoom){
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
+  if(!forzarZoom && (!mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
+
+  // La cámara está siendo movida por el GPS, no por el usuario.
+  // Los eventos drag/zoom/rotate/pitch de esta animación no deben
+  // apagar el seguimiento.
+  mapaMoviendoAutomatico=true;
+  mapaSiguiendoVehiculo=true;
+
+  try{
     map.stop();
     map.easeTo(target);
-    return;
-  }
 
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map.easeTo(target);
+    const liberarGuardia=function(){
+      mapaMoviendoAutomatico=false;
+      try{ map.off("moveend",liberarGuardia); }catch(e){}
+    };
+
+    if(typeof map.once==="function"){
+      map.once("moveend",liberarGuardia);
+    }else{
+      setTimeout(liberarGuardia, Math.max(500,target.duration+100));
+    }
+  }catch(e){
+    mapaMoviendoAutomatico=false;
+    console.warn("Seguimiento cámara:",e);
   }
 }
 
@@ -2721,6 +2756,7 @@ document.addEventListener("DOMContentLoaded", function(){
       if(recorridoActivo){
         mapaSiguiendoVehiculo=true;
         mapaUsuarioMovio=false;
+        mapaMoviendoAutomatico=false;
       }
       dvHideCenterButton();
       return true;
