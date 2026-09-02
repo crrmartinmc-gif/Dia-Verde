@@ -1142,85 +1142,67 @@ function crearIconoVehiculo(rumbo){
   });
 }
 
-// Estado interno de navegación estilo "Mi Ruta":
-// el mapa sigue al vehículo, gira según el desplazamiento real,
-// evita girar por ruido GPS y mantiene el vehículo adelantado en pantalla.
-let dvNavLastLat=null;
-let dvNavLastLng=null;
+
+let dvNavLastPosition=null;
 let dvNavBearing=null;
-let dvNavLastMoveAt=0;
 
-function dvNormalizarRumbo(r){
-  r=Number(r);
-  if(!Number.isFinite(r)) return null;
-  return ((r%360)+360)%360;
+function dvNavNormalizeBearing(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return null;
+  return ((n%360)+360)%360;
 }
 
-function dvRumboEntrePuntos(lat1,lng1,lat2,lng2){
-  const p1=Number(lat1)*Math.PI/180;
-  const p2=Number(lat2)*Math.PI/180;
-  const dl=(Number(lng2)-Number(lng1))*Math.PI/180;
-
-  const y=Math.sin(dl)*Math.cos(p2);
+function dvNavBearingBetween(a,b){
+  if(!a||!b) return null;
+  const lat1=Number(a.lat)*Math.PI/180;
+  const lat2=Number(b.lat)*Math.PI/180;
+  const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2);
   const x=
-    Math.cos(p1)*Math.sin(p2)-
-    Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
-
-  return dvNormalizarRumbo(Math.atan2(y,x)*180/Math.PI);
+    Math.cos(lat1)*Math.sin(lat2)-
+    Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
 }
 
-function dvSuavizarRumbo(nuevo){
-  nuevo=dvNormalizarRumbo(nuevo);
-  if(nuevo===null) return dvNavBearing;
-
+function dvNavSmoothBearing(next){
+  next=dvNavNormalizeBearing(next);
+  if(next===null) return dvNavBearing;
   if(dvNavBearing===null){
-    dvNavBearing=nuevo;
+    dvNavBearing=next;
     return dvNavBearing;
   }
-
-  const delta=((nuevo-dvNavBearing+540)%360)-180;
-
-  // Filtro suave: evita que el mapa pegue saltos por pequeñas
-  // variaciones del GPS, pero acompaña las curvas.
-  if(Math.abs(delta)<3) return dvNavBearing;
-
-  dvNavBearing=dvNormalizarRumbo(
-    dvNavBearing + delta*0.28
+  const delta=((next-dvNavBearing+540)%360)-180;
+  // Suavizado fuerte para que el mapa no tiemble con el GPS.
+  dvNavBearing=dvNavNormalizeBearing(
+    dvNavBearing + delta*0.22
   );
-
   return dvNavBearing;
 }
 
-function dvResetNavegacion(){
-  dvNavLastLat=null;
-  dvNavLastLng=null;
+function dvNavReset(){
+  dvNavLastPosition=null;
   dvNavBearing=null;
-  dvNavLastMoveAt=0;
 }
+
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
+  const actual={lat:lat,lng:lng};
+
+  // Primer GPS del recorrido: entrar de verdad en modo navegación.
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
+    dvNavLastPosition=actual;
 
-    // Primer punto: entrada automática al modo navegación.
-    // Igual que una app de seguimiento: posición + rumbo + pitch +
-    // offset se establecen juntos.
-    const initialBearing =
-      dvNavBearing!==null
-        ? dvNavBearing
-        : (
-            Number.isFinite(Number(recorridoHeading))
-              ? Number(recorridoHeading)
-              : 0
-          );
-
-    dvNavLastLat=lat;
-    dvNavLastLng=lng;
-    dvNavBearing=dvNormalizarRumbo(initialBearing);
+    const gpsHeading=Number(recorridoHeading);
+    dvNavBearing=
+      Number.isFinite(gpsHeading)
+        ? dvNavNormalizeBearing(gpsHeading)
+        : 0;
 
     try{
+      // Una sola operación de MapLibre establece TODO el estado de navegación.
       map.stop();
       map.easeTo({
         center:[lng,lat],
@@ -1228,13 +1210,15 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
         pitch:35,
         bearing:dvNavBearing,
         offset:[0,120],
-        duration:600,
+        duration:700,
         essential:true
       });
     }catch(e){
-      try{ map.setView([lat,lng],17,{animate:true}); }catch(e2){}
-      try{ map.setPitch(35); }catch(e3){}
-      try{ map.setBearing(dvNavBearing); }catch(e4){}
+      try{
+        map.setView([lat,lng],17,{animate:true});
+        map.setPitch(35);
+        map.setBearing(dvNavBearing||0);
+      }catch(e2){}
     }
     return;
   }
@@ -1242,72 +1226,52 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
     return;
 
-  // "Mi Ruta" no gira el mapa por cada ruido del GPS.
-  // Primero exige un desplazamiento real y calcula el rumbo del movimiento.
-  let movimientoRumbo=null;
-
-  if(
-    Number.isFinite(dvNavLastLat) &&
-    Number.isFinite(dvNavLastLng)
-  ){
-    const distancia=distanciaMetros(
-      {lat:dvNavLastLat,lng:dvNavLastLng},
-      {lat,lng}
-    );
-
-    if(distancia < 4){
-      // Todavía no hubo movimiento suficiente para cambiar el rumbo.
-      // Mantenemos la cámara estable.
-      return;
+  // El rumbo se obtiene primero del movimiento real entre puntos.
+  // Esto funciona aunque el teléfono no entregue coords.heading.
+  let movimiento=null;
+  if(dvNavLastPosition){
+    const d=distanciaMetros(dvNavLastPosition,actual);
+    if(d >= 3){
+      movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
     }
-
-    movimientoRumbo=dvRumboEntrePuntos(
-      dvNavLastLat,
-      dvNavLastLng,
-      lat,
-      lng
-    );
   }
 
-  dvNavLastLat=lat;
-  dvNavLastLng=lng;
+  dvNavLastPosition=actual;
 
-  if(movimientoRumbo!==null){
-    dvSuavizarRumbo(movimientoRumbo);
-    dvNavLastMoveAt=Date.now();
+  if(movimiento!==null){
+    dvNavSmoothBearing(movimiento);
+  }else if(dvNavBearing===null){
+    const gpsHeading=Number(recorridoHeading);
+    if(Number.isFinite(gpsHeading))
+      dvNavBearing=dvNavNormalizeBearing(gpsHeading);
   }
 
-  const bearing =
+  const bearing=
     dvNavBearing!==null
       ? dvNavBearing
-      : (
-          Number.isFinite(Number(recorridoHeading))
-            ? Number(recorridoHeading)
-            : 0
-        );
+      : 0;
 
   try{
-    // Seguimiento tipo navegación:
-    // el vehículo queda adelantado y el mapa gira suavemente con él.
+    // Modo navegación: centro adelantado, inclinación 35° y giro
+    // siguiendo el sentido de marcha.
     map.easeTo({
       center:[lng,lat],
       zoom:17,
       pitch:35,
-      bearing,
+      bearing:bearing,
       offset:[0,120],
-      duration:420,
+      duration:450,
       essential:true
     });
   }catch(e){
-    // Fallback al seguimiento que ya sabemos que funciona.
+    // Fallback seguro: el seguimiento que ya estaba probado.
     try{
       map.panTo([lat,lng],{
         animate:true,
-        duration:.42
+        duration:.45
       });
-      try{ map.setPitch(35); }catch(e2){}
-      try{ map.setBearing(bearing); }catch(e3){}
-    }catch(e4){}
+      map.setPitch(35);
+    }catch(e2){}
   }
 }
 
@@ -1485,7 +1449,7 @@ async function liberarPantallaEncendida(){
   try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
-  dvResetNavegacion();
+  dvNavReset();
   if(!selectedZone){
     alert("Primero seleccioná una zona.");
     return;
@@ -1529,7 +1493,7 @@ function iniciarRecorrido(){
   mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
-  dvResetNavegacion();
+  dvNavReset();
   if(!recorridoActivo)return;
   if(recorridoWatchId!==null){
     navigator.geolocation.clearWatch(recorridoWatchId);
@@ -2030,6 +1994,7 @@ normalizar(item.zona) ===
 normalizar(selected)
 );
 }
+let dvZonaCentradaKey = null;
 function mostrarMapa(
 nombreZona
 ){
@@ -2083,12 +2048,14 @@ fillOpacity:.30
 const bounds =
 activeLayer.getBounds();
 if(bounds.isValid()){
-map.fitBounds(
-bounds,
-{
-padding:[25,25]
-}
-);
+  const zonaKey =
+    normalizar(selectedCgm) + "||" + normalizar(nombreZona);
+
+  // Centrar la zona solo al cambiar la selección.
+  if(dvZonaCentradaKey !== zonaKey){
+    map.fitBounds(bounds,{padding:[25,25]});
+    dvZonaCentradaKey = zonaKey;
+  }
 }
 title.textContent =
 "Mapa de " +
@@ -2659,6 +2626,7 @@ stopRoute.addEventListener("click",finalizarRecorrido);
 cgm.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
 selectedCgm =
 cgm.value;
 selectedZone =
@@ -2672,6 +2640,7 @@ render();
 zone.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
   if(recorridoActivo && zone.value !== recorridoZona){
     zone.value=recorridoZona;
     selectedZone=recorridoZona;
