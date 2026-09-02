@@ -1142,6 +1142,61 @@ function crearIconoVehiculo(rumbo){
   });
 }
 
+// Estado interno de navegación estilo "Mi Ruta":
+// el mapa sigue al vehículo, gira según el desplazamiento real,
+// evita girar por ruido GPS y mantiene el vehículo adelantado en pantalla.
+let dvNavLastLat=null;
+let dvNavLastLng=null;
+let dvNavBearing=null;
+let dvNavLastMoveAt=0;
+
+function dvNormalizarRumbo(r){
+  r=Number(r);
+  if(!Number.isFinite(r)) return null;
+  return ((r%360)+360)%360;
+}
+
+function dvRumboEntrePuntos(lat1,lng1,lat2,lng2){
+  const p1=Number(lat1)*Math.PI/180;
+  const p2=Number(lat2)*Math.PI/180;
+  const dl=(Number(lng2)-Number(lng1))*Math.PI/180;
+
+  const y=Math.sin(dl)*Math.cos(p2);
+  const x=
+    Math.cos(p1)*Math.sin(p2)-
+    Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+
+  return dvNormalizarRumbo(Math.atan2(y,x)*180/Math.PI);
+}
+
+function dvSuavizarRumbo(nuevo){
+  nuevo=dvNormalizarRumbo(nuevo);
+  if(nuevo===null) return dvNavBearing;
+
+  if(dvNavBearing===null){
+    dvNavBearing=nuevo;
+    return dvNavBearing;
+  }
+
+  const delta=((nuevo-dvNavBearing+540)%360)-180;
+
+  // Filtro suave: evita que el mapa pegue saltos por pequeñas
+  // variaciones del GPS, pero acompaña las curvas.
+  if(Math.abs(delta)<3) return dvNavBearing;
+
+  dvNavBearing=dvNormalizarRumbo(
+    dvNavBearing + delta*0.28
+  );
+
+  return dvNavBearing;
+}
+
+function dvResetNavegacion(){
+  dvNavLastLat=null;
+  dvNavLastLng=null;
+  dvNavBearing=null;
+  dvNavLastMoveAt=0;
+}
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
@@ -1149,19 +1204,110 @@ function activarSeguimientoVisual(lat,lng,forzarZoom=false){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
 
-    // Entrar automáticamente en navegación al recibir el primer GPS.
-    map.setView([lat,lng],18,{animate:true});
-    try{ map.setPitch(35); }catch(e){}
+    // Primer punto: entrada automática al modo navegación.
+    // Igual que una app de seguimiento: posición + rumbo + pitch +
+    // offset se establecen juntos.
+    const initialBearing =
+      dvNavBearing!==null
+        ? dvNavBearing
+        : (
+            Number.isFinite(Number(recorridoHeading))
+              ? Number(recorridoHeading)
+              : 0
+          );
+
+    dvNavLastLat=lat;
+    dvNavLastLng=lng;
+    dvNavBearing=dvNormalizarRumbo(initialBearing);
+
+    try{
+      map.stop();
+      map.easeTo({
+        center:[lng,lat],
+        zoom:17,
+        pitch:35,
+        bearing:dvNavBearing,
+        offset:[0,120],
+        duration:600,
+        essential:true
+      });
+    }catch(e){
+      try{ map.setView([lat,lng],17,{animate:true}); }catch(e2){}
+      try{ map.setPitch(35); }catch(e3){}
+      try{ map.setBearing(dvNavBearing); }catch(e4){}
+    }
     return;
   }
 
-  // Seguimiento continuo con la implementación probada del DVMap.
-  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map.panTo([lat,lng],{
-      animate:true,
-      duration:.45
+  if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
+    return;
+
+  // "Mi Ruta" no gira el mapa por cada ruido del GPS.
+  // Primero exige un desplazamiento real y calcula el rumbo del movimiento.
+  let movimientoRumbo=null;
+
+  if(
+    Number.isFinite(dvNavLastLat) &&
+    Number.isFinite(dvNavLastLng)
+  ){
+    const distancia=distanciaMetros(
+      {lat:dvNavLastLat,lng:dvNavLastLng},
+      {lat,lng}
+    );
+
+    if(distancia < 4){
+      // Todavía no hubo movimiento suficiente para cambiar el rumbo.
+      // Mantenemos la cámara estable.
+      return;
+    }
+
+    movimientoRumbo=dvRumboEntrePuntos(
+      dvNavLastLat,
+      dvNavLastLng,
+      lat,
+      lng
+    );
+  }
+
+  dvNavLastLat=lat;
+  dvNavLastLng=lng;
+
+  if(movimientoRumbo!==null){
+    dvSuavizarRumbo(movimientoRumbo);
+    dvNavLastMoveAt=Date.now();
+  }
+
+  const bearing =
+    dvNavBearing!==null
+      ? dvNavBearing
+      : (
+          Number.isFinite(Number(recorridoHeading))
+            ? Number(recorridoHeading)
+            : 0
+        );
+
+  try{
+    // Seguimiento tipo navegación:
+    // el vehículo queda adelantado y el mapa gira suavemente con él.
+    map.easeTo({
+      center:[lng,lat],
+      zoom:17,
+      pitch:35,
+      bearing,
+      offset:[0,120],
+      duration:420,
+      essential:true
     });
-    try{ map.setPitch(35); }catch(e){}
+  }catch(e){
+    // Fallback al seguimiento que ya sabemos que funciona.
+    try{
+      map.panTo([lat,lng],{
+        animate:true,
+        duration:.42
+      });
+      try{ map.setPitch(35); }catch(e2){}
+      try{ map.setBearing(bearing); }catch(e3){}
+    }catch(e4){}
   }
 }
 
@@ -1339,6 +1485,7 @@ async function liberarPantallaEncendida(){
   try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
+  dvResetNavegacion();
   if(!selectedZone){
     alert("Primero seleccioná una zona.");
     return;
@@ -1382,6 +1529,7 @@ function iniciarRecorrido(){
   mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
+  dvResetNavegacion();
   if(!recorridoActivo)return;
   if(recorridoWatchId!==null){
     navigator.geolocation.clearWatch(recorridoWatchId);
