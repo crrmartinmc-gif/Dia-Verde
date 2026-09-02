@@ -795,6 +795,7 @@ map.on("click",function(e){
 });
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let mapaMoviendoAutomatico = false;
 let modoCamaraNavegacion = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
@@ -1169,29 +1170,46 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-  if(!forzarZoom && (!recorridoActivo || !modoCamaraNavegacion || !mapaSiguiendoVehiculo)) return;
+  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
-  const m=map._map || map;
-  if(!m || typeof m.easeTo!=="function") return;
+  if(!forzarZoom && (!recorridoActivo || !modoCamaraNavegacion ||
+                     !mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
 
-  const heading=Number(recorridoHeading);
-  const bearing=Number.isFinite(heading) ? heading : (Number(m.getBearing())||0);
-  const h=(m.getContainer && m.getContainer().clientHeight)||600;
+  const heading=recorridoHeading;
+  const bearingActual=map.getBearing();
+  const bearing=Number.isFinite(heading) ? heading : bearingActual;
+
+  const target={
+    center:[lng,lat],
+    zoom:18,
+    pitch:35,
+    bearing:bearing,
+    offset:[0,120],
+    duration:forzarZoom?700:450,
+    essential:true
+  };
+
+  mapaMoviendoAutomatico=true;
+  mapaSiguiendoVehiculo=true;
 
   try{
-    m.easeTo({
-      center:[lng,lat],
-      zoom:18,
-      bearing:bearing,
-      pitch:45,
-      padding:{top:0,right:0,bottom:Math.round(h*.24),left:0},
-      duration:forzarZoom?650:350,
-      essential:true
-    });
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-  }catch(e){ console.warn("Cámara navegación:",e); }
+    map.stop();
+    map.easeTo(target);
+
+    const liberarGuardia=function(){
+      mapaMoviendoAutomatico=false;
+      try{ map.off("moveend",liberarGuardia); }catch(e){}
+    };
+
+    if(typeof map.once==="function"){
+      map.once("moveend",liberarGuardia);
+    }else{
+      setTimeout(liberarGuardia,Math.max(600,target.duration+150));
+    }
+  }catch(e){
+    mapaMoviendoAutomatico=false;
+    console.warn("Seguimiento cámara:",e);
+  }
 }
 
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
@@ -2690,17 +2708,11 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvUserMovedMap = false;
   let dvLastNativeLocation = null;
 
-  function dvShowCenterButton(e){
-    if(typeof recorridoActivo!=="undefined" && recorridoActivo){
-      if(e && e.originalEvent){
-        mapaUsuarioMovio=true;
-        mapaSiguiendoVehiculo=false;
-      }
-      return;
-    }
+  function dvShowCenterButton(){
+    if(typeof mapaMoviendoAutomatico !== "undefined" && mapaMoviendoAutomatico) return;
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap=true;
-    if(typeof mapaSiguiendoVehiculo!=="undefined"){
+    if(typeof mapaSiguiendoVehiculo !== "undefined"){
       mapaSiguiendoVehiculo=false;
       mapaUsuarioMovio=true;
     }
