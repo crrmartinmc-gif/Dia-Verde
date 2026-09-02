@@ -765,31 +765,9 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){
-  if(recorridoActivo && !mapaMoviendoAutomatico){
-    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
-  }
-});
-map.on("zoomstart",function(){
-  if(recorridoActivo && !mapaMoviendoAutomatico){
-    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
-  }
-});
-map.on("rotatestart",function(){
-  if(recorridoActivo && !mapaMoviendoAutomatico){
-    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
-  }
-});
-map.on("pitchstart",function(){
-  if(recorridoActivo && !mapaMoviendoAutomatico){
-    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
-  }
-});
-map.on("click",function(){
-  if(recorridoActivo && !mapaMoviendoAutomatico){
-    mapaUsuarioMovio=true; mapaSiguiendoVehiculo=false;
-  }
-});
+map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let mapaMoviendoAutomatico = false;
@@ -1166,43 +1144,40 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+  if(!map || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  if(!forzarZoom && (!recorridoActivo || !mapaSiguiendoVehiculo)) return;
 
   const heading=Number(recorridoHeading);
-  const bearing=Number.isFinite(heading) ? heading : Number(map.getBearing())||0;
+  const bearing=Number.isFinite(heading) ? heading : (Number(map.getBearing())||0);
 
-  const target={
+  mapaMoviendoAutomatico=true;
+  mapaSiguiendoVehiculo=true;
+
+  const options={
     center:[lng,lat],
     zoom:18,
     pitch:45,
     bearing:bearing,
     offset:[0,120],
-    duration:forzarZoom?700:450,
+    duration:forzarZoom ? 650 : 350,
     essential:true
   };
 
-  if(!forzarZoom && (!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)) return;
-
-  mapaMoviendoAutomatico=true;
-  mapaSiguiendoVehiculo=true;
-
   try{
-    map.stop();
-    map.easeTo(target);
-
-    // La animación de MapLibre genera zoomstart/rotatestart/pitchstart.
-    // Esos eventos NO significan que el usuario haya movido el mapa.
-    const liberar=function(){
-      mapaMoviendoAutomatico=false;
-    };
-    if(typeof map.once==="function"){
-      map.once("moveend",liberar);
-    }else{
-      setTimeout(liberar,Math.max(800,target.duration+250));
+    if(typeof map.stop==="function") map.stop();
+    if(typeof map.easeTo==="function"){
+      map.easeTo(options);
+    }else if(typeof map.setView==="function"){
+      map.setView([lat,lng],18,{animate:false});
+      if(typeof map.setPitch==="function") map.setPitch(45);
+      if(typeof map.setBearing==="function") map.setBearing(bearing);
     }
+    setTimeout(function(){
+      mapaMoviendoAutomatico=false;
+    },Math.max(500,options.duration+200));
   }catch(e){
     mapaMoviendoAutomatico=false;
-    console.warn("Seguimiento automático de cámara:",e);
+    console.warn("Seguimiento automático:",e);
   }
 }
 
@@ -2699,10 +2674,7 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvLastNativeLocation = null;
 
   function dvShowCenterButton(){
-    // Ignorar los eventos generados por la cámara automática.
-    // Solo una interacción real del usuario debe sacar al mapa del seguimiento.
     if(typeof mapaMoviendoAutomatico !== "undefined" && mapaMoviendoAutomatico) return;
-
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap = true;
     if(typeof mapaSiguiendoVehiculo !== "undefined"){
@@ -2710,6 +2682,7 @@ document.addEventListener("DOMContentLoaded", function(){
       mapaUsuarioMovio=true;
     }
   }
+map.on("dragstart",dvShowCenterButton);
 
   function dvHideCenterButton(){
     if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
