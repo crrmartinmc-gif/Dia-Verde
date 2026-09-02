@@ -795,6 +795,7 @@ map.on("click",function(e){
 });
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
+let modoCamaraNavegacion = false;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
@@ -1168,29 +1169,29 @@ function crearIconoVehiculo(rumbo){
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
-  const heading=recorridoHeading;
-  const target={
-    center:[lng,lat],
-    zoom:18,
-    bearing:Number.isFinite(heading)?heading:map.getBearing(),
-    pitch:45,
-    offset:[0,120],
-    duration:forzarZoom?700:350,
-    essential:true
-  };
+  if(!map || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  if(!forzarZoom && (!recorridoActivo || !modoCamaraNavegacion || !mapaSiguiendoVehiculo)) return;
 
-  if(forzarZoom){
+  const m=map._map || map;
+  if(!m || typeof m.easeTo!=="function") return;
+
+  const heading=Number(recorridoHeading);
+  const bearing=Number.isFinite(heading) ? heading : (Number(m.getBearing())||0);
+  const h=(m.getContainer && m.getContainer().clientHeight)||600;
+
+  try{
+    m.easeTo({
+      center:[lng,lat],
+      zoom:18,
+      bearing:bearing,
+      pitch:45,
+      padding:{top:0,right:0,bottom:Math.round(h*.24),left:0},
+      duration:forzarZoom?650:350,
+      essential:true
+    });
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
-    map._map.stop();
-    map._map.easeTo(target);
-    return;
-  }
-
-  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map._map.easeTo(target);
-  }
+  }catch(e){ console.warn("Cámara navegación:",e); }
 }
 
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
@@ -1373,6 +1374,7 @@ function iniciarRecorrido(){
   }
   if(recorridoActivo)return;
   recorridoActivo=true;
+  modoCamaraNavegacion=true;
   recorridoHeading=null;
   mapaSiguiendoVehiculo=true;
   mapaUsuarioMovio=false;
@@ -1418,6 +1420,7 @@ function finalizarRecorrido(){
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
   recorridoActivo=false;
+  modoCamaraNavegacion=false;
   try{
     if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
       AndroidGPS.stopTracking();
@@ -1963,12 +1966,14 @@ fillOpacity:.30
 const bounds =
 activeLayer.getBounds();
 if(bounds.isValid()){
+if(!modoCamaraNavegacion && !recorridoActivo){
 map.fitBounds(
 bounds,
 {
 padding:[25,25]
 }
 );
+  }
 }
 title.textContent =
 "Mapa de " +
@@ -2686,10 +2691,16 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvLastNativeLocation = null;
 
   function dvShowCenterButton(e){
-    if(!dvUsuarioManipuloMapa(e)) return;
+    if(typeof recorridoActivo!=="undefined" && recorridoActivo){
+      if(e && e.originalEvent){
+        mapaUsuarioMovio=true;
+        mapaSiguiendoVehiculo=false;
+      }
+      return;
+    }
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
-    dvUserMovedMap = true;
-    if(typeof mapaSiguiendoVehiculo !== "undefined"){
+    dvUserMovedMap=true;
+    if(typeof mapaSiguiendoVehiculo!=="undefined"){
       mapaSiguiendoVehiculo=false;
       mapaUsuarioMovio=true;
     }
