@@ -417,6 +417,45 @@ footer{background:linear-gradient(145deg,#031a0e,#06331d);border-top:1px solid #
 </style>
 
 \n<style id="dv26-critical-fixes">\n/* PIN PENDIENTE: ya no queda blanco sobre el mapa */\n.dv-reclamo-pin.pendiente::before{\n  background:#087a3d !important;\n  border-color:#ffffff !important;\n}\n.dv-reclamo-pin.pendiente span{color:#ffffff !important;}\n\n/* POPUP RECLAMO: forzamos contraste incluso si otra regla global hereda blanco */\n.leaflet-container .leaflet-popup-content-wrapper,\n.leaflet-container .leaflet-popup-tip{background:#ffffff !important;}\n.leaflet-container .leaflet-popup-content,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup *,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup div,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup strong{\n  color:#17231c !important;\n  opacity:1 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .titulo{\n  color:#176331 !important;\n  font-weight:900 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .estado{\n  color:#17231c !important;\n  font-weight:800 !important;\n}\n.leaflet-container .leaflet-popup-close-button{color:#17231c !important;}\n\n/* ADMINISTRACIÓN: oculto por defecto para cualquier chofer */\n#dv22AdminOpen{display:none !important;}\n#dv22AdminOpen.dv-admin-visible{display:block !important;}\n</style>\n
+<style id="dv27-final-fixes">
+/* ===== RECLAMOS: PENDIENTE SIEMPRE ROJO ===== */
+.dv-reclamo-pin.pendiente::before{
+  background:#c62828 !important;
+  border:3px solid #ffffff !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.30) !important;
+}
+.dv-reclamo-pin.pendiente span{color:#ffffff !important;}
+.dv-reclamo-pin.realizado::before{background:#66bb6a !important;}
+.dv-reclamo-pin.suspendido::before{background:#8d6e63 !important;}
+.dv-reclamo-pin.amarillo::before{background:#f9a825 !important;}
+.dv-reclamo-pin.rojo::before{background:#c62828 !important;}
+
+/* Popup de reclamo: máximo contraste */
+.maplibregl-popup-content,
+.maplibregl-popup-content .dv-reclamo-popup,
+.maplibregl-popup-content .dv-reclamo-popup *{
+  color:#17231c !important;
+  opacity:1 !important;
+}
+.maplibregl-popup-content{background:#ffffff !important;}
+.maplibregl-popup-content .dv-reclamo-popup .titulo{color:#176331 !important;font-weight:900 !important;}
+.maplibregl-popup-content .dv-reclamo-popup .estado{color:#17231c !important;font-weight:900 !important;}
+.maplibregl-popup-close-button{color:#17231c !important;}
+
+/* ===== ADMIN: visible SOLO para el usuario cuyo nombre de usuario es admin ===== */
+#dv22AdminOpen{display:none !important;}
+#dv22AdminOpen.dv-admin-visible{display:block !important;}
+</style>
+
+<style id="dv28-only-two-statuses">
+/* Únicos estados visibles en Día Verde */
+.estado.espera,.estado.suspendido,.estado.rechazado,.estado.anulado,
+.estado-en-espera,.estado-suspendido,.estado-rechazado,.estado-anulado,
+.pendiente-espera{
+  display:none !important;
+}
+</style>
+
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -1206,7 +1245,7 @@ function popupReclamoMedioAmbiente(d){
     '<div class="titulo" style="color:#176331!important;font-weight:900;">♻️ Vecino Reciclador</div>'+
     '<div style="color:#17231c!important;">📍 <strong style="color:#17231c!important;">'+escaparHTML(direccion)+'</strong></div>'+
     '<div class="estado" style="color:#17231c!important;font-weight:800;">'+
-      (realizado ? '🟢 ' : '⚪ ')+
+      (realizado ? '🟢 ' : '🔴 ')+
       escaparHTML(estado)+
     '</div>'+
     '</div>';
@@ -3163,8 +3202,10 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
+    try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   }else{
     dvMostrarLogin();
+    try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   }
 }
 document.addEventListener("DOMContentLoaded", function(){
@@ -3428,10 +3469,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function dv22IsAdmin(){
     const u=dv22User();
-    return !!u && (
-      String(u.rol||"").toLowerCase()==="admin" ||
-      String(u.usuario||"").toLowerCase()==="admin"
-    );
+    return !!u && String(u.usuario||"").trim().toLowerCase()==="admin";
   }
 
   const css=`
@@ -3591,14 +3629,20 @@ document.addEventListener("DOMContentLoaded", function(){
     const admin= dv22IsAdmin();
     const existing=document.getElementById("dv22AdminOpen");
     if(!admin){
-      if(existing) existing.classList.remove("dv-admin-visible");
+      if(existing){
+        existing.classList.remove("dv-admin-visible");
+        existing.style.setProperty("display","none","important");
+      }
       const panel=document.getElementById("dv22Admin");
-      if(panel) panel.style.display="none";
+      if(panel) panel.style.setProperty("display","none","important");
       return;
     }
     make();
     const button=document.getElementById("dv22AdminOpen");
-    if(button) button.classList.add("dv-admin-visible");
+    if(button){
+      button.classList.add("dv-admin-visible");
+      button.style.setProperty("display","block","important");
+    }
     render();
     const s=evidenceStats();
     const summary=document.getElementById("dv22Summary");
