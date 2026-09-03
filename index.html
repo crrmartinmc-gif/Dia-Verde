@@ -416,6 +416,7 @@ footer{background:linear-gradient(145deg,#031a0e,#06331d);border-top:1px solid #
 }
 </style>
 
+\n<style id="dv26-critical-fixes">\n/* PIN PENDIENTE: ya no queda blanco sobre el mapa */\n.dv-reclamo-pin.pendiente::before{\n  background:#087a3d !important;\n  border-color:#ffffff !important;\n}\n.dv-reclamo-pin.pendiente span{color:#ffffff !important;}\n\n/* POPUP RECLAMO: forzamos contraste incluso si otra regla global hereda blanco */\n.leaflet-container .leaflet-popup-content-wrapper,\n.leaflet-container .leaflet-popup-tip{background:#ffffff !important;}\n.leaflet-container .leaflet-popup-content,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup *,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup div,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup strong{\n  color:#17231c !important;\n  opacity:1 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .titulo{\n  color:#176331 !important;\n  font-weight:900 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .estado{\n  color:#17231c !important;\n  font-weight:800 !important;\n}\n.leaflet-container .leaflet-popup-close-button{color:#17231c !important;}\n\n/* ADMINISTRACIÓN: oculto por defecto para cualquier chofer */\n#dv22AdminOpen{display:none !important;}\n#dv22AdminOpen.dv-admin-visible{display:block !important;}\n</style>\n
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -1201,10 +1202,10 @@ function popupReclamoMedioAmbiente(d){
     ? estaRealizadaHoy(d)
     : false;
   const estado = realizado ? "Realizado" : "Pendiente";
-  return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
+  return '<div class="dv-reclamo-popup" style="color:#17231c!important;background:#fff!important;font-family:Arial,sans-serif;">'+
+    '<div class="titulo" style="color:#176331!important;font-weight:900;">♻️ Vecino Reciclador</div>'+
+    '<div style="color:#17231c!important;">📍 <strong style="color:#17231c!important;">'+escaparHTML(direccion)+'</strong></div>'+
+    '<div class="estado" style="color:#17231c!important;font-weight:800;">'+
       (realizado ? '🟢 ' : '⚪ ')+
       escaparHTML(estado)+
     '</div>'+
@@ -3139,6 +3140,7 @@ function dvIniciarSesion(){
   }));
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
+  try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   try {
     if(typeof recuperarRecorrido === "function") recuperarRecorrido();
   } catch(e) {
@@ -3149,6 +3151,7 @@ function dvCerrarSesion(){
   localStorage.removeItem(DV_SESSION_KEY);
   localStorage.removeItem(DV_USER_KEY);
   dvMostrarLogin();
+  try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   const u = document.getElementById("dvLoginUser");
   const p = document.getElementById("dvLoginPass");
   if(u) u.value = "";
@@ -3585,8 +3588,17 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function update(){
-    if(!dv22IsAdmin())return;
-    make(); document.getElementById("dv22AdminOpen").style.display="block";
+    const admin= dv22IsAdmin();
+    const existing=document.getElementById("dv22AdminOpen");
+    if(!admin){
+      if(existing) existing.classList.remove("dv-admin-visible");
+      const panel=document.getElementById("dv22Admin");
+      if(panel) panel.style.display="none";
+      return;
+    }
+    make();
+    const button=document.getElementById("dv22AdminOpen");
+    if(button) button.classList.add("dv-admin-visible");
     render();
     const s=evidenceStats();
     const summary=document.getElementById("dv22Summary");
@@ -3604,9 +3616,10 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+  window.dv22RefreshAdmin=function(){ update(); };
   function init(){
-    if(!dv22IsAdmin())return;
-    make(); update(); setInterval(update,3000);
+    update();
+    setInterval(update,3000);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
   else init();
