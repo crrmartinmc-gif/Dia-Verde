@@ -1479,6 +1479,41 @@ async function mostrarMarcadoresGeocodificados(lista){
   dvProcesarColaGeocoding(generacion);
 }
 
+async function dvProcesarColaGeocoding(generacion){
+  const lista=dvGeoListaActual || [];
+  if(!lista.length) return;
+
+  const limite=3;
+  let indice=0;
+
+  async function trabajador(){
+    while(true){
+      if(generacion!==geocodingGeneration) return;
+      const i=indice++;
+      if(i>=lista.length) return;
+
+      const d=lista[i];
+      try{
+        const pos=await geocodificarDireccion(d);
+        if(generacion!==geocodingGeneration) return;
+
+        if(pos && dvPosValida(pos)){
+          dvGuardarGeo(d,pos,"Nominatim");
+          agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+        }
+      }catch(error){
+        console.warn("Geocodificación de dirección falló:",d,error);
+      }
+
+      await new Promise(r=>setTimeout(r,350));
+    }
+  }
+
+  await Promise.all(
+    Array.from({length:Math.min(limite,lista.length)},()=>trabajador())
+  );
+}
+
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
