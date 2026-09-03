@@ -771,7 +771,14 @@ map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiend
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV2";
+let dvGeocodeSignature = "";
+let dvGeocodeRunning = false;
+let dvGeocodeQueue = [];
+let dvGeocodeIndex = 0;
+let dvGeocodeZone = "";
+const DV_GEOCODE_MAX_RETRIES = 2;
+const DV_GEOCODE_TIMEOUT_MS = 9000;
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -890,71 +897,348 @@ function claveGeocoding(d){
     `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
   );
 }
+function dvTextoDireccion(d){
+  const calle=String(d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || "").trim();
+  const numero=String(d.numero || "").trim();
+  return `${calle} ${numero}`.trim();
+}
+
+function dvLocalidadesAlternativas(localidad){
+  const l=normalizar(localidad || "");
+  const mapa={
+    "llavallol":["Llavallol","Lomas de Zamora"],
+    "banfield":["Banfield","Lomas de Zamora"],
+    "temperley":["Temperley","Lomas de Zamora"],
+    "turdera":["Turdera","Lomas de Zamora"],
+    "lomas":["Lomas de Zamora","Lomas"]
+  };
+  return mapa[l] || [localidad || "Lomas de Zamora"];
+}
+
+function dvConsultasGeocoding(d){
+  const direccion=dvTextoDireccion(d);
+  if(!direccion) return [];
+
+  const localidades=dvLocalidadesAlternativas(d.localidad || selectedCgm);
+  const consultas=[];
+
+  localidades.forEach(loc=>{
+    consultas.push(`${direccion}, ${loc}, Buenos Aires, Argentina`);
+    consultas.push(`${direccion}, ${loc}, Lomas de Zamora, Buenos Aires, Argentina`);
+  });
+
+  // Variante sin número para casos en los que el nomenclador no reconoce la altura.
+  const calle=String(d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || "").trim();
+  if(calle){
+    localidades.forEach(loc=>{
+      consultas.push(`${calle}, ${loc}, Buenos Aires, Argentina`);
+    });
+  }
+
+  return [...new Set(consultas)];
+}
+
+function dvCacheValida(cacheItem){
+  return !!cacheItem &&
+    Number.isFinite(Number(cacheItem.lat)) &&
+    Number.isFinite(Number(cacheItem.lng)) &&
+    Math.abs(Number(cacheItem.lat))<=90 &&
+    Math.abs(Number(cacheItem.lng))<=180;
+}
+
+function dvEsResultadoUtil(pos){
+  return Array.isArray(pos) &&
+    pos.length>=2 &&
+    Number.isFinite(Number(pos[0])) &&
+    Number.isFinite(Number(pos[1])) &&
+    Math.abs(Number(pos[0]))<=90 &&
+    Math.abs(Number(pos[1]))<=180;
+}
+
+async function dvFetchJSONConTimeout(url,options={}){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),DV_GEOCODE_TIMEOUT_MS);
+
+  try{
+    const response=await fetch(
+      url,
+      {
+        ...options,
+        signal:controller.signal,
+        cache:"no-store"
+      }
+    );
+
+    if(!response.ok) return null;
+    return await response.json();
+  }catch(error){
+    console.warn("Geocodificador:",error);
+    return null;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+async function dvBuscarNominatim(query){
+  const url=
+    "https://nominatim.openstreetmap.org/search" +
+    "?format=jsonv2&limit=1&countrycodes=ar&addressdetails=1&q=" +
+    encodeURIComponent(query);
+
+  const resultados=await dvFetchJSONConTimeout(
+    url,
+    {headers:{"Accept":"application/json"}}
+  );
+
+  if(!Array.isArray(resultados) || !resultados.length) return null;
+
+  const lat=Number(resultados[0].lat);
+  const lng=Number(resultados[0].lon);
+
+  return dvEsResultadoUtil([lat,lng]) ? [lat,lng] : null;
+}
+
+async function dvBuscarPhoton(query){
+  const url=
+    "https://photon.komoot.io/api/" +
+    "?limit=1&lang=es&q=" +
+    encodeURIComponent(query);
+
+  const resultado=await dvFetchJSONConTimeout(
+    url,
+    {headers:{"Accept":"application/json"}}
+  );
+
+  const feature=
+    resultado &&
+    Array.isArray(resultado.features) &&
+    resultado.features[0];
+
+  if(!feature || !feature.geometry || !Array.isArray(feature.geometry.coordinates)){
+    return null;
+  }
+
+  const lng=Number(feature.geometry.coordinates[0]);
+  const lat=Number(feature.geometry.coordinates[1]);
+
+  return dvEsResultadoUtil([lat,lng]) ? [lat,lng] : null;
+}
+
+async function dvBuscarGeocodificacion(query){
+  // Primero Nominatim. Si no encuentra o falla, usamos Photon.
+  let pos=await dvBuscarNominatim(query);
+  if(pos) return {pos,proveedor:"Nominatim"};
+
+  pos=await dvBuscarPhoton(query);
+  if(pos) return {pos,proveedor:"Photon"};
+
+  return null;
+}
+
+function dvClaveGeocodingRobusta(d){
+  return normalizar(
+    `${dvTextoDireccion(d)}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
+  );
+}
+
+function dvGuardarCoordenada(d,pos,proveedor){
+  if(!dvEsResultadoUtil(pos)) return;
+
+  const cache=cargarCacheGeocoding();
+  const key=dvClaveGeocodingRobusta(d);
+
+  cache[key]={
+    lat:Number(pos[0]),
+    lng:Number(pos[1]),
+    proveedor:proveedor || "desconocido",
+    actualizado:new Date().toISOString()
+  };
+
+  guardarCacheGeocoding(cache);
+}
+
 async function geocodificarDireccion(d){
   const directa=obtenerLatLngReclamo(d);
   if(directa) return directa;
+
   const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
+  const key=dvClaveGeocodingRobusta(d);
+
+  if(dvCacheValida(cache[key])){
+    return [
+      Number(cache[key].lat),
+      Number(cache[key].lng)
+    ];
   }
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
-  try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
-    return [lat,lng];
-  }catch(error){
-    console.warn("Geocodificación:",q,error);
-    return null;
+
+  const consultas=dvConsultasGeocoding(d);
+
+  if(!consultas.length) return null;
+
+  for(let intento=0; intento<DV_GEOCODE_MAX_RETRIES; intento++){
+    for(const query of consultas){
+      const resultado=await dvBuscarGeocodificacion(query);
+
+      if(resultado && dvEsResultadoUtil(resultado.pos)){
+        dvGuardarCoordenada(
+          d,
+          resultado.pos,
+          resultado.proveedor
+        );
+        return resultado.pos;
+      }
+    }
+
+    if(intento<DV_GEOCODE_MAX_RETRIES-1){
+      await new Promise(
+        resolve=>setTimeout(resolve,1500)
+      );
+    }
   }
+
+  // Guardamos el fallo temporalmente para no martillar los servicios
+  // cada vez que render() se ejecute.
+  cache[key]={
+    sinResultado:true,
+    actualizado:new Date().toISOString()
+  };
+  guardarCacheGeocoding(cache);
+
+  console.warn(
+    "No se pudo geolocalizar:",
+    dvTextoDireccion(d),
+    d.localidad || selectedCgm
+  );
+
+  return null;
 }
+
+function dvFirmaListaGeocoding(lista){
+  if(!Array.isArray(lista)) return "";
+  return lista.map(d=>
+    `${dvClaveGeocodingRobusta(d)}|${d.lat||""}|${d.lng||""}`
+  ).join("||");
+}
+
 async function mostrarMarcadoresGeocodificados(lista){
+  if(!Array.isArray(lista)||!lista.length){
+    limpiarMarcadoresReclamos();
+    dvGeocodeSignature="";
+    dvGeocodeQueue=[];
+    dvGeocodeRunning=false;
+    return;
+  }
+
+  const firma=dvFirmaListaGeocoding(lista);
+
+  /*
+   * MUY IMPORTANTE:
+   * render() puede ejecutarse por actualización de estados/evidencias.
+   * Si la lista es la misma, NO reiniciamos la geocodificación.
+   * Esto evita que una consulta lenta sea cancelada/reemplazada antes
+   * de terminar.
+   */
+  if(firma===dvGeocodeSignature && dvGeocodeRunning){
+    return;
+  }
+
+  if(firma===dvGeocodeSignature && !dvGeocodeRunning){
+    return;
+  }
+
+  dvGeocodeSignature=firma;
+  geocodingGeneration++;
+  const generacion=geocodingGeneration;
+
   limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)||!lista.length) return;
-  const generacion=++geocodingGeneration;
   const capa=asegurarCapaReclamos();
   if(!capa) return;
+
   const pendientes=[];
+
   for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
+    const directa=obtenerLatLngReclamo(d);
+
+    if(directa){
       agregarMarcadorReclamo(d);
-    }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
-      if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
-      }else{
-        pendientes.push(d);
+      continue;
+    }
+
+    const cache=cargarCacheGeocoding();
+    const key=dvClaveGeocodingRobusta(d);
+
+    if(dvCacheValida(cache[key])){
+      agregarMarcadorReclamo({
+        ...d,
+        lat:Number(cache[key].lat),
+        lng:Number(cache[key].lng)
+      });
+      continue;
+    }
+
+    // Si fue marcado sin resultado recientemente, lo dejamos para el
+    // reintento manual/por cambio real de datos, no en cada render.
+    if(cache[key] && cache[key].sinResultado){
+      const age=Date.now()-new Date(cache[key].actualizado || 0).getTime();
+      if(Number.isFinite(age) && age<10*60*1000){
+        continue;
       }
     }
+
+    pendientes.push(d);
   }
-  const limite=3;
-  let indice=0;
+
+  dvGeocodeQueue=pendientes;
+  dvGeocodeIndex=0;
+  dvGeocodeZone=selectedZone;
+  dvGeocodeRunning=true;
+
   async function trabajador(){
-    while(indice<pendientes.length){
+    while(true){
       if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-      if(generacion!==geocodingGeneration) return;
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+
+      const i=dvGeocodeIndex++;
+      if(i>=dvGeocodeQueue.length) return;
+
+      const d=dvGeocodeQueue[i];
+
+      try{
+        const pos=await geocodificarDireccion(d);
+
+        if(generacion!==geocodingGeneration) return;
+
+        if(pos){
+          agregarMarcadorReclamo({
+            ...d,
+            lat:Number(pos[0]),
+            lng:Number(pos[1])
+          });
+        }
+      }catch(error){
+        console.warn("Error ubicando reclamo:",error);
       }
-      await new Promise(r=>setTimeout(r,350));
+
+      // Respetamos el servicio y evitamos bloqueos por ráfagas.
+      await new Promise(
+        resolve=>setTimeout(resolve,650)
+      );
     }
   }
-  await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
-  );
+
+  // Dos trabajadores: suficiente para que cargue rápido sin
+  // disparar una ráfaga excesiva de solicitudes.
+  try{
+    await Promise.all([
+      trabajador(),
+      trabajador()
+    ]);
+  }finally{
+    if(generacion===geocodingGeneration){
+      dvGeocodeRunning=false;
+    }
+  }
 }
+
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
@@ -1787,8 +2071,9 @@ statusText.textContent =
 "Actualizado correctamente";
 actualizarHora();
 if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
+  // No renderizamos el mapa nuevamente: solo actualizamos el estado
+  // de los pines existentes. La geocodificación continúa en segundo plano.
+  refrescarEstadosMarcadoresReclamos();
 }
 refrescarEstadosMarcadoresReclamos();
 }
@@ -1804,8 +2089,7 @@ evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
+  refrescarEstadosMarcadoresReclamos();
 }
 }
 );
@@ -2545,7 +2829,17 @@ render
 refresh.addEventListener(
 "click",
 () => {
-cargarDatos();
+  try{
+    const cache=cargarCacheGeocoding();
+    Object.keys(cache).forEach(key=>{
+      if(cache[key] && cache[key].sinResultado) delete cache[key];
+    });
+    guardarCacheGeocoding(cache);
+  }catch(e){}
+  dvGeocodeSignature="";
+  dvGeocodeQueue=[];
+  dvGeocodeRunning=false;
+  cargarDatos();
 }
 );
 cargarMapa();
