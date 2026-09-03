@@ -802,11 +802,7 @@ async function mostrarMarcadoresGeocodificados(lista){
       }
     }
   }
-  // Nominatim es un servicio público con límites de uso.
-  // Procesamos una dirección por vez para evitar bloqueos/429 y
-  // permitir que los pines aparezcan progresivamente sin tocar
-  // el mapa, los filtros ni el sistema de recorridos.
-  const limite=1;
+  const limite=3;
   let indice=0;
   async function trabajador(){
     while(indice<pendientes.length){
@@ -817,9 +813,7 @@ async function mostrarMarcadoresGeocodificados(lista){
       if(pos){
         agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
       }
-      // Ritmo conservador para Nominatim. La caché evita repetir
-      // consultas ya resueltas en futuras cargas.
-      await new Promise(r=>setTimeout(r,1100));
+      await new Promise(r=>setTimeout(r,350));
     }
   }
   await Promise.all(
@@ -2476,9 +2470,13 @@ cargarEvidenciasHoy();
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
-  { usuario:"admin",  password:"diaverde2026", nombre:"Administrador" },
-  { usuario:"chofer1", password:"1234", nombre:"Chofer 1" },
-  { usuario:"chofer2", password:"1234", nombre:"Chofer 2" }
+  { usuario:"Ale",       password:"boca",         nombre:"Ale" },
+  { usuario:"admin",     password:"banfield09",   nombre:"Dia Verde" },
+  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
+  { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
+  { usuario:"Francocrr", password:"boca",         nombre:"Pablo Vazques" },
+  { usuario:"chofer",    password:"comodin",      nombre:"Comodin" },
+  { usuario:"CarliDT",   password:"banfield",     nombre:"Carli" }
 ];
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
