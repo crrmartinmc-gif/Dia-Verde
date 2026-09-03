@@ -1,55 +1,232 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Direcciones DIA VERDE</title>
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
-<style>
-:root{--verde:#087a3d;--verde-oscuro:#04552b;--verde-claro:#e9f7ed;--texto:#193329;--gris:#728078;--fondo:#f3f7f4;--borde:#dce9e0;--blanco:#fff;}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto);}header{background:linear-gradient( 135deg, var(--verde-oscuro), var(--verde) );color:white;padding:24px 28px;box-shadow:0 4px 20px #0002;}.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px;}.brand{display:flex;align-items:center;gap:15px;}.logo{width:58px;height:58px;border-radius:50%;background:white;display:grid;place-items:center;font-size:29px;}h1{margin:0;font-size:28px;}.sub{margin-top:5px;font-size:15px;}.status{display:flex;align-items:center;gap:10px;font-size:13px;}.status-icon{width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;font-size:20px;}main{max-width:1200px;margin:auto;padding:22px;}.layout{display:grid;grid-template-columns:300px 1fr;gap:18px;}.card{background:white;border:1px solid #e5eee8;border-radius:18px;box-shadow:0 8px 30px #163a2614;}.sidebar{padding:20px;}.section-label{color:var(--verde);font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}label{display:block;font-weight:700;margin-bottom:8px;}select, input{width:100%;min-height:48px;border:1px solid #d5e0d9;border-radius:10px;padding:11px 13px;font-size:15px;color:var(--texto);background:white;outline:none;}select:focus, input:focus{border-color:#72bb8b;box-shadow:0 0 0 3px #087a3d1a;}.refresh{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:10px;background:var(--verde);color:white;font-weight:800;cursor:pointer;}.refresh:hover{background:var(--verde-oscuro);}.info-box{margin-top:18px;padding:15px;border:1px solid #c9e7d1;border-radius:12px;background:#f4fbf6;color:#40534a;font-size:13px;line-height:1.55;}.stats{margin-top:25px;}.stat{border:1px solid var(--borde);border-radius:13px;padding:14px;margin-top:9px;display:flex;align-items:center;gap:12px;}.stat-icon{width:42px;height:42px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.stat small{display:block;color:var(--gris);}.stat strong{font-size:22px;}.update{margin-top:24px;font-size:13px;color:#4d5d54;line-height:1.5;}.map-card{padding:18px;}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;}.card-title-icon{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.card-title h2{margin:0;font-size:21px;}.card-title p{margin:3px 0 0;color:var(--gris);font-size:13px;}.map-wrap{position:relative;}#map{height:500px;border-radius:14px;overflow:hidden;}.zone-badge{position:absolute;z-index:1000;left:50%;top:20px;transform:translateX(-50%);background:var(--verde);color:white;padding:9px 16px;border-radius:10px;font-weight:800;box-shadow:0 5px 15px #0003;pointer-events:none;}.results{margin-top:18px;padding:18px;}.results-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;}.count-pill{background:var(--verde-claro);color:var(--verde);padding:8px 13px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;}.search{margin-bottom:12px;}.address-list{display:grid;border:1px solid #e1e9e4;border-radius:13px;overflow:hidden;}.address{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border-bottom:1px solid #e7eee9;background:white;}.address:last-child{border-bottom:0;}.address:hover{background:#fbfdfb;}.address-left{display:flex;align-items:center;gap:12px;min-width:0;}.pin{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;flex:0 0 auto;}.address strong{display:block;font-size:15px;}.address small{display:block;margin-top:4px;color:var(--gris);}.address-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.maps, .evidence-btn{display:inline-block;text-decoration:none;border:1px solid #8bcaa1;color:var(--verde);background:white;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;}.maps:hover, .evidence-btn:hover{background:var(--verde-claro);}.evidence-btn.done{background:var(--verde-claro);border-color:#63b57f;}.empty, .loading{text-align:center;padding:35px;color:var(--gris);}.error{background:#fff0f0;color:#a52222;padding:15px;border-radius:10px;}.modal-backdrop{position:fixed;inset:0;background:#062b17aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:3000;}.modal-backdrop.show{display:flex;}.evidence-modal{width:min(520px,100%);background:white;border-radius:20px;box-shadow:0 20px 60px #0004;padding:22px;}.evidence-modal h3{margin:0 0 5px;font-size:21px;}.evidence-modal p{margin:0 0 18px;color:var(--gris);font-size:13px;}.evidence-preview{width:100%;max-height:280px;object-fit:cover;border-radius:14px;background:#edf3ef;display:none;margin-bottom:15px;}.gps-box{padding:12px;border-radius:12px;background:#f4fbf6;border:1px solid #c9e7d1;font-size:13px;line-height:1.55;margin-bottom:15px;}.modal-actions{display:flex;gap:10px;}.modal-actions button{flex:1;min-height:46px;border-radius:10px;font-weight:800;cursor:pointer;}.cancel-btn{border:1px solid #d5e0d9;background:white;color:#53625a;}.send-btn{border:0;background:var(--verde);color:white;}.send-btn:disabled{opacity:.5;cursor:not-allowed;}.toast{position:fixed;right:20px;bottom:20px;z-index:4000;background:var(--verde-oscuro);color:white;padding:13px 16px;border-radius:12px;box-shadow:0 8px 25px #0003;display:none;font-size:13px;font-weight:700;}.toast.show{display:block;}footer{margin-top:20px;background:var(--verde-oscuro);color:white;padding:22px;}.footer-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;gap:15px;align-items:center;}footer span{opacity:.9;font-size:13px;}@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px;}.sidebar .stats, .sidebar .update{grid-column:1/-1;margin-top:0;}}@media(max-width:600px){header{padding:18px;}.header-inner{align-items:flex-start;}.status{display:none;}.logo{width:48px;height:48px;font-size:24px;}h1{font-size:23px;}.sub{font-size:13px;}main{padding:12px;}.sidebar{display:block;}.info-box, .stats, .update{margin-top:18px!important;}#map{height:100%;min-height:460px;}.address{align-items:flex-start;flex-direction:column;}.address-actions{width:100%;}.maps, .evidence-btn{flex:1;text-align:center;}.footer-inner{flex-direction:column;text-align:center;}}.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}.route-btn:disabled{opacity:.5;cursor:not-allowed}.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
+Editar
+la administracion me encanto, pero la parte de choferes quedo asi
+Editar
+Editar
+los botones quedaron desproporcionados y los iconos muy chicos empareja eso de la interfaz y en el mapa de choferes las gotas de ubicacion cuando la apretas sale la descripcion del reclamo... esta en letras blancas y el fondo blanco, pone letras negras
+Editar
+no se corrigio fijate que qeudaron las gotas en pediente todo blanco y als letras todas blancas tendremos algun conflicto? otra cosa mas entre a usuario chofer y le figura la opcion administracion esa opcion solo la tiene que tener el usuario "admin"
+corregi esto y pasame el txt pero controla el codigo y busca errores
 
+
+seguimos teniendo conflicto con los colores del pin pendiente segui buscando errores. tambien con la actualizacion de estados de los pin, va y viene ahi tenemos otro conflicto, tambien tenemos conflicto con las proporciones de la app en los celulares, y desaparecio el boton administraion al usuario admin
+Que paso acá chat?
+hoy 8:41
+Dia Verde app.txt
+Documento
+este es el funcional, necesito que me refuerzes la geolocalizacion de los pines, no me carga algunos como que quda sin encontrar... o se quda trabado sin cargar
+Se ha pegado el código(2).js
+JavaScript
+Pegado text(20260903-123309).txt
+Documento
+en este codigo los pines se ubicacban perectamente leelo y fijate que se cambio para que no los marque ahora...
+Dia Verde app(1).txt
+Documento
+dale perfecto hagamos eso, pero lo quiero en este codigo no el de administracion
+index_DiaVerde_MAESTRO_V21_SYNC_PC_Y_MOVIL (1).txt
+Documento
+fijate como funcionaba aca
+Se ha pegado el código(3).js
+JavaScript
+sigue sin cargar los pines el script por ahi tocaste alguna coneccion te lo paso el original el que funcionaba
+asi estan
+Pegado text(20260903-133210).txt
+Documento
+fijate esta vercion como funciona
+seguimos sin pines
+Pegado text(20260903-140953).txt
+Documento
+sigue sin funcionar, mira este codigo
+
+Sí, ya encontré algo importante. Las credenciales están bien escritas, y el botón también está conectado correctamente a dvIniciarSesion().
+
+Para admin, el código compara:
+
+usuario → admin
+contraseña → banfield09
+
+y la comparación es exacta para la contraseña.
+
+Entonces, ¿por qué te dice incorrecto?
+
+Hay una posibilidad muy concreta: el archivo que estás ejecutando no es el TXT que acabamos de modificar, sino una copia anterior que quedó cargada en tu HTML/app, o el navegador está mostrando una versión vieja.
+
+Porque en el archivo que estoy inspeccionando ahora mismo, admin / banfield09 tiene que entrar.
+
+Además, el botón está correctamente conectado:
+
+INGRESAR
+   ↓
+dvIniciarSesion()
+   ↓
+DV_USUARIOS.find(...)
+
+Hagamos algo mejor
+
+No quiero que sigamos peleándonos con esto. Te preparo una versión corregida de autenticación sobre el archivo maestro, pero esta vez voy a hacer que el login:
+
+acepte los 7 usuarios;
+ignore espacios accidentales en usuario y contraseña;
+mantenga mayúsculas/minúsculas indiferentes en usuario;
+mantenga la contraseña exactamente como la definiste;
+no toque absolutamente nada del mapa, pines, GPS ni recorrido.
+
+Y además voy a poner una validación interna para que podamos saber si realmente está cargando la lista correcta de usuarios.
+
+No voy a modificar ninguna otra función.
+
+Pegado text(20260903-142925).txt
+Documento
+este como lo ves?
+
+Sí. Pero veo algo importante: el archivo que acabás de subir no parece ser el HTML de choferes que veníamos modificando, sino que en la búsqueda aparecen varias versiones y partes de otros archivos.
+
+No quiero decirte “está bien” sin haber localizado exactamente el archivo que me estás señalando.
+
+Si te referís al archivo Pegado text(20260903-133210).txt, lo puedo inspeccionar completo y decirte:
+
+qué usuarios tiene;
+cómo funciona el login;
+qué funciones tiene;
+si conserva el recorrido;
+si guarda los puntos GPS;
+cómo maneja los pines;
+cómo geolocaliza;
+y, sobre todo, qué versión conviene tomar como MASTER.
+
+Porque a esta altura tenemos varias versiones y no quiero seguir mezclándolas.
+
+usa el que termina 2925
+
+Sí. Ahora sí estoy usando exactamente el archivo que termina en 142925:
+
+Pegado text(20260903-142925).txt
+
+Y te digo algo: este archivo es bastante mejor como MASTER que las versiones que veníamos generando.
+
+Encontré que tiene:
+
+7 usuarios, incluidos los que me pasaste.
+Sistema de recorrido propio DV19.
+iniciarRecorrido() integrado con persistencia y navegación.
+guardarRecorridoLocal() para guardar el recorrido.
+recuperarRecorrido() para recuperar lo guardado.
+Sistema de pines mediante mostrarMarcadoresGeocodificados().
+🔥 Así que desde ahora
+
+Este 142925 lo tomo como MASTER.
+
+No voy a usar V41, V42, V43 ni V44 para hacer la próxima modificación.
+
+Y si queremos solucionar los pines, voy a tocar únicamente la parte de geocodificación de este archivo, dejando intacto todo lo demás.
+
+Eso también evita el problema que vos detectaste de que cada versión nueva terminaba teniendo menos líneas o perdiendo funciones.
+
+Esta vez trabajamos sobre el original completo 142925.
+
+fiajte que concuerde las colunas del sheet
+
+Sí. Acabo de verificar el 142925 contra la estructura que veníamos definiendo, y hay un punto importante.
+
+En este código la hoja está interpretada así:
+
+Localidad	Calle	Número	Zona
+Llavallol	A	B	C
+Banfield	D	E	F
+Temperley	G	H	I
+Turdera	J	K	—
+Lomas	L	M	N
+Santa Catalina	O	P	Q
+
+Eso está directamente en procesarFilasSheets().
+
+⚠️ Entonces hay una diferencia
+
+Vos me habías marcado:
+
+Lomas = L / M / N
+
+Eso sí está correcto.
+
+También:
+
+Turdera = J / K
+
+Eso también está correcto. El código incluso fuerza la zona a "Turdera" cuando la localidad es Turdera, porque no utiliza columna de zona para esa localidad.
+
+Y las otras tres quedan:
+
+Llavallol → A/B/C
+Banfield → D/E/F
+Temperley → G/H/I
+🔎 Pero aparece Santa Catalina
+
+El código también está leyendo:
+
+O/P/Q → Santa Catalina.
+
+Si esas columnas O/P/Q realmente existen y las estás usando, hay que mantenerlas.
+
+Si tu Sheet actual solamente tiene hasta L/M/N para Lomas, entonces O/P/Q sobra y puede estar generando confusión, aunque por sí solo no debería impedir que funcionen los otros pines.
+
+Mi conclusión
+
+La correspondencia principal que me pediste está correcta:
+
+A/B/C → Llavallol
+D/E/F → Banfield
+G/H/I → Temperley
+J/K → Turdera
+L/M/N → Lomas
+
+No tocaría esa parte.
+
+Si querés, el próximo paso lo hacemos sobre este mismo 142925, sin quitar ninguna función, y revisamos específicamente por qué Temperley está encontrando solamente un pin.
+
+esta opq en santa catalina pero no entro en la captura que te mande
+
+Exacto 👍. O/P/Q corresponden a Santa Catalina, simplemente no entraron en la captura que me mostraste.
+
+Entonces la estructura completa del Sheet queda confirmada:
+
+A/B/C → Llavallol
+D/E/F → Banfield
+G/H/I → Temperley
+J/K → Turdera
+L/M/N → Lomas
+O/P/Q → Santa Catalina
+
+Así que esa parte del código está correcta y no la tocaría.
+
+Y además el tratamiento especial de Turdera también está correcto: como no tiene columna de zona, el código le asigna directamente zona = "Turdera".
+
+Por ahora, el problema de los pines no está en la correspondencia de columnas.
+
+<!DOCTYPE html>
+
+<html lang="es"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Direcciones DIA VERDE</title> <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> <style> :root{--verde:#087a3d;--verde-oscuro:#04552b;--verde-claro:#e9f7ed;--texto:#193329;--gris:#728078;--fondo:#f3f7f4;--borde:#dce9e0;--blanco:#fff;}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto);}header{background:linear-gradient( 135deg, var(--verde-oscuro), var(--verde) );color:white;padding:24px 28px;box-shadow:0 4px 20px #0002;}.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px;}.brand{display:flex;align-items:center;gap:15px;}.logo{width:58px;height:58px;border-radius:50%;background:white;display:grid;place-items:center;font-size:29px;}h1{margin:0;font-size:28px;}.sub{margin-top:5px;font-size:15px;}.status{display:flex;align-items:center;gap:10px;font-size:13px;}.status-icon{width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;font-size:20px;}main{max-width:1200px;margin:auto;padding:22px;}.layout{display:grid;grid-template-columns:300px 1fr;gap:18px;}.card{background:white;border:1px solid #e5eee8;border-radius:18px;box-shadow:0 8px 30px #163a2614;}.sidebar{padding:20px;}.section-label{color:var(--verde);font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}label{display:block;font-weight:700;margin-bottom:8px;}select, input{width:100%;min-height:48px;border:1px solid #d5e0d9;border-radius:10px;padding:11px 13px;font-size:15px;color:var(--texto);background:white;outline:none;}select:focus, input:focus{border-color:#72bb8b;box-shadow:0 0 0 3px #087a3d1a;}.refresh{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:10px;background:var(--verde);color:white;font-weight:800;cursor:pointer;}.refresh:hover{background:var(--verde-oscuro);}.info-box{margin-top:18px;padding:15px;border:1px solid #c9e7d1;border-radius:12px;background:#f4fbf6;color:#40534a;font-size:13px;line-height:1.55;}.stats{margin-top:25px;}.stat{border:1px solid var(--borde);border-radius:13px;padding:14px;margin-top:9px;display:flex;align-items:center;gap:12px;}.stat-icon{width:42px;height:42px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.stat small{display:block;color:var(--gris);}.stat strong{font-size:22px;}.update{margin-top:24px;font-size:13px;color:#4d5d54;line-height:1.5;}.map-card{padding:18px;}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;}.card-title-icon{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.card-title h2{margin:0;font-size:21px;}.card-title p{margin:3px 0 0;color:var(--gris);font-size:13px;}.map-wrap{position:relative;}#map{height:500px;border-radius:14px;overflow:hidden;}.zone-badge{position:absolute;z-index:1000;left:50%;top:20px;transform:translateX(-50%);background:var(--verde);color:white;padding:9px 16px;border-radius:10px;font-weight:800;box-shadow:0 5px 15px #0003;pointer-events:none;}.results{margin-top:18px;padding:18px;}.results-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;}.count-pill{background:var(--verde-claro);color:var(--verde);padding:8px 13px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;}.search{margin-bottom:12px;}.address-list{display:grid;border:1px solid #e1e9e4;border-radius:13px;overflow:hidden;}.address{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border-bottom:1px solid #e7eee9;background:white;}.address:last-child{border-bottom:0;}.address:hover{background:#fbfdfb;}.address-left{display:flex;align-items:center;gap:12px;min-width:0;}.pin{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;flex:0 0 auto;}.address strong{display:block;font-size:15px;}.address small{display:block;margin-top:4px;color:var(--gris);}.address-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.maps, .evidence-btn{display:inline-block;text-decoration:none;border:1px solid #8bcaa1;color:var(--verde);background:white;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;}.maps:hover, .evidence-btn:hover{background:var(--verde-claro);}.evidence-btn.done{background:var(--verde-claro);border-color:#63b57f;}.empty, .loading{text-align:center;padding:35px;color:var(--gris);}.error{background:#fff0f0;color:#a52222;padding:15px;border-radius:10px;}.modal-backdrop{position:fixed;inset:0;background:#062b17aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:3000;}.modal-backdrop.show{display:flex;}.evidence-modal{width:min(520px,100%);background:white;border-radius:20px;box-shadow:0 20px 60px #0004;padding:22px;}.evidence-modal h3{margin:0 0 5px;font-size:21px;}.evidence-modal p{margin:0 0 18px;color:var(--gris);font-size:13px;}.evidence-preview{width:100%;max-height:280px;object-fit:cover;border-radius:14px;background:#edf3ef;display:none;margin-bottom:15px;}.gps-box{padding:12px;border-radius:12px;background:#f4fbf6;border:1px solid #c9e7d1;font-size:13px;line-height:1.55;margin-bottom:15px;}.modal-actions{display:flex;gap:10px;}.modal-actions button{flex:1;min-height:46px;border-radius:10px;font-weight:800;cursor:pointer;}.cancel-btn{border:1px solid #d5e0d9;background:white;color:#53625a;}.send-btn{border:0;background:var(--verde);color:white;}.send-btn:disabled{opacity:.5;cursor:not-allowed;}.toast{position:fixed;right:20px;bottom:20px;z-index:4000;background:var(--verde-oscuro);color:white;padding:13px 16px;border-radius:12px;box-shadow:0 8px 25px #0003;display:none;font-size:13px;font-weight:700;}.toast.show{display:block;}footer{margin-top:20px;background:var(--verde-oscuro);color:white;padding:22px;}.footer-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;gap:15px;align-items:center;}footer span{opacity:.9;font-size:13px;}@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px;}.sidebar .stats, .sidebar .update{grid-column:1/-1;margin-top:0;}}@media(max-width:600px){header{padding:18px;}.header-inner{align-items:flex-start;}.status{display:none;}.logo{width:48px;height:48px;font-size:24px;}h1{font-size:23px;}.sub{font-size:13px;}main{padding:12px;}.sidebar{display:block;}.info-box, .stats, .update{margin-top:18px!important;}#map{height:100%;min-height:460px;}.address{align-items:flex-start;flex-direction:column;}.address-actions{width:100%;}.maps, .evidence-btn{flex:1;text-align:center;}.footer-inner{flex-direction:column;text-align:center;}}.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}.route-btn:disabled{opacity:.5;cursor:not-allowed}.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
 #dvCenterButton{
-  display:none;
-  position:absolute;
-  right:12px;
-  bottom:12px;
-  z-index:1000;
-  border:0;
-  border-radius:999px;
-  padding:10px 15px;
-  font-weight:800;
-  font-size:14px;
-  background:#087f3f;
-  color:#fff;
-  box-shadow:0 3px 12px rgba(0,0,0,.28);
-  cursor:pointer;
+display;
+position;
+left:12px;
+right;
+bottom:12px;
+z-index:1000;
+border:0;
+border-radius:999px;
+padding:9px 13px;
+font-weight:800;
+font-size:13px;
+background:#087f3f;
+color:#fff;
+box-shadow:0 3px 12px rgba(0,0,0,.28);
+cursor;
 }
-#dvCenterButton.dv-visible{display:block}
+#dvCenterButton.dv-visible{display}
 
-</style>
-<style id="diaverde-auth-css">
-#dvLoginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#087a3d,#04552b);padding:20px;}#dvLoginBox{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.25);}#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}#dvLoginBtn{width:100%;min-height:48px;border:0;border-radius:10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer;}#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}#dvUserBar{display:none;align-items:center;gap:10px;margin-left:auto;}#dvUserName{font-weight:800}#dvLogout{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;}
-</style>
-<style id="dia-verde-reclamos-style">
-.dv-reclamo-pin{width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));}.dv-reclamo-pin::before{content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#66bb6a;border:3px solid #fff;box-sizing:border-box;}.dv-reclamo-pin span{position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;}.dv-reclamo-pin.realizado::before{background:#2e7d32}.dv-reclamo-pin.suspendido::before{background:#8d6e63}.dv-reclamo-pin.amarillo::before{background:#f9a825}.dv-reclamo-pin.rojo::before{background:#c62828}.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}.dv-reclamo-popup .estado{font-weight:700;margin-top:4px}
-</style>
-<style id="dia-verde-map-3d-css">
-.dv-truck-3d{width:52px;height:52px;display:flex;align-items:center;justify-content:center;filter:none;transform-origin:center center;transition:transform .25s ease}.dv-map-marker{will-change:transform}.dv-pitch-control button{font-weight:900;font-size:13px}.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)}
-</style>
+</style> <style id="diaverde-auth-css"> #dvLoginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#087a3d,#04552b);padding:20px;}#dvLoginBox{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 18px 60px rgba(0,0,0,.25);}#dvLoginBox h2{margin:0 0 6px;color:#087a3d;text-align:center}#dvLoginBox p{margin:0 0 20px;text-align:center;color:#66736b}#dvLoginBox input{box-sizing:border-box;margin-bottom:12px}#dvLoginBtn{width:100%;min-height:48px;border:0;border-radius:10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer;}#dvLoginError{min-height:20px;margin-top:10px;color:#b42318;text-align:center;font-size:13px}#dvUserBar{display:none;align-items:center;gap:10px;margin-left:auto;}#dvUserName{font-weight:800}#dvLogout{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;} </style> <style id="dia-verde-reclamos-style"> .dv-reclamo-pin{width:36px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.30));}.dv-reclamo-pin::before{content:"";position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;border:3px solid #fff;box-sizing:border-box;}.dv-reclamo-pin span{position:relative;z-index:2;font-size:19px;line-height:1;font-weight:900;transform:translateY(-1px);font-family:Arial,sans-serif;}.dv-reclamo-pin.realizado::before{background:#66bb6a}.dv-reclamo-pin.suspendido::before{background:#8d6e63}.dv-reclamo-pin.amarillo::before{background:#f9a825}.dv-reclamo-pin.rojo::before{background:#c62828}.dv-reclamo-popup{font-family:Arial,sans-serif;min-width:190px}.dv-reclamo-popup .titulo{font-weight:800;color:#236b2a;font-size:15px;margin-bottom:5px}.dv-reclamo-popup .estado{font-weight:700;margin-top:4px} </style> <style id="dia-verde-map-3d-css"> .dv-navigation-arrow{width:52px;height:52px;display:flex;align-items:center;justify-content:center;filter:none;transform-origin:center center;transition:transform .25s ease}.dv-map-marker{will-change:transform}.dv-pitch-control button{font-weight:900;font-size:13px}.maplibregl-ctrl-top-left{margin-top:8px;margin-left:8px}.maplibregl-popup-content{font-family:Arial,sans-serif;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.18)} </style>
 
-<style id="dv-map-pins-fix">
-/* Los marcadores pertenecen al mapa: no se fijan a la pantalla. */
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-div-icon,
-.dia-verde-vehiculo-icon {
-  will-change: transform;
-}
-</style>
+<style id="dv-map-pins-fix"> /* Los marcadores pertenecen al mapa: no se fijan a la pantalla. */ .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-div-icon, .dia-verde-vehiculo-icon { will-change: transform; } </style>
 
 
 
@@ -57,284 +234,10 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 
 
 
-<style id="dv-navigation-pro-css">
-.map-card{position:relative;}
-.map-wrap{position:relative;width:100%;height:clamp(500px,64vh,760px);overflow:hidden;border-radius:14px;}
-#map{width:100%;height:100%;min-height:0;border-radius:14px;overflow:hidden;}
-#dvCenterButton{position:absolute!important;right:14px!important;bottom:18px!important;z-index:2147483647!important;display:none!important;border:0!important;border-radius:999px!important;padding:11px 17px!important;font-size:15px!important;font-weight:800!important;line-height:1!important;background:#087a3d!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.30)!important;cursor:pointer!important;}
-#dvCenterButton.dv-visible{display:block!important;}
-.route-controls{margin-top:12px!important;display:flex!important;gap:10px!important;flex-wrap:wrap!important;align-items:center!important;}
-.route-status{margin-top:12px!important;}
-@media(max-width:600px){.map-card{padding:10px!important;}.map-wrap{height:64vh;min-height:500px;max-height:760px;}.route-btn{min-height:52px!important;font-size:14px!important;}}
-</style>
-</head>
-<body class="dv-navigation-active">
-<div id="dvLoginOverlay">
-  <div id="dvLoginBox">
-    <h2>🌿 DIA VERDE</h2>
-    <p>Ingresá con tu usuario</p>
-    <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
-    <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña">
-    <button id="dvLoginBtn" type="button">INGRESAR</button>
-    <div id="dvLoginError"></div>
-  </div>
-</div>
-<header>
-<div class="header-inner">
-<div class="brand">
-<div class="logo">
-🌿
-</div>
-<div>
-<h1>DIA VERDE</h1>
-<div class="sub">
-Dirección Municipal de Logística Ambiental
-</div>
-</div>
-</div>
-<div class="status">
-<div class="status-icon">
-↻
-</div>
-<div>
-<strong>Estado del sistema</strong>
-<br>
-<span id="statusText">
-Conectando...
-</span>
-</div>
-</div>
-</div>
-<div id="dvUserBar">
-  <span>👤 <span id="dvUserName"></span></span>
-  <button id="dvLogout" type="button">Salir</button>
-</div>
-</header>
-<main>
-<div class="layout">
-<aside class="card sidebar">
-<div>
-<div class="section-label">
-CGM
-</div>
-<label for="cgm">
-Seleccioná un CGM
-</label>
-<select id="cgm">
-<option value="">— Elegí un CGM —</option>
-</select>
-<div class="section-label" style="margin-top:16px">
-Zona
-</div>
-<label for="zone">
-Seleccioná una zona
-</label>
-<select id="zone" disabled>
-<option value="">
-— Elegí una zona —
-</option>
-</select>
-<button
-class="refresh"
-id="refresh"
->
-↻ &nbsp; Actualizar ahora
-</button>
-<div class="info-box">
-<strong>ⓘ Información</strong>
-<br>
-Seleccioná primero el CGM y después una zona.
-El mapa corresponde al polígono real de esa zona y las direcciones se toman de Google Sheets.
-</div>
-</div>
-<div class="stats">
-<div class="section-label">
-Información
-</div>
-<div class="stat">
-<div class="stat-icon">
-📍
-</div>
-<div>
-<small>
-Direcciones
-</small>
-<strong id="totalAddresses">
-—
-</strong>
-</div>
-</div>
-<div class="stat">
-<div class="stat-icon">
-🏙️
-</div>
-<div>
-<small>
-Zonas
-</small>
-<strong id="totalZones">
-—
-</strong>
-</div>
-</div>
-</div>
-<div class="update">
-<strong>
-◷ Última actualización
-</strong>
-<br>
-<span id="lastUpdate">
-Esperando datos...
-</span>
-</div>
-</aside>
-<section>
-<div class="card map-card">
-<div class="card-title">
-<div class="card-title-icon">
-🗺️
-</div>
-<div>
-<h2 id="title">
-Mapa de la zona
-</h2>
-<p id="mapSubtitle">
-Seleccioná una zona para visualizar su área.
-</p>
-</div>
-</div>
-<div class="map-wrap">
-<button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button>
-<div
-class="zone-badge"
-id="zoneBadge"
-style="display:none"
-></div>
-<div id="map"></div>
-</div>
-<div class="route-controls">
-<button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button>
-<button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button>
-</div>
-<div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div>
-</div>
-<div class="card results">
-<div class="results-head">
-<div
-class="card-title"
-style="margin:0"
->
-<div class="card-title-icon">
-☷
-</div>
-<div>
-<h2 id="resultTitle">
-Direcciones
-</h2>
-<p id="resultSubtitle">
-Direcciones de la zona seleccionada
-</p>
-</div>
-</div>
-<div
-class="count-pill"
-id="count"
->
-0 direcciones
-</div>
-</div>
-<input
-class="search"
-id="search"
-type="search"
-placeholder="🔎 Buscar calle o número..."
-disabled
->
-<div
-class="address-list"
-id="list"
->
-<div class="empty">
-Elegí una zona del menú.
-</div>
-</div>
-</div>
-</section>
-</div>
-</main>
-<footer>
-<div class="footer-inner">
-<strong>
-🌿 DIA VERDE
-</strong>
-<span>
-Dirección Municipal de Logística Ambiental
-</span>
-<span>
-♻️ Cuidemos nuestra ciudad
-</span>
-</div>
-</footer>
-<div
-class="modal-backdrop"
-id="evidenceBackdrop"
->
-<div class="evidence-modal">
-<h3>
-📷 Registrar evidencia
-</h3>
-<p id="evidenceAddress">
-Dirección
-</p>
-<img
-id="evidencePreview"
-class="evidence-preview"
-alt="Vista previa"
->
-<div
-class="gps-box"
-id="gpsBox"
->
-Primero sacá la fotografía.
-Luego se obtendrá automáticamente la ubicación GPS.
-</div>
-<input
-id="cameraInput"
-type="file"
-accept="image/*"
-capture="environment"
-style="display:none"
->
-<div class="modal-actions">
-<button
-class="cancel-btn"
-id="cancelEvidence"
->
-Cancelar
-</button>
-<button
-class="send-btn"
-id="takeEvidence"
->
-📷 Tomar fotografía
-</button>
-<button
-class="send-btn"
-id="sendEvidence"
-disabled
->
-✓ Registrar
-</button>
-</div>
-</div>
-</div>
-<div
-class="toast"
-id="toast"
-></div>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
-<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-<script>
+<style id="dv-navigation-mode"> /* Modo navegación: agranda el mapa sin ocultar el resto de la WebApp. */ .map-card{position:relative} .map-wrap{position:relative;width:100%;height:clamp(520px,70vh,760px)} #map{width:100%;height:100%;min-height:520px;border-radius:14px;overflow:hidden} .route-controls{position:relative;z-index:2;margin-top:12px} #dvCenterButton{ position:absolute!important; left:12px!important; right:auto!important; bottom:14px!important; z-index:10000!important; display:block!important; padding:9px 13px!important; border:0!important; border-radius:24px!important; font-size:15px!important; font-weight:800!important; line-height:1!important; background:#087a3d!important; color:#fff!important; box-shadow:0 3px 12px rgba(0,0,0,.30)!important; cursor:pointer!important; } #dvCenterButton.dv-visible{display:block!important} /* FIX GEOREFERENCIA: el root de cada pin sigue siendo administrado por MapLibre. */ .maplibregl-marker.dv-map-marker{ position:absolute!important; top:0!important; left:0!important; will-change:transform; pointer-events:auto; } .maplibregl-marker.dv-map-marker > .dv-reclamo-pin, .maplibregl-marker.dv-map-marker > .dv-navigation-arrow{ pointer-events:auto; } @media(max-width:600px){ .map-wrap{height:68vh;min-height:460px;max-height:none} #map{min-height:460px} .map-card{padding:10px} .card-title{margin-bottom:10px} #dvCenterButton{left:12px!important;right:auto!important;bottom:14px!important} } </style>
+
+</head> <body class="dv-navigation-active"> <div id="dvLoginOverlay"> <div id="dvLoginBox"> <h2>🌿 DIA VERDE</h2> <p>Ingresá con tu usuario</p> <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario"> <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña"> <button id="dvLoginBtn" type="button">INGRESAR</button> <div id="dvLoginError"></div> </div> </div> <header> <div class="header-inner"> <div class="brand"> <div class="logo"> 🌿 </div> <div> <h1>DIA VERDE</h1> <div class="sub"> Dirección Municipal de Logística Ambiental </div> </div> </div> <div class="status"> <div class="status-icon"> ↻ </div> <div> <strong>Estado del sistema</strong> <br> <span id="statusText"> Conectando... </span> </div> </div> </div> <div id="dvUserBar"> <span>👤 <span id="dvUserName"></span></span> <button id="dvLogout" type="button">Salir</button> </div> </header> <main> <div class="layout"> <aside class="card sidebar"> <div> <div class="section-label"> CGM </div> <label for="cgm"> Seleccioná un CGM </label> <select id="cgm"> <option value="">— Elegí un CGM —</option> </select> <div class="section-label" style="margin-top:16px"> Zona </div> <label for="zone"> Seleccioná una zona </label> <select id="zone" disabled> <option value=""> — Elegí una zona — </option> </select> <button class="refresh" id="refresh" > ↻ &nbsp; Actualizar ahora </button> <div class="info-box"> <strong>ⓘ Información</strong> <br> Seleccioná primero el CGM y después una zona. El mapa corresponde al polígono real de esa zona y las direcciones se toman de Google Sheets. </div> </div> <div class="stats"> <div class="section-label"> Información </div> <div class="stat"> <div class="stat-icon"> 📍 </div> <div> <small> Direcciones </small> <strong id="totalAddresses"> — </strong> </div> </div> <div class="stat"> <div class="stat-icon"> 🏙️ </div> <div> <small> Zonas </small> <strong id="totalZones"> — </strong> </div> </div> </div> <div class="update"> <strong> ◷ Última actualización </strong> <br> <span id="lastUpdate"> Esperando datos... </span> </div> </aside> <section> <div class="card map-card"> <div class="card-title"> <div class="card-title-icon"> 🗺️ </div> <div> <h2 id="title"> Mapa de la zona </h2> <p id="mapSubtitle"> Seleccioná una zona para visualizar su área. </p> </div> </div> <div class="map-wrap"> <div class="zone-badge" id="zoneBadge" style="display:none" ></div> <div id="map"></div> <button id="dvCenterButton" type="button" aria-label="Centrar en el vehículo">📍 Centrar</button> </div> <div class="route-controls"> <button type="button" class="route-btn route-start" id="startRoute">🟢 Iniciar recorrido</button> <button type="button" class="route-btn route-stop" id="stopRoute" disabled>🔴 Finalizar recorrido</button> <div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div> </div> </div> </div> <div class="card results"> <div class="results-head"> <div class="card-title" style="margin:0" > <div class="card-title-icon"> ☷ </div> <div> <h2 id="resultTitle"> Direcciones </h2> <p id="resultSubtitle"> Direcciones de la zona seleccionada </p> </div> </div> <div class="count-pill" id="count" > 0 direcciones </div> </div> <input class="search" id="search" type="search" placeholder="🔎 Buscar calle o número..." disabled > <div class="address-list" id="list" > <div class="empty"> Elegí una zona del menú. </div> </div> </div> </section> </div> </main> <footer> <div class="footer-inner"> <strong> 🌿 DIA VERDE </strong> <span> Dirección Municipal de Logística Ambiental </span> <span> ♻️ Cuidemos nuestra ciudad </span> </div> </footer> <div class="modal-backdrop" id="evidenceBackdrop" > <div class="evidence-modal"> <h3> 📷 Registrar evidencia </h3> <p id="evidenceAddress"> Dirección </p> <img id="evidencePreview" class="evidence-preview" alt="Vista previa" > <div class="gps-box" id="gpsBox" > Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS. </div> <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none" > <div class="modal-actions"> <button class="cancel-btn" id="cancelEvidence" > Cancelar </button> <button class="send-btn" id="takeEvidence" > 📷 Tomar fotografía </button> <button class="send-btn" id="sendEvidence" disabled > ✓ Registrar </button> </div> </div> </div> <div class="toast" id="toast" ></div> <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"> <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script> <script> // ===== V19 PERSISTENCIA LOCAL ===== const DV19_DAY_KEY=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}; const DV19_ROUTE_KEY=()=>`diaVerde_recorrido_${DV19_DAY_KEY()}`; const DV19_EVID_KEY=()=>`diaVerde_evidencias_${DV19_DAY_KEY()}`; function dv19Load(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}} function dv19Save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} function dv19PersistRoute(){ if(typeof recorridoPuntos==="undefined")return; dv19Save(DV19_ROUTE_KEY(),{day:DV19_DAY_KEY(),active:!!recorridoActivo,puntos:recorridoPuntos,updatedAt:Date.now()}); } function dv19RestoreRoute(){ const v=dv19Load(DV19_ROUTE_KEY(),null); if(!v||v.day!==DV19_DAY_KEY()||!Array.isArray(v.puntos)||!v.puntos.length)return; recorridoPuntos=v.puntos; if(v.active){recorridoActivo=true;mapaSiguiendoVehiculo=true;} } function dv19FinishRoute(){ const v=dv19Load(DV19_ROUTE_KEY(),null); if(v){v.active=false;v.updatedAt=Date.now();dv19Save(DV19_ROUTE_KEY(),v)} } function dv19DailyGuard(){ const d=DV19_DAY_KEY(); if(window.dv19Day&&window.dv19Day!==d){ try{recorridoActivo=false;recorridoPuntos=[]}catch(e){} } window.dv19Day=d; } function dv19InstallLifecycle(){ dv19DailyGuard(); dv19RestoreRoute(); document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")dv19PersistRoute();else{dv19DailyGuard();dv19RestoreRoute()}}); window.addEventListener("pagehide",dv19PersistRoute); window.addEventListener("beforeunload",dv19PersistRoute); setInterval(dv19DailyGuard,30000); }
+
 const SHEET_ID =
 "1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
 const GID =
@@ -348,13 +251,13 @@ let selectedZone = "";
 let activeLayer = null;
 const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
 function getRouteStorageKey(){
-  try{
-    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
-    const id = u && u.usuario ? u.usuario : "sin_usuario";
-    return ROUTE_STORAGE_BASE_KEY + "_" + id;
-  }catch(e){
-    return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
-  }
+try{
+const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
+const id = u && u.usuario ? u.usuario : "sin_usuario";
+return ROUTE_STORAGE_BASE_KEY + "_" + id;
+}catch(e){
+return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
+}
 }
 let recorridoActivo = false;
 let recorridoZona = "";
@@ -426,404 +329,528 @@ document.getElementById("toast");
 let dvMapReady = false;
 const dvMapPending = [];
 function dvWhenMapReady(fn){
-  if(dvMapReady) fn();
-  else dvMapPending.push(fn);
+if(dvMapReady) fn();
+else dvMapPending.push(fn);
 }
 function dvBoundsFromGeometry(geometry){
-  const coords=[];
-  function walk(v){
-    if(Array.isArray(v) && v.length>=2 && typeof v[0]==="number" && typeof v[1]==="number"){
-      coords.push(v);
-      return;
-    }
-    if(Array.isArray(v)) v.forEach(walk);
-  }
-  if(geometry && geometry.coordinates) walk(geometry.coordinates);
-  if(!coords.length) return null;
-  let minLng=Infinity,minLat=Infinity,maxLng=-Infinity,maxLat=-Infinity;
-  coords.forEach(([lng,lat])=>{
-    minLng=Math.min(minLng,lng); minLat=Math.min(minLat,lat);
-    maxLng=Math.max(maxLng,lng); maxLat=Math.max(maxLat,lat);
-  });
-  return {sw:[minLng,minLat],ne:[maxLng,maxLat]};
+const coords=[];
+function walk(v){
+if(Array.isArray(v) && v.length>=2 && typeof v[0]==="number" && typeof v[1]==="number"){
+coords.push(v);
+return;
+}
+if(Array.isArray(v)) v.forEach(walk);
+}
+if(geometry && geometry.coordinates) walk(geometry.coordinates);
+if(!coords.length) return null;
+let minLng=Infinity,minLat=Infinity,maxLng=-Infinity,maxLat=-Infinity;
+coords.forEach(([lng,lat])=>{
+minLng=Math.min(minLng,lng); minLat=Math.min(minLat,lat);
+maxLng=Math.max(maxLng,lng); maxLat=Math.max(maxLat,lat);
+});
+return {sw:[minLng,minLat],ne:[maxLng,maxLat]};
 }
 class DVLayerGroup{
-  constructor(){ this._layers=[]; this._map=null; }
-  addTo(target){ this._map=target; this._layers.forEach(l=>l.addTo(target)); return this; }
-  addLayer(layer){ if(!this._layers.includes(layer)) this._layers.push(layer); if(this._map) layer.addTo(this._map); return this; }
-  removeLayer(layer){ this._layers=this._layers.filter(x=>x!==layer); if(layer && layer.remove) layer.remove(); return this; }
-  clearLayers(){ this._layers.forEach(l=>{ if(l&&l.remove) l.remove(); }); this._layers=[]; }
-  eachLayer(fn){ this._layers.slice().forEach(fn); }
+constructor(){ this._layers=[]; this._map=null; }
+addTo(target){ this._map=target; this._layers.forEach(l=>l.addTo(target)); return this; }
+addLayer(layer){ if(!this._layers.includes(layer)) this._layers.push(layer); if(this._map) layer.addTo(this._map); return this; }
+removeLayer(layer){ this._layers=this._layers.filter(x=>x!==layer); if(layer && layer.remove) layer.remove(); return this; }
+clearLayers(){ this._layers.forEach(l=>{ if(l&&l.remove) l.remove(); }); this._layers=[]; }
+eachLayer(fn){ this._layers.slice().forEach(fn); }
 }
 class DVMarker{
-  constructor(latlng,options={}){
-    this._latlng=latlng;
-    this.options=options;
-    this.__dvPopupHtml="";
-    this.__dvTooltip="";
-    this._element=document.createElement("div");
-    this._element.className="dv-map-marker";
-    this._element.style.pointerEvents="auto";
-    this._element.style.cursor="pointer";
-    this._setIcon(options.icon || {html:"",className:"",iconSize:[36,36],iconAnchor:[18,18]});
-    const size=options.icon&&options.icon.iconSize ? options.icon.iconSize : [36,36];
-     const anchorPx=options.icon&&options.icon.iconAnchor ? options.icon.iconAnchor : [size[0]/2,size[1]/2];
-     const anchor=Math.abs(anchorPx[0]-size[0]/2)<2 && anchorPx[1]>=size[1]-2 ? "bottom" : "center";
-     this._marker=new maplibregl.Marker({element:this._element,anchor:anchor}).setLngLat([latlng[1],latlng[0]]);
+constructor(latlng,options={}){
+this._latlng=latlng;
+this.options=options;
+this.__dvPopupHtml="";
+this.__dvTooltip="";
+this._element=document.createElement("div");
+this._element.className="maplibregl-marker dv-map-marker";
+this._element.style.pointerEvents="auto";
+this._element.style.cursor="pointer";
+
+this._setIcon(
+  options.icon || {
+    html:"",
+    className:"",
+    iconSize:[36,36],
+    iconAnchor:[18,18]
   }
-  _setIcon(icon){
-    this._icon=icon;
-    this._element.className="dv-map-marker "+(icon.className||"");
-    this._element.innerHTML=icon.html||"";
-    if(icon.iconSize){ this._element.style.width=icon.iconSize[0]+"px"; this._element.style.height=icon.iconSize[1]+"px"; }
-    const anchor=icon.iconAnchor||[0,0];
-    this._element.style.transformOrigin=(anchor[0]-((icon.iconSize||[0,0])[0]/2))+"px "+(anchor[1]-((icon.iconSize||[0,0])[1]/2))+"px";
-  }
-  addTo(target){
-    if(target instanceof DVLayerGroup) return target.addLayer(this);
-    const mapObj=target instanceof DVMap ? target : map;
-    this._map=mapObj;
-    this._marker.addTo(mapObj._map);
-    return this;
-  }
-  remove(){ try{this._marker.remove();}catch(e){} return this; }
-  setLatLng(latlng){ this._latlng=latlng; this._marker.setLngLat([latlng[1],latlng[0]]); return this; }
-  getLatLng(){ return {lat:this._latlng[0],lng:this._latlng[1]}; }
-  setIcon(icon){ this._setIcon(icon); this._marker.setLngLat([this._latlng[1],this._latlng[0]]); return this; }
-  bindPopup(html){ this.__dvPopupHtml=html||""; this._popup=new maplibregl.Popup({offset:28,maxWidth:"300px",closeButton:true}).setHTML(this.__dvPopupHtml); this._marker.setPopup(this._popup); return this; }
-  setPopupContent(html){ this.__dvPopupHtml=html||""; if(this._popup) this._popup.setHTML(this.__dvPopupHtml); else this.bindPopup(this.__dvPopupHtml); return this; }
-  bindTooltip(text){ this.__dvTooltip=text||""; this._element.title=String(text||""); return this; }
-  setZIndexOffset(z){ this._element.style.zIndex=String(1000+Number(z||0)); return this; }
-  bringToFront(){ this._element.style.zIndex="9999"; return this; }
-  updateScreenRotation(){
-    const heading=Number(this._heading);
-    if(Number.isFinite(heading) && map && map._map){
-      const bearing=map._map.getBearing();
-      const inner=this._element.firstElementChild;
-      if(inner) inner.style.transform="rotate("+(((heading-bearing)%360+360)%360)+"deg)";
-    }
-  }
+);
+
+const icon=options.icon || {};
+const size=icon.iconSize || [36,36];
+const anchorPx=icon.iconAnchor || [size[0]/2,size[1]/2];
+
+/*
+ * El punto geográfico debe coincidir exactamente con el anclaje
+ * del pin. Los pines de reclamo tienen la punta abajo; el vehículo
+ * usa centro.
+ */
+let anchor="center";
+if(
+  Math.abs(anchorPx[0]-(size[0]/2)) < 2 &&
+  anchorPx[1] >= size[1]-2
+){
+  anchor="bottom";
+}
+
+this._marker=new maplibregl.Marker({
+  element:this._element,
+  anchor:anchor
+}).setLngLat([latlng[1],latlng[0]]);
+
+}
+
+_setIcon(icon){
+this._icon=icon;
+
+/*
+ * IMPORTANTE:
+ * Nunca reemplazamos la clase "maplibregl-marker".
+ * MapLibre utiliza esa clase para mantener el elemento pegado
+ * a su coordenada geográfica al mover, hacer zoom, rotar o inclinar.
+ */
+this._element.className =
+  "maplibregl-marker dv-map-marker " +
+  (icon.className || "");
+
+this._element.innerHTML=icon.html || "";
+
+if(icon.iconSize){
+  this._element.style.width=icon.iconSize[0]+"px";
+  this._element.style.height=icon.iconSize[1]+"px";
+}
+
+this._element.style.pointerEvents="auto";
+
+}
+
+addTo(target){
+if(target instanceof DVLayerGroup) return target.addLayer(this);
+const mapObj=target instanceof DVMap ? target : map;
+this._map=mapObj;
+this._marker.addTo(mapObj._map);
+return this;
+}
+
+remove(){
+try{this._marker.remove();}catch(e){}
+return this;
+}
+
+setLatLng(latlng){
+this._latlng=latlng;
+this._marker.setLngLat([latlng[1],latlng[0]]);
+return this;
+}
+
+getLatLng(){
+return {
+lat._latlng[0],
+lng._latlng[1]
+};
+}
+
+setIcon(icon){
+this._setIcon(icon);
+this._marker.setLngLat([this._latlng[1],this._latlng[0]]);
+return this;
+}
+
+bindPopup(html){
+this.__dvPopupHtml=html || "";
+this._popup=new maplibregl.Popup({
+offset:28,
+maxWidth:"300px",
+closeButton
+}).setHTML(this.__dvPopupHtml);
+this._marker.setPopup(this._popup);
+return this;
+}
+
+setPopupContent(html){
+this.__dvPopupHtml=html || "";
+if(this._popup){
+this._popup.setHTML(this.__dvPopupHtml);
+}else{
+this.bindPopup(this.__dvPopupHtml);
+}
+return this;
+}
+
+bindTooltip(text){
+this.__dvTooltip=text || "";
+this._element.title=String(text || "");
+return this;
+}
+
+setZIndexOffset(z){
+this._element.style.zIndex=String(1000+Number(z || 0));
+return this;
+}
+
+bringToFront(){
+this._element.style.zIndex="9999";
+return this;
+}
+
+updateScreenRotation(){
+const heading=Number(this._heading);
+if(Number.isFinite(heading) && map && map._map){
+const bearing=map._map.getBearing();
+const inner=this._element.firstElementChild;
+if(inner){
+inner.style.transform=
+"rotate("+(((heading-bearing)%360+360)%360)+"deg)";
+}
+}
+}
 }
 class DVPolyline{
-  constructor(points,options={}){
-    this.points=points||[]; this.options=options; this.id="dv-route-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-  }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      if(m.getSource(this.id)) m.removeSource(this.id);
-      if(m.getLayer(this.id)) m.removeLayer(this.id);
-      m.addSource(this.id,{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates:this.points.map(p=>[p[1],p[0]])}}});
-      m.addLayer({id:this.id,type:"line",source:this.id,layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":this.options.color||"#087a3d","line-width":this.options.weight||6,"line-opacity":this.options.opacity==null?.9:this.options.opacity}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  bringToFront(){ return this; }
-  remove(){ if(!this._map) return; const m=this._map._map; try{if(m.getLayer(this.id))m.removeLayer(this.id);if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
+constructor(points,options={}){
+this.points=points||[]; this.options=options; this.id="dv-route-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+}
+addTo(target){
+this._map=target instanceof DVMap ? target : map;
+const add=()=>{
+const m=this._map._map;
+if(m.getSource(this.id)) m.removeSource(this.id);
+if(m.getLayer(this.id)) m.removeLayer(this.id);
+m.addSource(this.id,{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates.points.map(p=>[p[1],p[0]])}}});
+m.addLayer({id.id,type:"line",source.id,layout:{"line-cap":"round","line-join":"round"},paint:{"line-color".options.color||"#087a3d","line-width".options.weight||6,"line-opacity".options.opacity==null?.9.options.opacity}});
+};
+dvWhenMapReady(add); return this;
+}
+bringToFront(){ return this; }
+remove(){ if(!this._map) return; const m=this._map._map; try{if(m.getLayer(this.id))m.removeLayer(this.id);if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
 }
 class DVGeoJSONLayer{
-  constructor(feature,options={}){ this.feature=feature; this.options=options; this.id="dv-zone-"+Date.now()+"-"+Math.random().toString(36).slice(2); this._bounds=dvBoundsFromGeometry(feature&&feature.geometry); }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      const style=this.options.style||{};
-      const fillId=this.id+"-fill";
-      const lineId=this.id+"-line";
-      m.addSource(this.id,{type:"geojson",data:this.feature});
-      m.addLayer({id:fillId,type:"fill",source:this.id,paint:{"fill-color":style.fillColor||"#7acb91","fill-opacity":style.fillOpacity==null?.30:style.fillOpacity}});
-      m.addLayer({id:lineId,type:"line",source:this.id,paint:{"line-color":style.color||"#087a3d","line-width":style.weight||3,"line-opacity":1}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  getBounds(){
-    const b=this._bounds;
-    return {isValid:()=>!!b,_dv:b};
-  }
-  remove(){ if(!this._map)return; const m=this._map._map; try{if(m.getLayer(this.id+"-fill"))m.removeLayer(this.id+"-fill");if(m.getLayer(this.id+"-line"))m.removeLayer(this.id+"-line");if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
+constructor(feature,options={}){ this.feature=feature; this.options=options; this.id="dv-zone-"+Date.now()+"-"+Math.random().toString(36).slice(2); this._bounds=dvBoundsFromGeometry(feature&&feature.geometry); }
+addTo(target){
+this._map=target instanceof DVMap ? target : map;
+const add=()=>{
+const m=this._map._map;
+const style=this.options.style||{};
+const fillId=this.id+"-fill";
+const lineId=this.id+"-line";
+m.addSource(this.id,{type:"geojson",data.feature});
+m.addLayer({id,type:"fill",source.id,paint:{"fill-color".fillColor||"#7acb91","fill-opacity".fillOpacity==null?.30.fillOpacity}});
+m.addLayer({id,type:"line",source.id,paint:{"line-color".color||"#087a3d","line-width".weight||3,"line-opacity":1}});
+};
+dvWhenMapReady(add); return this;
+}
+getBounds(){
+const b=this._bounds;
+return {isValid:()=>!!b,_dv};
+}
+remove(){ if(!this._map)return; const m=this._map._map; try{if(m.getLayer(this.id+"-fill"))m.removeLayer(this.id+"-fill");if(m.getLayer(this.id+"-line"))m.removeLayer(this.id+"-line");if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
 }
 class DVMap{
-  constructor(){
-    this._map=new maplibregl.Map({
-      container:"map",
-      style:"https://tiles.openfreemap.org/styles/liberty",
-      center:[-58.3809,-34.7777],
-      zoom:13,
-      pitch:0,
-      bearing:0,
-      antialias:true,
-      dragRotate:true,
-      touchZoomRotate:true,
-      touchPitch:true,
-      pitchWithRotate:true,
-      attributionControl:true
-    });
-    this._map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-left");
-    this._map.addControl(new DVPitchControl(),"top-left");
-    this._map.on("load",()=>{
-      dvMapReady=true;
-      dvMejorarEtiquetasCalles();
-      while(dvMapPending.length) dvMapPending.shift()();
-    });
-    this._map.on("rotate",()=>{
-      if(recorridoMarker) recorridoMarker.updateScreenRotation();
-    });
-  }
-  on(event,fn){
-    this._map.on(event,fn); return this;
-  }
-  setView(latlng,zoom,options={}){
-    const center=[latlng[1],latlng[0]];
-    const action=options&&options.animate?"easeTo":"jumpTo";
-    this._map[action]({center,zoom}); return this;
-  }
-  panTo(latlng,options={}){
-    this._map.easeTo({center:[latlng[1],latlng[0]],duration:options.duration?options.duration*1000:450}); return this;
-  }
-  fitBounds(bounds,options={}){
-    if(!bounds || !bounds._dv) return this;
-    this._map.fitBounds([bounds._dv.sw,bounds._dv.ne],{padding:options.padding||25,duration:500}); return this;
-  }
-  removeLayer(layer){ if(layer&&typeof layer.remove==="function") layer.remove(); return this; }
-  setBearing(b){ this._map.easeTo({bearing:Number(b)||0,duration:300}); return this; }
-  getBearing(){ return this._map.getBearing(); }
-  setPitch(p){ this._map.easeTo({pitch:Math.max(0,Math.min(70,Number(p)||0)),duration:300}); return this; }
-  getPitch(){ return this._map.getPitch(); }
-  setCenter(center){ this._map.setCenter(center); return this; }
-  setZoom(z){ this._map.setZoom(Number(z)||0); return this; }
-  easeTo(options){ this._map.easeTo(options||{}); return this; }
-  stop(){ this._map.stop(); return this; }
+constructor(){
+this._map=new maplibregl.Map({
+container:"map",
+style:"https://tiles.openfreemap.org/styles/liberty",
+center:[-58.3809,-34.7777],
+zoom:13,
+pitch:0,
+bearing:0,
+antialias,
+dragRotate,
+touchZoomRotate,
+touchPitch,
+pitchWithRotate,
+attributionControl
+});
+this._map.addControl(new maplibregl.NavigationControl({visualizePitch}),"top-left");
+this._map.addControl(new DVPitchControl(),"top-left");
+this._map.on("load",()=>{
+dvMapReady=true;
+dvMejorarEtiquetasCalles();
+while(dvMapPending.length) dvMapPending.shift()();
+});
+this._map.on("rotate",()=>{
+if(recorridoMarker) recorridoMarker.updateScreenRotation();
+});
+}
+on(event,fn){
+this._map.on(event,fn); return this;
+}
+setView(latlng,zoom,options={}){
+const center=[latlng[1],latlng[0]];
+const action=options&&options.animate?"easeTo":"jumpTo";
+this._mapaction; return this;
+}
+panTo(latlng,options={}){
+this._map.easeTo({center:[latlng[1],latlng[0]],duration.duration?options.duration1000:450}); return this;
+}
+fitBounds(bounds,options={}){
+if(!bounds || !bounds._dv) return this;
+this._map.fitBounds([bounds._dv.sw,bounds._dv.ne],{padding.padding||25,duration:500}); return this;
+}
+removeLayer(layer){ if(layer&&typeof layer.remove==="function") layer.remove(); return this; }
+setBearing(b){ this._map.easeTo({bearing(b)||0,duration:300}); return this; }
+getBearing(){ return this._map.getBearing(); }
+setPitch(p){ this._map.easeTo({pitch.max(0,Math.min(70,Number(p)||0)),duration:300}); return this; }
+getPitch(){ return this._map.getPitch(); }
+setCenter(center){ this._map.setCenter(center); return this; }
+setZoom(z){ this._map.setZoom(Number(z)||0); return this; }
+easeTo(options){ this._map.easeTo(options||{}); return this; }
+stop(){ this._map.stop(); return this; }
 }
 class DVPitchControl{
-  onAdd(mapInstance){
-    this._map=mapInstance;
-    const c=document.createElement("div"); c.className="maplibregl-ctrl maplibregl-ctrl-group dv-pitch-control";
-    c.innerHTML='<button type="button" title="Inclinar mapa">▲</button><button type="button" title="Bajar mapa">▼</button><button type="button" title="Vista 3D / Norte">3D</button>';
-    const [up,down,threeD]=c.querySelectorAll("button");
-    up.onclick=()=>this._map.easeTo({pitch:Math.min(70,this._map.getPitch()+10),duration:250});
-    down.onclick=()=>this._map.easeTo({pitch:Math.max(0,this._map.getPitch()-10),duration:250});
-    threeD.onclick=()=>this._map.easeTo({pitch:this._map.getPitch()>5?0:45,duration:350});
-    this._container=c; return c;
-  }
-  onRemove(){this._container?.parentNode?.removeChild(this._container); this._map=undefined;}
+onAdd(mapInstance){
+this._map=mapInstance;
+const c=document.createElement("div"); c.className="maplibregl-ctrl maplibregl-ctrl-group dv-pitch-control";
+c.innerHTML='<button type="button" title="Inclinar mapa">▲</button><button type="button" title="Bajar mapa">▼</button><button type="button" title="Vista 3D / Norte">3D</button>';
+const [up,down,threeD]=c.querySelectorAll("button");
+up.onclick=()=>this._map.easeTo({pitch.min(70,this._map.getPitch()+10),duration:250});
+down.onclick=()=>this._map.easeTo({pitch.max(0,this._map.getPitch()-10),duration:250});
+threeD.onclick=()=>this._map.easeTo({pitch._map.getPitch()>5?0:45,duration:350});
+this._container=c; return c;
+}
+onRemove(){this._container?.parentNode?.removeChild(this._container); this._map=undefined;}
 }
 function dvMejorarEtiquetasCalles(){
-  try{
-    const m=map._map;
-    const layers=(m.getStyle().layers||[]);
-    layers.forEach(layer=>{
-      const id=String(layer.id||"").toLowerCase();
-      if(layer.type!=="symbol" || !layer.layout || !layer.layout["text-field"]) return;
-      if(!(id.includes("road")||id.includes("street")||id.includes("highway")||id.includes("path")||id.includes("transport"))) return;
-      const size=layer.layout["text-size"];
-      if(typeof size==="number") m.setLayoutProperty(layer.id,"text-size",size*1.25);
-      else if(size) m.setLayoutProperty(layer.id,"text-size",["*",size,1.25]);
-    });
-  }catch(e){ console.warn("Etiquetas 25%:",e); }
+try{
+const m=map._map;
+const layers=(m.getStyle().layers||[]);
+layers.forEach(layer=>{
+const id=String(layer.id||"").toLowerCase();
+if(layer.type!=="symbol" || !layer.layout || !layer.layout["text-field"]) return;
+if(!(id.includes("road")||id.includes("street")||id.includes("highway")||id.includes("path")||id.includes("transport"))) return;
+const size=layer.layout["text-size"];
+if(typeof size==="number") m.setLayoutProperty(layer.id,"text-size",size1.25);
+else if(size) m.setLayoutProperty(layer.id,"text-size",["*",size,1.25]);
+});
+}catch(e){ console.warn("Etiquetas 25%:",e); }
 }
 const map = new DVMap();
 const L={
-  layerGroup:()=>new DVLayerGroup(),
-  divIcon:opts=>opts,
-  marker:(pos,opts)=>new DVMarker(pos,opts),
-  polyline:(points,opts)=>new DVPolyline(points,opts),
-  geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
+layerGroup:()=>new DVLayerGroup(),
+divIcon=>opts,
+marker:(pos,opts)=>new DVMarker(pos,opts),
+polyline:(points,opts)=>new DVPolyline(points,opts),
+geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+let dvNavCameraMoving = false;
+
+map.on("dragstart",function(){
+if(recorridoActivo && !dvNavCameraMoving){
+mapaUsuarioMovio=true;
+mapaSiguiendoVehiculo=false;
+}
+});
+map.on("zoomstart",function(){
+// easeTo() del modo navegación también dispara zoomstart.
+// No debemos confundirlo con un zoom manual del usuario.
+if(recorridoActivo && !dvNavCameraMoving){
+mapaUsuarioMovio=true;
+mapaSiguiendoVehiculo=false;
+}
+});
+map.on("click",function(){
+if(recorridoActivo && !dvNavCameraMoving){
+mapaUsuarioMovio=true;
+mapaSiguiendoVehiculo=false;
+}
+});
+map.on("moveend",function(){
+if(dvNavCameraMoving){
+dvNavCameraMoving=false;
+}
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
-  if(!map) return null;
-  if(!reclamosMarkersLayer){
-    reclamosMarkersLayer = L.layerGroup().addTo(map);
-  }
-  return reclamosMarkersLayer;
+if(!map) return null;
+if(!reclamosMarkersLayer){
+reclamosMarkersLayer = L.layerGroup().addTo(map);
+}
+return reclamosMarkersLayer;
 }
 function escaparHTML(valor){
-  return String(valor ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+return String(valor ?? "")
+.replace(/&/g,"&")
+.replace(/</g,"<")
+.replace(/>/g,">")
+.replace(/"/g,""")
+.replace(/'/g,"'");
 }
 function iconoReclamoMedioAmbiente(estado){
-  const s = String(estado || "").toLowerCase();
-  let clase = "pendiente";
-  let simbolo = "♻";
-  if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
-    clase = "realizado";
-  }else if(s.includes("suspend")){
-    clase = "suspendido";
-  }else if(s.includes("espera") || s.includes("definir")){
-    clase = "amarillo";
-  }else if(s.includes("rechaz") || s.includes("anulad")){
-    clase = "rojo";
-  }
-  return L.divIcon({
-    className:"dv-reclamo-icon",
-    html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
-    iconSize:[36,44],
-    iconAnchor:[18,43],
-    popupAnchor:[0,-40]
-  });
+const s = String(estado || "").toLowerCase();
+let clase = "pendiente";
+let simbolo = "♻";
+if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
+clase = "realizado";
+}else if(s.includes("suspend")){
+clase = "suspendido";
+}else if(s.includes("espera") || s.includes("definir")){
+clase = "amarillo";
+}else if(s.includes("rechaz") || s.includes("anulad")){
+clase = "rojo";
+}
+return L.divIcon({
+className:"dv-reclamo-icon",
+html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
+iconSize:[36,44],
+iconAnchor:[18,43],
+popupAnchor:[0,-40]
+});
 }
 function popupReclamoMedioAmbiente(d){
-  const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-  const estado = realizado ? "Realizado" : "Pendiente";
-  return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
-      (realizado ? '🟢 ' : '⚪ ')+
-      escaparHTML(estado)+
-    '</div>'+
-    '</div>';
+const direccion = ${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}.trim();
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+const estado = realizado ? "Realizado" : "Pendiente";
+return '<div class="dv-reclamo-popup">'+
+'<div class="titulo">♻️ Vecino Reciclador</div>'+
+'<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
+'<div class="estado">'+
+(realizado ? '🟢 ' : '⚪ ')+
+escaparHTML(estado)+
+'</div>'+
+'</div>';
 }
 function obtenerLatLngReclamo(d){
-  const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
-  const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
-  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
-    return [lat,lng];
-  }
-  return null;
+const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
+const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
+if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
+return [lat,lng];
+}
+return null;
 }
 function agregarMarcadorReclamo(d){
-  const pos = obtenerLatLngReclamo(d);
-  if(!pos) return null;
-  const layer = asegurarCapaReclamos();
-  if(!layer) return null;
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-  const estado = realizado ? "Realizado" : "Pendiente";
-  const marker = L.marker(pos,{
-    icon:iconoReclamoMedioAmbiente(estado),
-    zIndexOffset:100
-  });
-  marker.__dvReclamoData = d;
-  marker.bindPopup(popupReclamoMedioAmbiente(d));
-  marker.addTo(layer);
-  return marker;
+const pos = obtenerLatLngReclamo(d);
+if(!pos) return null;
+const layer = asegurarCapaReclamos();
+if(!layer) return null;
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+const estado = realizado ? "Realizado" : "Pendiente";
+const marker = L.marker(pos,{
+icon(estado),
+zIndexOffset:100
+});
+marker.__dvReclamoData = d;
+marker.bindPopup(popupReclamoMedioAmbiente(d));
+marker.addTo(layer);
+return marker;
 }
 function refrescarEstadosMarcadoresReclamos(){
-  if(!reclamosMarkersLayer) return;
-  reclamosMarkersLayer.eachLayer(marker => {
-    const d = marker.__dvReclamoData;
-    if(!d) return;
-    const realizado = typeof estaRealizadaHoy === "function"
-      ? estaRealizadaHoy(d)
-      : false;
-    marker.setIcon(
-      iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
-    );
-    marker.setPopupContent(popupReclamoMedioAmbiente(d));
-  });
+if(!reclamosMarkersLayer) return;
+reclamosMarkersLayer.eachLayer(marker => {
+const d = marker.__dvReclamoData;
+if(!d) return;
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+marker.setIcon(
+iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
+);
+marker.setPopupContent(popupReclamoMedioAmbiente(d));
+});
 }
 function limpiarMarcadoresReclamos(){
-  if(reclamosMarkersLayer){
-    reclamosMarkersLayer.clearLayers();
-  }
+if(reclamosMarkersLayer){
+reclamosMarkersLayer.clearLayers();
+}
 }
 function mostrarMarcadoresReclamos(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)) return;
-  lista.forEach(d => agregarMarcadorReclamo(d));
+limpiarMarcadoresReclamos();
+if(!Array.isArray(lista)) return;
+lista.forEach(d => agregarMarcadorReclamo(d));
 }
 function cargarCacheGeocoding(){
-  try{
-    return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
-  }catch(e){
-    return {};
-  }
+try{
+return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
+}catch(e){
+return {};
+}
 }
 function guardarCacheGeocoding(cache){
-  try{
-    localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
-  }catch(e){}
+try{
+localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
+}catch(e){}
 }
 function claveGeocoding(d){
-  return normalizar(
-    `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
-  );
+return normalizar(
+${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina
+);
 }
 async function geocodificarDireccion(d){
-  const directa=obtenerLatLngReclamo(d);
-  if(directa) return directa;
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
-  }
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
-  try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
-    return [lat,lng];
-  }catch(error){
-    console.warn("Geocodificación:",q,error);
-    return null;
-  }
+const directa=obtenerLatLngReclamo(d);
+if(directa) return directa;
+const cache=cargarCacheGeocoding();
+const key=claveGeocoding(d);
+if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+return [Number(cache[key].lat),Number(cache[key].lng)];
+}
+const q=${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina;
+const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
+try{
+const response=await fetch(url,{headers:{"Accept":"application/json"}});
+if(!response.ok) return null;
+const resultados=await response.json();
+if(!resultados.length) return null;
+const lat=Number(resultados[0].lat);
+const lng=Number(resultados[0].lon);
+if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+cache[key]={lat,lng};
+guardarCacheGeocoding(cache);
+return [lat,lng];
+}catch(error){
+console.warn("Geocodificación:",q,error);
+return null;
+}
 }
 async function mostrarMarcadoresGeocodificados(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)||!lista.length) return;
-  const generacion=++geocodingGeneration;
-  const capa=asegurarCapaReclamos();
-  if(!capa) return;
-  const pendientes=[];
-  for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
-      agregarMarcadorReclamo(d);
-    }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
-      if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
-      }else{
-        pendientes.push(d);
-      }
-    }
-  }
-  const limite=3;
-  let indice=0;
-  async function trabajador(){
-    while(indice<pendientes.length){
-      if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-      if(generacion!==geocodingGeneration) return;
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
-      }
-      await new Promise(r=>setTimeout(r,350));
-    }
-  }
-  await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
-  );
+limpiarMarcadoresReclamos();
+if(!Array.isArray(lista)||!lista.length) return;
+const generacion=++geocodingGeneration;
+const capa=asegurarCapaReclamos();
+if(!capa) return;
+const pendientes=[];
+for(const d of lista){
+const pos=obtenerLatLngReclamo(d);
+if(pos){
+agregarMarcadorReclamo(d);
+}else{
+const cache=cargarCacheGeocoding();
+const key=claveGeocoding(d);
+if(cache[key]){
+agregarMarcadorReclamo({...d,lat(cache[key].lat),lng(cache[key].lng)});
+}else{
+pendientes.push(d);
+}
+}
+}
+const limite=3;
+let indice=0;
+async function trabajador(){
+while(indice<pendientes.length){
+if(generacion!==geocodingGeneration) return;
+const d=pendientes[indice++];
+const pos=await geocodificarDireccion(d);
+if(generacion!==geocodingGeneration) return;
+if(pos){
+agregarMarcadorReclamo({...d,lat,lng});
+}
+await new Promise(r=>setTimeout(r,350));
+}
+}
+await Promise.all(
+Array.from({length.min(limite,pendientes.length)},()=>trabajador())
+);
 }
 function resetearRotacionMapa(){
-  if(map && map._map){
-    map._map.easeTo({bearing:0,pitch:0,duration:350});
-  }
+if(map && map._map){
+map._map.easeTo({bearing:0,pitch:0,duration:350});
+}
 }
 function esc(text){
 return String(
@@ -831,11 +858,11 @@ text ?? ""
 ).replace(
 /[&<>"']/g,
 m => ({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#039;"
+"&":"&",
+"<":"<",
+">":">",
+'"':""",
+"'":"'"
 }[m])
 );
 }
@@ -914,757 +941,661 @@ document.getElementById(
 );
 }
 function guardarRecorridoLocal(){
-  try{
-    localStorage.setItem(
-      getRouteStorageKey(),
-      JSON.stringify({
-        activo:recorridoActivo,
-        zona:recorridoZona,
-        inicio:recorridoInicio,
-        puntos:recorridoPuntos
-      })
-    );
-  }catch(error){
-    console.error("Guardar recorrido:",error);
-  }
+try{
+localStorage.setItem(
+getRouteStorageKey(),
+JSON.stringify({
+activo,
+zona,
+inicio,
+puntos
+})
+);
+}catch(error){
+console.error("Guardar recorrido:",error);
+}
 }
 function borrarRecorridoLocal(){
-  try{
-    localStorage.removeItem(getRouteStorageKey());
-  }catch(error){
-    console.error("Borrar recorrido:",error);
-  }
+try{
+localStorage.removeItem(getRouteStorageKey());
+}catch(error){
+console.error("Borrar recorrido:",error);
+}
 }
 function distanciaMetros(a,b){
-  const R=6371000;
-  const p1=a.lat*Math.PI/180;
-  const p2=b.lat*Math.PI/180;
-  const dp=(b.lat-a.lat)*Math.PI/180;
-  const dl=(b.lng-a.lng)*Math.PI/180;
-  const x=
-    Math.sin(dp/2)**2+
-    Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
-  return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+const R=6371000;
+const p1=a.latMath.PI/180;
+const p2=b.latMath.PI/180;
+const dp=(b.lat-a.lat)*Math.PI/180;
+const dl=(b.lng-a.lng)Math.PI/180;
+const x=
+Math.sin(dp/2)**2+
+Math.cos(p1)Math.cos(p2)Math.sin(dl/2)**2;
+return 2RMath.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 function dibujarRecorrido(){
-  if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
-    recorridoLayer=null;
-  }
-  if(recorridoPuntos.length<2)return;
-  recorridoLayer=L.polyline(
-    recorridoPuntos.map(p=>[p.lat,p.lng]),
-    {
-      color:"#087a3d",
-      weight:6,
-      opacity:.9,
-      lineCap:"round",
-      lineJoin:"round"
-    }
-  ).addTo(map);
-  recorridoLayer.bringToFront();
+if(recorridoLayer){
+map.removeLayer(recorridoLayer);
+recorridoLayer=null;
+}
+if(recorridoPuntos.length<2)return;
+recorridoLayer=L.polyline(
+recorridoPuntos.map(p=>[p.lat,p.lng]),
+{
+color:"#087a3d",
+weight:6,
+opacity:.9,
+lineCap:"round",
+lineJoin:"round"
+}
+).addTo(map);
+recorridoLayer.bringToFront();
 }
 function actualizarEstadoRecorrido(texto,activo=false){
-  routeStatus.innerHTML=texto;
-  routeStatus.classList.toggle("active",activo);
+routeStatus.innerHTML=texto;
+routeStatus.classList.toggle("active",activo);
 }
 function actualizarBotonesRecorrido(){
-  const hayZona=!!selectedZone;
-  startRoute.disabled=!hayZona||recorridoActivo;
-  stopRoute.disabled=!recorridoActivo;
+const hayZona=!!selectedZone;
+startRoute.disabled=!hayZona||recorridoActivo;
+stopRoute.disabled=!recorridoActivo;
 }
 function normalizarRumbo(grados){
-  let r=Number(grados);
-  if(!Number.isFinite(r)) return null;
-  r=((r%360)+360)%360;
-  return r;
+let r=Number(grados);
+if(!Number.isFinite(r)) return null;
+r=((r%360)+360)%360;
+return r;
 }
 function suavizarRumbo(nuevo){
-  nuevo=normalizarRumbo(nuevo);
-  if(nuevo===null) return recorridoHeading;
-  if(recorridoHeading===null){
-    recorridoHeading=nuevo;
-    return recorridoHeading;
-  }
-  let delta=((nuevo-recorridoHeading+540)%360)-180;
-  if(Math.abs(delta)<4) return recorridoHeading;
-  recorridoHeading=normalizarRumbo(
-    recorridoHeading + delta*0.35
-  );
-  return recorridoHeading;
+nuevo=normalizarRumbo(nuevo);
+if(nuevo===null) return recorridoHeading;
+if(recorridoHeading===null){
+recorridoHeading=nuevo;
+return recorridoHeading;
+}
+let delta=((nuevo-recorridoHeading+540)%360)-180;
+if(Math.abs(delta)<4) return recorridoHeading;
+recorridoHeading=normalizarRumbo(
+recorridoHeading + delta0.35
+);
+return recorridoHeading;
 }
 function crearIconoVehiculo(rumbo){
-  const rot=normalizarRumbo(rumbo);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="52" height="52" aria-label="Camión reciclable">'+
-    '<g transform="translate(8 5)" stroke="#14532d" stroke-width="2" stroke-linejoin="round">'+
-    '<path fill="#27ae60" d="M8 10h32v34H8z"/>'+
-    '<path fill="#4ade80" d="M12 14h24v7H12z" stroke="none"/>'+
-    '<path fill="#16a34a" d="M40 23h9l7 8v13H40z"/>'+
-    '<path fill="#c7f9dc" d="M43 26h6l4 5h-10z"/>'+
-    '<text x="24" y="37" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#fff" stroke="none">♻</text>'+
-    '<circle fill="#222" cx="17" cy="49" r="5"/><circle fill="#222" cx="46" cy="49" r="5"/>'+
-    '</g></svg>';
-  return L.divIcon({
-    className:"dia-verde-vehiculo-icon",
-    html:'<div class="dv-truck-3d" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
-    iconSize:[52,52],
-    iconAnchor:[26,26]
-  });
+const rot=normalizarRumbo(rumbo);
+const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="54" height="54" aria-label="Posición del vehículo">'+
+'<path d="M32 4 L52 54 L32 43 L12 54 Z" fill="#19a85b" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>'+
+'<path d="M32 10 L44 45 L32 38 L20 45 Z" fill="#39d477"/>'+
+'</svg>';
+return L.divIcon({
+className:"dia-verde-vehiculo-icon",
+html:'<div class="dv-navigation-arrow" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
+iconSize:[54,54],
+iconAnchor:[27,27]
+});
+}
+
+let dvNavLastPosition=null;
+let dvNavBearing=null;
+
+function dvNavNormalizeBearing(value){
+const n=Number(value);
+if(!Number.isFinite(n)) return null;
+return ((n%360)+360)%360;
+}
+
+function dvNavBearingBetween(a,b){
+if(!a||!b) return null;
+const lat1=Number(a.lat)*Math.PI/180;
+const lat2=Number(b.lat)*Math.PI/180;
+const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+const y=Math.sin(dLon)*Math.cos(lat2);
+const x=
+Math.cos(lat1)*Math.sin(lat2)-
+Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
+}
+
+function dvNavSmoothBearing(next){
+next=dvNavNormalizeBearing(next);
+if(next===null) return dvNavBearing;
+if(dvNavBearing===null){
+dvNavBearing=next;
+return dvNavBearing;
+}
+const delta=((next-dvNavBearing+540)%360)-180;
+// Suavizado fuerte para que el mapa no tiemble con el GPS.
+dvNavBearing=dvNavNormalizeBearing(
+dvNavBearing + delta*0.22
+);
+return dvNavBearing;
+}
+
+function dvNavReset(){
+dvNavLastPosition=null;
+dvNavBearing=null;
 }
 
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng) || !map._map) return;
-  const heading=recorridoHeading;
-  if(forzarZoom){
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-  }
-  if(mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    const h=map._map.getContainer().clientHeight||600;
-    const padding={top:0,right:0,bottom:Math.round(h*.24),left:0};
-    map._map.easeTo({
-      center:[lng,lat],
-      zoom:18,
-      bearing:Number.isFinite(heading)?heading:map._map.getBearing(),
-      pitch:45,
-      padding:padding,
-      duration:forzarZoom?700:450,
-      essential:true
-    });
-  }
+if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+const actual={lat,lng};
+
+// Primer GPS del recorrido: entrar de verdad en modo navegación.
+if(forzarZoom){
+mapaSiguiendoVehiculo=true;
+mapaUsuarioMovio=false;
+dvNavLastPosition=actual;
+
+const gpsHeading=Number(recorridoHeading);
+dvNavBearing=
+  Number.isFinite(gpsHeading)
+    ? dvNavNormalizeBearing(gpsHeading)
+    : 0;
+
+try{
+  // Una sola operación de MapLibre establece TODO el estado de navegación.
+  map.stop();
+  dvNavCameraMoving=true;
+  map.easeTo({
+    center:[lng,lat],
+    zoom:17,
+    pitch:35,
+    bearing:dvNavBearing,
+    offset:[0,120],
+    duration:700,
+    essential:true
+  });
+}catch(e){
+  try{
+    map.setView([lat,lng],17,{animate:true});
+    map.setPitch(35);
+    map.setBearing(dvNavBearing||0);
+  }catch(e2){}
+}
+return;
+
+}
+
+if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
+return;
+
+// El rumbo se obtiene primero del movimiento real entre puntos.
+// Esto funciona aunque el teléfono no entregue coords.heading.
+let movimiento=null;
+if(dvNavLastPosition){
+const d=distanciaMetros(dvNavLastPosition,actual);
+if(d >= 3){
+movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
+}
+}
+
+dvNavLastPosition=actual;
+
+if(movimiento!==null){
+dvNavSmoothBearing(movimiento);
+}else if(dvNavBearing===null){
+const gpsHeading=Number(recorridoHeading);
+if(Number.isFinite(gpsHeading))
+dvNavBearing=dvNavNormalizeBearing(gpsHeading);
+}
+
+const bearing=
+dvNavBearing!==null
+? dvNavBearing
+: 0;
+
+try{
+// Modo navegación: centro adelantado, inclinación 35° y giro
+// siguiendo el sentido de marcha.
+dvNavCameraMoving=true;
+map.easeTo({
+center:[lng,lat],
+zoom:17,
+pitch:35,
+bearing,
+offset:[0,120],
+duration:450,
+essential
+});
+}catch(e){
+// Fallback seguro: el seguimiento que ya estaba probado.
+try{
+map.panTo([lat,lng],{
+animate,
+duration:.45
+});
+map.setPitch(35);
+}catch(e2){}
+}
 }
 
 function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
-  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-  const heading=suavizarRumbo(rumbo);
-  if(recorridoMarker) recorridoMarker._heading=heading;
-  if(!recorridoMarker){
-    recorridoMarker=L.marker(
-      [lat,lng],
-      {
-        icon:crearIconoVehiculo(heading),
-        zIndexOffset:1000
-      }
-    ).addTo(map);
-    recorridoMarker.bindTooltip(
-      "🚛 Vehículo",
-      {permanent:false}
-    );
-    recorridoMarker._heading=heading;
-    recorridoMarker.updateScreenRotation();
-  }else{
-    recorridoMarker.setLatLng([lat,lng]);
-    if(heading!==null){
-      recorridoMarker.setIcon(crearIconoVehiculo(heading));
-    }
-    recorridoMarker.setZIndexOffset(1000);
-    recorridoMarker.bringToFront();
-    recorridoMarker.updateScreenRotation();
-  }
-  recorridoMarker.bindPopup(
-    "🚛 <strong>Vehículo</strong><br>"+
-    "📍 Ubicación GPS del teléfono<br>"+
-    "🌐 Lat: "+lat.toFixed(6)+"<br>"+
-    "🌐 Lng: "+lng.toFixed(6)+
-    (Number.isFinite(precision)
-      ? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
-      : "")+
-    (heading!==null
-      ? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
-      : "")
-  );
-  activarSeguimientoVisual(lat,lng,forzarZoom);
+if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+const heading=suavizarRumbo(rumbo);
+if(recorridoMarker) recorridoMarker._heading=heading;
+if(!recorridoMarker){
+recorridoMarker=L.marker(
+[lat,lng],
+{
+icon(heading),
+zIndexOffset:1000
+}
+).addTo(map);
+recorridoMarker.bindTooltip(
+"📍 Posición del vehículo",
+{permanent}
+);
+recorridoMarker._heading=heading;
+recorridoMarker.updateScreenRotation();
+}else{
+recorridoMarker.setLatLng([lat,lng]);
+if(heading!==null){
+recorridoMarker.setIcon(crearIconoVehiculo(heading));
+}
+recorridoMarker.setZIndexOffset(1000);
+recorridoMarker.bringToFront();
+recorridoMarker.updateScreenRotation();
+}
+recorridoMarker.bindPopup(
+"📍 <strong>Posición del vehículo</strong><br>"+
+"📍 Ubicación GPS del teléfono<br>"+
+"🌐 Lat: "+lat.toFixed(6)+"<br>"+
+"🌐 Lng: "+lng.toFixed(6)+
+(Number.isFinite(precision)
+? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
+: "")+
+(heading!==null
+? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
+: "")
+);
+activarSeguimientoVisual(lat,lng,forzarZoom);
 }
 function registrarPuntoRecorrido(position){
-  const c=position.coords;
-  const lat=Number(c.latitude);
-  const lng=Number(c.longitude);
-  const precision=Number(c.accuracy);
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)){
-    return;
-  }
-  mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
-  const punto={
-    lat:lat,
-    lng:lng,
-    hora:new Date().toISOString(),
-    precision:Number.isFinite(precision)?precision:null
-  };
-  const ultimo=recorridoPuntos[recorridoPuntos.length-1];
-  if(ultimo){
-    const distancia=distanciaMetros(ultimo,punto);
-    const ahora=Date.now();
-    const antes=new Date(ultimo.hora).getTime();
-    const segundos=Math.max(1,(ahora-antes)/1000);
-    const velocidad=distancia/segundos;
-    if(distancia<3){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
-      return;
-    }
-    if(velocidad>50){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS recibido"+
-        "<br>⚠️ Salto de ubicación descartado"+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
-      return;
-    }
-  }
-  recorridoPuntos.push(punto);
-  dibujarRecorrido();
-  guardarRecorridoLocal();
-  actualizarEstadoRecorrido(
-    "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS activo · Puntos registrados: "+
-    recorridoPuntos.length+
-    "<br>🌐 Lat: "+lat.toFixed(6)+
-    " · Lng: "+lng.toFixed(6)+
-    "<br>📡 Precisión informada: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-    true
-  );
+const c=position.coords;
+const lat=Number(c.latitude);
+const lng=Number(c.longitude);
+const precision=Number(c.accuracy);
+if(!Number.isFinite(lat)||!Number.isFinite(lng)){
+return;
+}
+mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
+const punto={
+lat,
+lng,
+hora Date().toISOString(),
+precision.isFinite(precision)?precision
+};
+const ultimo=recorridoPuntos[recorridoPuntos.length-1];
+if(ultimo){
+const distancia=distanciaMetros(ultimo,punto);
+const ahora=Date.now();
+const antes=new Date(ultimo.hora).getTime();
+const segundos=Math.max(1,(ahora-antes)/1000);
+const velocidad=distancia/segundos;
+if(distancia<3){
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 GPS activo · Puntos: "+recorridoPuntos.length+
+"<br>📡 Precisión informada: ±"+
+(Number.isFinite(precision)?Math.round(precision):"?")+" m",
+true
+);
+return;
+}
+if(velocidad>50){
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 GPS recibido"+
+"<br>⚠️ Salto de ubicación descartado"+
+"<br>📡 Precisión informada: ±"+
+(Number.isFinite(precision)?Math.round(precision):"?")+" m",
+true
+);
+return;
+}
+}
+recorridoPuntos.push(punto);
+dv19PersistRoute();
+dibujarRecorrido();
+guardarRecorridoLocal();
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 GPS activo · Puntos registrados: "+
+recorridoPuntos.length+
+"<br>🌐 Lat: "+lat.toFixed(6)+
+" · Lng: "+lng.toFixed(6)+
+"<br>📡 Precisión informada: ±"+
+(Number.isFinite(precision)?Math.round(precision):"?")+" m",
+true
+);
 }
 function manejarErrorRecorrido(error){
-  console.error("GPS recorrido:",error);
-  let mensaje="⚠️ No se pudo obtener la ubicación.";
-  if(error&&error.code===1){
-    mensaje=
-      "⚠️ Permiso de ubicación denegado."+
-      "<br>Permití la ubicación para DIA VERDE.";
-  }else if(error&&error.code===2){
-    mensaje=
-      "⚠️ El dispositivo no pudo determinar la ubicación."+
-      "<br>Seguimos intentando.";
-  }else if(error&&error.code===3){
-    mensaje=
-      "⚠️ El GPS tardó demasiado en responder."+
-      "<br>Seguimos intentando.";
-  }
-  actualizarEstadoRecorrido(
-    mensaje+
-    (recorridoActivo
-      ? "<br>El recorrido continúa activo."
-      : ""),
-    recorridoActivo
-  );
+console.error("GPS recorrido:",error);
+let mensaje="⚠️ No se pudo obtener la ubicación.";
+if(error&&error.code===1){
+mensaje=
+"⚠️ Permiso de ubicación denegado."+
+"<br>Permití la ubicación para DIA VERDE.";
+}else if(error&&error.code===2){
+mensaje=
+"⚠️ El dispositivo no pudo determinar la ubicación."+
+"<br>Seguimos intentando.";
+}else if(error&&error.code===3){
+mensaje=
+"⚠️ El GPS tardó demasiado en responder."+
+"<br>Seguimos intentando.";
+}
+actualizarEstadoRecorrido(
+mensaje+
+(recorridoActivo
+? "<br>El recorrido continúa activo."
+: ""),
+recorridoActivo
+);
 }
 function iniciarSeguimientoGPS(){
-  if(!navigator.geolocation){
-    actualizarEstadoRecorrido(
-      "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
-    );
-    return false;
-  }
-  if(recorridoWatchId!==null){
-    navigator.geolocation.clearWatch(recorridoWatchId);
-    recorridoWatchId=null;
-  }
-  navigator.geolocation.getCurrentPosition(
-    registrarPuntoRecorrido,
-    manejarErrorRecorrido,
-    {
-      enableHighAccuracy:true,
-      timeout:20000,
-      maximumAge:0
-    }
-  );
-  recorridoWatchId=
-    navigator.geolocation.watchPosition(
-      registrarPuntoRecorrido,
-      manejarErrorRecorrido,
-      {
-        enableHighAccuracy:true,
-        maximumAge:0,
-        timeout:20000
-      }
-    );
-  return true;
+if(!navigator.geolocation){
+actualizarEstadoRecorrido(
+"❌ Este dispositivo/navegador no permite obtener ubicación GPS."
+);
+return false;
+}
+if(recorridoWatchId!==null){
+navigator.geolocation.clearWatch(recorridoWatchId);
+recorridoWatchId=null;
+}
+navigator.geolocation.getCurrentPosition(
+registrarPuntoRecorrido,
+manejarErrorRecorrido,
+{
+enableHighAccuracy,
+timeout:20000,
+maximumAge:0
+}
+);
+recorridoWatchId=
+navigator.geolocation.watchPosition(
+registrarPuntoRecorrido,
+manejarErrorRecorrido,
+{
+enableHighAccuracy,
+maximumAge:0,
+timeout:20000
+}
+);
+return true;
 }
 let dvWakeLock=null;
 async function activarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
-  }catch(e){}
-  try{
-    if("wakeLock" in navigator && !dvWakeLock){
-      dvWakeLock=await navigator.wakeLock.request("screen");
-      dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
-    }
-  }catch(e){ console.warn("Wake Lock:",e); }
+try{
+if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
+}catch(e){}
+try{
+if("wakeLock" in navigator && !dvWakeLock){
+dvWakeLock=await navigator.wakeLock.request("screen");
+dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
+}
+}catch(e){ console.warn("Wake Lock:",e); }
 }
 async function liberarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
-  }catch(e){}
-  try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
+try{
+if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
+}catch(e){}
+try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
-  if(!selectedZone){
-    alert("Primero seleccioná una zona.");
-    return;
-  }
-  if(recorridoActivo)return;
-  recorridoActivo=true;
-  recorridoHeading=null;
-  mapaSiguiendoVehiculo=true;
-  mapaUsuarioMovio=false;
-  recorridoZona=selectedZone;
-  recorridoInicio=new Date().toISOString();
-  recorridoPuntos=[];
-  activarPantallaEncendida();
-  if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
-    recorridoLayer=null;
-  }
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  actualizarBotonesRecorrido();
-  actualizarEstadoRecorrido(
-    "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 Solicitando ubicación GPS del teléfono...",
-    true
-  );
-  if(!iniciarSeguimientoGPS()){
-    recorridoActivo=false;
-    actualizarBotonesRecorrido();
-    return;
-  }
-  guardarRecorridoLocal();
-  mostrarToast("🚛 Recorrido iniciado");
+window.dv19Day=DV19_DAY_KEY();
+dv19PersistRoute();
+dvNavReset();
+if(!selectedZone){
+alert("Primero seleccioná una zona.");
+return;
+}
+if(recorridoActivo)return;
+recorridoActivo=true;
+recorridoHeading=null;
+mapaSiguiendoVehiculo=true;
+mapaUsuarioMovio=false;
+recorridoZona=selectedZone;
+recorridoInicio=new Date().toISOString();
+recorridoPuntos=[];
+activarPantallaEncendida();
+try{
+if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+AndroidGPS.startTracking();
+}
+}catch(e){
+console.warn("GPS nativo no disponible:",e);
+}
+if(recorridoLayer){
+map.removeLayer(recorridoLayer);
+recorridoLayer=null;
+}
+if(recorridoMarker){
+map.removeLayer(recorridoMarker);
+recorridoMarker=null;
+}
+actualizarBotonesRecorrido();
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 Solicitando ubicación GPS del teléfono...",
+true
+);
+if(!iniciarSeguimientoGPS()){
+recorridoActivo=false;
+actualizarBotonesRecorrido();
+return;
+}
+guardarRecorridoLocal();
+mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
-  if(!recorridoActivo)return;
-  if(recorridoWatchId!==null){
-    navigator.geolocation.clearWatch(recorridoWatchId);
-    recorridoWatchId=null;
-  }
-  const cantidad=recorridoPuntos.length;
-  const zonaFinal=recorridoZona;
-  recorridoActivo=false;
-  liberarPantallaEncendida();
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  guardarRecorridoLocal();
-  actualizarBotonesRecorrido();
-  actualizarEstadoRecorrido(
-    "✅ <strong>Recorrido finalizado</strong><br>"+
-    "Zona: "+esc(zonaFinal)+
-    "<br>📍 Puntos registrados: "+cantidad+
-    "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
-  );
-  mostrarToast("✅ Recorrido finalizado");
+dvNavReset();
+if(!recorridoActivo)return;
+if(recorridoWatchId!==null){
+navigator.geolocation.clearWatch(recorridoWatchId);
+recorridoWatchId=null;
+}
+const cantidad=recorridoPuntos.length;
+const zonaFinal=recorridoZona;
+recorridoActivo=false;
+try{
+if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
+AndroidGPS.stopTracking();
+}
+}catch(e){
+console.warn("No se pudo detener GPS nativo:",e);
+}
+liberarPantallaEncendida();
+if(recorridoMarker){
+map.removeLayer(recorridoMarker);
+recorridoMarker=null;
+}
+guardarRecorridoLocal();
+actualizarBotonesRecorrido();
+actualizarEstadoRecorrido(
+"✅ <strong>Recorrido finalizado</strong><br>"+
+"Zona: "+esc(zonaFinal)+
+"<br>📍 Puntos registrados: "+cantidad+
+"<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
+);
+mostrarToast("✅ Recorrido finalizado");
+
+dv19FinishRoute();
 }
 function recuperarRecorrido(){
-  try{
-    const guardado=
-      localStorage.getItem(getRouteStorageKey());
-    if(!guardado)return;
-    const estado=JSON.parse(guardado);
-    if(
-      !estado||
-      !estado.activo||
-      !estado.zona
-    )return;
-    const inicio=
-      estado.inicio
-      ?new Date(estado.inicio)
-      :null;
-    const ahora=new Date();
-    if(
-      !inicio||
-      inicio.toDateString()!==ahora.toDateString()
-    ){
-      borrarRecorridoLocal();
-      return;
-    }
-    recorridoActivo=true;
-    recorridoZona=estado.zona;
-    recorridoInicio=estado.inicio;
-    recorridoPuntos=
-      Array.isArray(estado.puntos)
-      ?estado.puntos
-      :[];
-    dibujarRecorrido();
-    actualizarBotonesRecorrido();
-    if(recorridoPuntos.length){
-      const ultimo=
-        recorridoPuntos[recorridoPuntos.length-1];
-      mostrarPosicionRecorrido(
-        ultimo.lat,
-        ultimo.lng,
-        ultimo.precision
-      );
-    }
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Recorrido recuperado: "+
-      recorridoPuntos.length+
-      " puntos.<br>"+
-      "El GPS continúa registrando nuevas posiciones.",
-      true
-    );
-    iniciarSeguimientoGPS();
-  }catch(error){
-    console.error("Recuperar recorrido:",error);
-    borrarRecorridoLocal();
-  }
-}
-function cargarDatos(){
-statusText.textContent =
-"Cargando direcciones...";
-const callback =
-"handleSheets_"+Date.now();
-window[callback] =
-response => {
 try{
-const rows =
-(response.table.rows || [])
-.map(
-row =>
-(row.c || [])
-.map(
-cell =>
-cell &&
-cell.v != null
-?
-String(cell.v)
-:
-""
-)
+const guardado=
+localStorage.getItem(getRouteStorageKey());
+if(!guardado)return;
+const estado=JSON.parse(guardado);
+if(
+!estado||
+!estado.activo||
+!estado.zona
+)return;
+const inicio=
+estado.inicio
+?new Date(estado.inicio)
+;
+const ahora=new Date();
+if(
+!inicio||
+inicio.toDateString()!==ahora.toDateString()
+){
+borrarRecorridoLocal();
+return;
+}
+recorridoActivo=true;
+recorridoZona=estado.zona;
+recorridoInicio=estado.inicio;
+recorridoPuntos=
+Array.isArray(estado.puntos)
+?estado.puntos
+:[];
+dibujarRecorrido();
+actualizarBotonesRecorrido();
+if(recorridoPuntos.length){
+const ultimo=
+recorridoPuntos[recorridoPuntos.length-1];
+mostrarPosicionRecorrido(
+ultimo.lat,
+ultimo.lng,
+ultimo.precision
 );
-data = [];
-rows.forEach(
-row => {
+}
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 Recorrido recuperado: "+
+recorridoPuntos.length+
+" puntos.<br>"+
+"El GPS continúa registrando nuevas posiciones.",
+true
+);
+try{
+if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+AndroidGPS.startTracking();
+}
+}catch(e){}
+iniciarSeguimientoGPS();
+}catch(error){
+console.error("Recuperar recorrido:",error);
+borrarRecorridoLocal();
+}
+}
+function parseCSVGoogle(text){
+const rows=[];
+let row=[],field="",quoted=false;
+for(let i=0;i<text.length;i++){
+const ch=text[i];
+if(quoted){
+if(ch==='"' && text[i+1]==='"'){field+='"';i++;}
+else if(ch==='"'){quoted=false;}
+else field+=ch;
+}else{
+if(ch==='"')quoted=true;
+else if(ch===','){row.push(field);field="";}
+else if(ch==='\n'){row.push(field);rows.push(row);row=[];field="";}
+else if(ch!=='\r')field+=ch;
+}
+}
+if(field!==""||row.length){row.push(field);rows.push(row);}
+return rows;
+}
+function procesarFilasSheets(rows){
+data=[];
+rows.forEach(row=>{
 agregar(row,0,1,2,"Llavallol");
 agregar(row,3,4,5,"Banfield");
 agregar(row,6,7,8,"Temperley");
 agregar(row,9,10,null,"Turdera");
 agregar(row,11,12,13,"Lomas");
-}
-);
+agregar(row,14,15,16,"Santa Catalina");
+});
 cargarCGMs();
 actualizarZonasPorCGM();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
 }
-catch(error){
-console.error(error);
-statusText.textContent =
-"Error al cargar";
-list.innerHTML =
-'<div class="error">' +
-'Error al cargar las direcciones.' +
-'</div>';
+function cargarDatos(){
+statusText.textContent="Cargando direcciones...";
+const base="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?gid="+GID+"&t="+Date.now();
+let terminado=false;
+const timeout=setTimeout(()=>{
+if(!terminado){
+terminado=true;
+statusText.textContent="Error de conexión con Google Sheets";
+list.innerHTML='<div class="error">No se pudo obtener las direcciones de Google Sheets.<br><br>Revisá que la hoja esté compartida y disponible públicamente.</div>';
+}
+},15000);
+
+fetch(base+"&tqx=out",{cache:"no-store"})
+.then(r=>{
+if(!r.ok)throw new Error("HTTP "+r.status);
+return r.text();
+})
+.then(text=>{
+if(terminado)return;
+const rows=parseCSVGoogle(text);
+if(!rows.length)throw new Error("La hoja devolvió 0 filas");
+const primera=rows[0].map(v=>normalizar(v));
+const pareceEncabezado=primera.some(v=>
+["calle","numero","número","zona","llavallol","banfield","temperley","lomas"]
+.some(k=>v.includes(k))
+);
+procesarFilasSheets(pareceEncabezado?rows.slice(1));
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Datos cargados correctamente";
+})
+.catch(error=>{
+console.warn("CSV Sheets no disponible, probando JSONP:",error);
+if(terminado)return;
+
+const callback="handleSheets_"+Date.now();
+window[callback]=response=>{
+try{
+const rows=(response.table.rows||[]).map(row=>
+(row.c||[]).map(cell=>cell&&cell.v!=null?String(cell.v):"")
+);
+if(!rows.length)throw new Error("Google Sheets devolvió 0 filas");
+procesarFilasSheets(rows);
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Datos cargados correctamente";
+}catch(e){
+console.error(e);
+if(!terminado){
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Error al cargar datos";
+list.innerHTML='<div class="error">Google Sheets respondió, pero los datos no pudieron procesarse.</div>';
+}
+}finally{
+delete window[callback];
+const old=document.getElementById(callback);
+if(old)old.remove();
+}
+};
+
+const script=document.createElement("script");
+script.id=callback;
+script.src=base+"&tqx=responseHandler:"+callback;
+script.onerror=()=>{
+if(!terminado){
+terminado=true;
+clearTimeout(timeout);
+statusText.textContent="Error de conexión con Google Sheets";
+list.innerHTML='<div class="error">No se pudo conectar con Google Sheets.</div>';
 }
 delete window[callback];
-const script =
-document.getElementById(callback);
-if(script)
 script.remove();
 };
-const script =
-document.createElement("script");
-script.id =
-callback;
-script.src =
-"https://docs.google.com/spreadsheets/d/" +
-SHEET_ID +
-"/gviz/tq?tqx=responseHandler:" +
-callback +
-"&gid=" +
-GID +
-"&t=" +
-Date.now();
-script.onerror =
-() => {
-statusText.textContent =
-"Error de conexión";
-list.innerHTML =
-'<div class="error">' +
-'No se pudo conectar con Google Sheets.' +
-'</div>';
-delete window[callback];
-script.remove();
-};
-document.body.appendChild(
-script
-);
-}
-function cargarCGMs(){
-const cgms =
-[...new Set(
-data.map(item => item.localidad)
-)];
-const anterior =
-selectedCgm;
-cgm.innerHTML =
-'<option value="">— Elegí un CGM —</option>';
-cgms.forEach(
-nombre => {
-const option =
-document.createElement("option");
-option.value =
-nombre;
-option.textContent =
-nombre;
-cgm.appendChild(
-option
-);
-}
-);
-if(
-cgms.includes(anterior)
-){
-cgm.value =
-anterior;
-}else{
-selectedCgm =
-"";
-cgm.value =
-"";
-}
-}
-function actualizarZonasPorCGM(){
-zone.innerHTML =
-'<option value="">— Elegí una zona —</option>';
-zone.disabled =
-!selectedCgm;
-if(!selectedCgm){
-selectedZone =
-"";
-return;
-}
-const zonas =
-[...new Set(
-data
-.filter(
-item =>
-normalizar(item.localidad) ===
-normalizar(selectedCgm)
-)
-.map(
-item => item.zona
-)
-.filter(Boolean)
-)];
-const anterior =
-selectedZone;
-zonas.forEach(
-nombre => {
-const option =
-document.createElement("option");
-option.value =
-nombre;
-option.textContent =
-nombre;
-zone.appendChild(
-option
-);
-}
-);
-if(
-zonas.includes(anterior)
-){
-zone.value =
-anterior;
-}else{
-selectedZone =
-"";
-zone.value =
-"";
-}
-}
-function actualizarContadores(){
-totalAddresses.textContent =
-data.length.toLocaleString(
-"es-AR"
-);
-}
-function nombrePoligonoPara(
-cgmNombre,
-zonaNombre
-){
-const c =
-normalizar(cgmNombre);
-const z =
-normalizar(zonaNombre);
-if(c === "lomas"){
-if(z === "microcentro")
-return "Lomas - Microcentro";
-if(z === "frias/garibaldi")
-return "Lomas - Frias/Garibaldi";
-if(z === "p libertad")
-return "Lomas - P Libertad";
-if(z === "las heras")
-return "Lomas - Las Heras";
-if(z === "este")
-return "Lomas Este";
-}
-if(c === "banfield"){
-if(z === "este")
-return "Banfield Este";
-if(z === "oeste")
-return "Banfield Oeste";
-if(z === "banfield 3")
-return "Banfield 3";
-}
-if(c === "temperley"){
-if(z === "este cerrito")
-return "Temperley Este Cerrito";
-if(z === "este 30 de septiembre")
-return "Temperley Este 30 de Septiembre";
-if(z === "oeste")
-return "Temperley Oeste";
-}
-if(c === "turdera")
-return "Turdera";
-if(c === "llavallol"){
-if(z === "llavallol norte")
-return "Llavallol Norte";
-if(z === "llavallol sur")
-return "Llavallol Sur";
-}
-return "";
-}
-function agregar(
-row,
-calleCol,
-numeroCol,
-zonaCol,
-localidad
-){
-const calle =
-(row[calleCol] || "").trim();
-const numero =
-(row[numeroCol] || "").trim();
-if(!calle && !numero)
-return;
-let zona = "";
-if(zonaCol !== null){
-zona =
-(row[zonaCol] || "").trim();
-}
-if(
-normalizar(localidad) ===
-"turdera"
-){
-zona =
-"Turdera";
-}
-data.push({
-localidad:
-localidad,
-calle:
-calle,
-numero:
-numero,
-zona:
-zona
+document.body.appendChild(script);
 });
 }
-function cargarEvidenciasHoy(){
-fetch(
-APPS_SCRIPT_URL +
-"?accion=evidenciasHoy&t="+
-Date.now()
-)
-.then(
-response => {
-if(!response.ok){
-throw new Error(
-"No se pudo consultar el histórico."
-);
-}
-return response.json();
-}
-)
-.then(
-resultado => {
-if(!resultado.ok){
-throw new Error(
-resultado.error ||
-"Error en el histórico."
-);
-}
-evidenciasHoy =
-resultado.evidencias || [];
-statusText.textContent =
-"Actualizado correctamente";
-actualizarHora();
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-refrescarEstadosMarcadoresReclamos();
-}
-)
-.catch(
-error => {
-console.error(error);
-console.log(
-"El histórico no pudo consultarse:",
-error
-);
-evidenciasHoy = [];
-statusText.textContent =
-"Direcciones cargadas";
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-}
-);
-}
-function claveDireccion(
-zona,
-direccion
-){
-return (
-normalizar(zona) +
-"|" +
-normalizar(direccion)
-);
-}
-function estaRealizadaHoy(
-item
-){
-const direccion =
-`${item.calle} ${item.numero || ""}`;
-const clave =
-claveDireccion(
-selectedZone,
-direccion
-);
-return evidenciasHoy.some(
-e => {
-const zonaHistorico =
-String(
-e.zona || ""
-);
-const direccionHistorico =
-String(
-e.direccion || ""
-);
-return (
-claveDireccion(
-zonaHistorico,
-direccionHistorico
-)
-===
+
 clave
 );
 }
@@ -1701,6 +1632,7 @@ normalizar(item.zona) ===
 normalizar(selected)
 );
 }
+let dvZonaCentradaKey = null;
 function mostrarMapa(
 nombreZona
 ){
@@ -1754,12 +1686,14 @@ fillOpacity:.30
 const bounds =
 activeLayer.getBounds();
 if(bounds.isValid()){
-map.fitBounds(
-bounds,
-{
-padding:[25,25]
+const zonaKey =
+normalizar(selectedCgm) + "||" + normalizar(nombreZona);
+
+// Centrar la zona solo al cambiar la selección.
+if(dvZonaCentradaKey !== zonaKey){
+map.fitBounds(bounds,{padding:[25,25]});
+dvZonaCentradaKey = zonaKey;
 }
-);
 }
 title.textContent =
 "Mapa de " +
@@ -1781,8 +1715,8 @@ cgm.value;
 selectedZone =
 zone.value;
 if(recorridoActivo && recorridoZona && selectedZone !== recorridoZona){
-  selectedZone=recorridoZona;
-  zone.value=recorridoZona;
+selectedZone=recorridoZona;
+zone.value=recorridoZona;
 }
 actualizarBotonesRecorrido();
 if(!selectedCgm){
@@ -1865,7 +1799,7 @@ item => {
 if(!termino)
 return true;
 return normalizar(
-`${item.calle} ${item.numero} ${item.localidad}`
+${item.calle} ${item.numero} ${item.localidad}
 ).includes(
 termino
 );
@@ -1903,7 +1837,7 @@ currentVisibleDirections
 .map(
 (item,index) => {
 const direccion =
-`${item.calle} ${item.numero || ""}`;
+${item.calle} ${item.numero || ""};
 const realizado =
 estaRealizadaHoy(
 item
@@ -1911,718 +1845,207 @@ item
 const mapsURL =
 "https://www.google.com/maps/search/?api=1&query=" +
 encodeURIComponent(
-`${direccion}, ${item.localidad}, Buenos Aires, Argentina`
+${direccion}, ${item.localidad}, Buenos Aires, Argentina
 );
 return `
-<div class="address">
-<div class="address-left">
-<div class="pin">
-${
-realizado
-?
-"✅"
-:
-"📍"
-}
-</div>
-<div>
-<strong>
-${esc(item.calle)}
-${
-item.numero
-?
-" " + esc(item.numero)
-:
-""
-}
-</strong>
-<small>
-${esc(item.localidad)}
-·
-${
-realizado
-?
-"🟢 Realizado hoy"
-:
-"⚪ Pendiente"
-}
-</small>
-</div>
-</div>
-<div class="address-actions">
-<a
-class="maps"
-href="${mapsURL}"
-target="_blank"
-rel="noopener noreferrer"
->
-📍 Abrir en mapa
-</a>
-${realizado ? `
-<button
-type="button"
-onclick="verEvidencia(currentVisibleDirections[${index}])"
-style="
-display:inline-block!important;
-visibility:visible!important;
-opacity:1!important;
-background:#e9f7ed!important;
-color:#087a3d!important;
-border:1px solid #63b57f!important;
-padding:10px 14px!important;
-border-radius:9px!important;
-font-size:13px!important;
-font-weight:800!important;
-cursor:pointer!important;
-"
->
-📷 Ver evidencia
-</button>
-` : `
-<button
-type="button"
-onclick="abrirEvidencia(currentVisibleDirections[${index}])"
-style="
-display:inline-block!important;
-visibility:visible!important;
-opacity:1!important;
-background:#087a3d!important;
-color:white!important;
-border:0!important;
-padding:10px 14px!important;
-border-radius:9px!important;
-font-size:13px!important;
-font-weight:800!important;
-cursor:pointer!important;
-"
->
-📷 Registrar evidencia
-</button>
-`}
-</div>
-</div>
-`;
-}
-)
-.join("");
-if(direcciones.length > 100){
-list.innerHTML +=
-'<div class="empty">' +
-'Mostrando las primeras 100 direcciones.' +
-'</div>';
+
+<div class="address"> <div class="address-left"> <div class="pin"> ${ realizado ? "✅" : "📍" } </div> <div> <strong> ${esc(item.calle)} ${ item.numero ? " " + esc(item.numero) : "" } </strong> <small> ${esc(item.localidad)} · ${ realizado ? "🟢 Realizado hoy" : "⚪ Pendiente" } </small> </div> </div> <div class="address-actions"> <a class="maps" href="${mapsURL}" target="_blank" rel="noopener noreferrer" > 📍 Abrir en mapa </a> ${realizado ? ` <button type="button" onclick="verEvidencia(currentVisibleDirections[${index}])" style=" display:inline-block!important; visibility:visible!important; opacity:1!important; background:#e9f7ed!important; color:#087a3d!important; border:1px solid #63b57f!important; padding:10px 14px!important; border-radius:9px!important; font-size:13px!important; font-weight:800!important; cursor:pointer!important; " > 📷 Ver evidencia </button> ` : ` <button type="button" onclick="abrirEvidencia(currentVisibleDirections[${index}])" style=" display:inline-block!important; visibility:visible!important; opacity:1!important; background:#087a3d!important; color:white!important; border:0!important; padding:10px 14px!important; border-radius:9px!important; font-size:13px!important; font-weight:800!important; cursor:pointer!important; " > 📷 Registrar evidencia </button> `} </div> </div> `; } ) .join(""); if(direcciones.length > 100){ list.innerHTML += '<div class="empty">' + 'Mostrando las primeras 100 direcciones.' + '</div>'; } } function abrirEvidencia( item ){ evidenciaActual = item; evidenciaBase64 = ""; evidenciaLat = ""; evidenciaLng = ""; evidenceAddress.textContent = `${item.calle} ${item.numero || ""} — ${selectedZone}`; evidencePreview.style.display = "none"; evidencePreview.src = ""; gpsBox.innerHTML = "📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS."; sendEvidence.disabled = true; takeEvidence.style.display = "block"; evidenceBackdrop.classList.add( "show" ); } function convertirUrlImagenDrive(url){ const texto=String(url||"").trim(); if(!texto) return ""; if(texto.startsWith("data:image/")) return texto; let match=texto.match(/\/file\/d\/([^/]+)/); if(!match) match=texto.match(/[?&]id=([^&]+)/); if(!match) match=texto.match(/\/d\/([^/]+)/); if(match && match[1]){ return "https://drive.google.com/thumbnail?id="+encodeURIComponent(match[1])+"&sz=w1200"; } return texto; } function verEvidencia(item){ const direccion = `${item.calle} ${item.numero || ""}`; const evidencia = evidenciasHoy.find(e => claveDireccion( String(e.zona || ""), String(e.direccion || "") ) === claveDireccion( selectedCgm + " — " + selectedZone, direccion ) ) || evidenciasHoy.find(e => normalizar(String(e.direccion || "")) === normalizar(direccion) && normalizar(String(e.zona || "")).includes(normalizar(selectedZone)) ); if(!evidencia){ alert("No se encontró la evidencia registrada para hoy."); return; } evidenciaActual = item; evidenciaBase64 = ""; evidenciaLat = evidencia.latitud || ""; evidenciaLng = evidencia.longitud || ""; evidenceAddress.textContent = `${direccion} — ${selectedCgm} — ${selectedZone}`; if(evidencia.foto){ evidencePreview.src = convertirUrlImagenDrive(evidencia.foto); evidencePreview.style.display = "block"; evidencePreview.onerror = () => { evidencePreview.style.display = "none"; mostrarToast("⚠️ No se pudo visualizar la foto desde Drive."); }; }else{ evidencePreview.style.display = "none"; } gpsBox.innerHTML = "✅ Evidencia registrada hoy." + "<br><br>" + (evidencia.latitud && evidencia.longitud ? "📍 Latitud: " + evidencia.latitud + "<br>Longitud: " + evidencia.longitud : "📍 Sin coordenadas registradas."); sendEvidence.style.display = "none"; takeEvidence.style.display = "none"; evidenceBackdrop.classList.add("show"); } function cerrarEvidencia(){ evidenceBackdrop.classList.remove( "show" ); evidenciaActual = null; evidenciaBase64 = ""; evidenciaLat = ""; evidenciaLng = ""; cameraInput.value = ""; sendEvidence.style.display = "block"; takeEvidence.style.display = "block"; } function comprimirImagen(file){ return new Promise((resolve,reject) => { const reader = new FileReader(); reader.onload = event => { const img = new Image(); img.onload = () => { let width = img.naturalWidth || img.width; let height = img.naturalHeight || img.height; const maxWidth = 1000; if(width > maxWidth){ height = Math.round( height * maxWidth / width ); width = maxWidth; } const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height; const ctx = canvas.getContext("2d"); if(!ctx){ reject(new Error("No se pudo procesar la fotografía.")); return; } ctx.drawImage( img, 0, 0, width, height ); const resultado = canvas.toDataURL( "image/jpeg", 0.65 ); canvas.width = 1; canvas.height = 1; resolve(resultado); }; img.onerror = reject; img.src = event.target.result; }; reader.onerror = reject; reader.readAsDataURL(file); }); } async function prepararEvidencia(file){ try{ if(!file){ alert("No se seleccionó ninguna fotografía."); return; } gpsBox.innerHTML = "📷 Procesando fotografía..."; evidenciaBase64 = await comprimirImagen(file); evidencePreview.src = evidenciaBase64; evidencePreview.style.display = "block"; gpsBox.innerHTML = "📷 Fotografía lista para registrar."; sendEvidence.disabled = false; }catch(error){ console.error("Error preparando evidencia:",error); gpsBox.innerHTML = "❌ No se pudo procesar la fotografía.<br><br>" + "Revisá la fotografía e intentá nuevamente."; sendEvidence.disabled = true; } } async function enviarEvidencia(){ if(!evidenciaActual) return; if(!evidenciaBase64){ alert( "Primero sacá la fotografía." ); return; } sendEvidence.disabled = true; sendEvidence.textContent = "Enviando..."; const ahora = new Date(); const fecha = ahora.toLocaleDateString( "es-AR" ); const hora = ahora.toLocaleTimeString( "es-AR", { hour:"2-digit", minute:"2-digit", second:"2-digit" } ); const datos = { fecha: fecha, hora: hora, cgm: selectedCgm, zona: selectedZone, direccion: `${evidenciaActual.calle} ${evidenciaActual.numero || ""}`, foto: evidenciaBase64 }; try{ await fetch( APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{ "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify( datos ) } ); cerrarEvidencia(); mostrarToast( "📷 Evidencia enviada. Actualizando..." ); setTimeout( () => { cargarEvidenciasHoy(); }, 2000 ); } catch(error){ console.error(error); alert( "No se pudo enviar la evidencia." ); } finally{ sendEvidence.disabled = false; sendEvidence.textContent = "✓ Registrar"; } } list.addEventListener( "click", event => { const button = event.target.closest( ".evidence-btn" ); if(!button) return; const index = Number( button.dataset.evidenceIndex ); const item = currentVisibleDirections[index]; if(item){ abrirEvidencia( item ); } } ); cameraInput.addEventListener( "change", async () => { if( cameraInput.files && cameraInput.files[0] ){ await prepararEvidencia( cameraInput.files[0] ); } } ); takeEvidence.addEventListener( "click", () => { cameraInput.click(); } ); sendEvidence.addEventListener( "click", enviarEvidencia ); cancelEvidence.addEventListener( "click", cerrarEvidencia ); evidenceBackdrop.addEventListener( "click", event => { if( event.target === evidenceBackdrop ){ cerrarEvidencia(); } } ); startRoute.addEventListener("click",iniciarRecorrido); stopRoute.addEventListener("click",finalizarRecorrido); cgm.addEventListener( "change", () => { dvZonaCentradaKey=null; selectedCgm = cgm.value; selectedZone = ""; search.value = ""; actualizarZonasPorCGM(); render(); } ); zone.addEventListener( "change", () => { dvZonaCentradaKey=null; if(recorridoActivo && zone.value !== recorridoZona){ zone.value=recorridoZona; selectedZone=recorridoZona; alert("Finalizá el recorrido actual antes de cambiar de zona."); return; } if(!recorridoActivo && recorridoMarker){ map.removeLayer(recorridoMarker); recorridoMarker=null; } render(); actualizarBotonesRecorrido(); } ); search.addEventListener( "input", render ); refresh.addEventListener( "click", () => { cargarDatos(); } ); cargarMapa(); cargarDatos(); setInterval( () => { cargarDatos(); }, 5 * 60 * 1000 ); document.addEventListener( "visibilitychange", () => { if(!document.hidden){ if(recorridoActivo) activarPantallaEncendida(); cargarEvidenciasHoy(); } } ); </script> <script id="diaverde-auth"> const DV_USUARIOS = [ { usuario:"Ale", password:"boca", nombre:"Ale" }, { usuario:"admin", password:"banfield09", nombre:"Dia Verde" }, { usuario:"Pablo", password:"independiente", nombre:"Pablo Vazques" }, { usuario:"Franco", password:"independiente", nombre:"Franco Sorcinelli" }, { usuario:"Francocrr", password:"boca", nombre:"Pablo Vazques" }, { usuario:"chofer", password:"comodin", nombre:"Comodin" }, { usuario:"CarliDT", password:"banfield", nombre:"Carli" } ]; const DV_SESSION_KEY = "diaVerdeSesionV1"; const DV_USER_KEY = "diaVerdeUsuarioV1"; function dvUsuarioActual(){ try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); } catch(e){ return null; } } function dvMostrarAplicacion(usuario){ const overlay = document.getElementById("dvLoginOverlay"); const bar = document.getElementById("dvUserBar"); const name = document.getElementById("dvUserName"); if(overlay) overlay.style.display = "none"; if(bar) bar.style.display = "flex"; if(name) name.textContent = usuario.nombre || usuario.usuario; } function dvMostrarLogin(){ const overlay = document.getElementById("dvLoginOverlay"); const bar = document.getElementById("dvUserBar"); if(overlay) overlay.style.display = "flex"; if(bar) bar.style.display = "none"; } function dvIniciarSesion(){ const user = (document.getElementById("dvLoginUser").value || "").trim(); const pass = document.getElementById("dvLoginPass").value || ""; const error = document.getElementById("dvLoginError"); const encontrado = DV_USUARIOS.find( u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass ); if(!encontrado){ if(error) error.textContent = "Usuario o contraseña incorrectos."; return; } localStorage.setItem(DV_SESSION_KEY, "1"); localStorage.setItem(DV_USER_KEY, JSON.stringify({ usuario: encontrado.usuario, nombre: encontrado.nombre })); if(error) error.textContent = ""; dvMostrarAplicacion(encontrado); try { if(typeof recuperarRecorrido === "function") recuperarRecorrido(); } catch(e) { console.error("Recuperación de recorrido:", e); } } function dvCerrarSesion(){ localStorage.removeItem(DV_SESSION_KEY); localStorage.removeItem(DV_USER_KEY); dvMostrarLogin(); const u = document.getElementById("dvLoginUser"); const p = document.getElementById("dvLoginPass"); if(u) u.value = ""; if(p) p.value = ""; if(u) u.focus(); } function dvComprobarSesion(){ const sesion = localStorage.getItem(DV_SESSION_KEY); const usuario = dvUsuarioActual(); if(sesion === "1" && usuario){ dvMostrarAplicacion(usuario); }else{ dvMostrarLogin(); } } document.addEventListener("DOMContentLoaded", function(){ const btn = document.getElementById("dvLoginBtn"); const logout = document.getElementById("dvLogout"); const pass = document.getElementById("dvLoginPass"); if(btn) btn.addEventListener("click", dvIniciarSesion); if(logout) logout.addEventListener("click", dvCerrarSesion); if(pass) pass.addEventListener("keydown", function(e){ if(e.key === "Enter") dvIniciarSesion(); }); dvComprobarSesion(); });
+
+(function(){
+const dvCenterButton = document.getElementById("dvCenterButton");
+let dvUserMovedMap = false;
+let dvLastNativeLocation = null;
+
+function dvShowCenterButton(){
+if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
+dvUserMovedMap = true;
+if(typeof mapaSiguiendoVehiculo !== "undefined"){
+mapaSiguiendoVehiculo=false;
+mapaUsuarioMovio=true;
 }
 }
-function abrirEvidencia(
-item
-){
-evidenciaActual =
-item;
-evidenciaBase64 =
-"";
-evidenciaLat =
-"";
-evidenciaLng =
-"";
-evidenceAddress.textContent =
-`${item.calle} ${item.numero || ""} — ${selectedZone}`;
-evidencePreview.style.display =
-"none";
-evidencePreview.src =
-"";
-gpsBox.innerHTML =
-"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
-sendEvidence.disabled =
-true;
-takeEvidence.style.display =
-"block";
-evidenceBackdrop.classList.add(
-"show"
-);
+
+function dvHideCenterButton(){
+if(dvCenterButton) dvCenterButton.classList.remove("dv-visible");
+dvUserMovedMap = false;
 }
-function convertirUrlImagenDrive(url){
-  const texto=String(url||"").trim();
-  if(!texto) return "";
-  if(texto.startsWith("data:image/")) return texto;
-  let match=texto.match(/\/file\/d\/([^/]+)/);
-  if(!match) match=texto.match(/[?&]id=([^&]+)/);
-  if(!match) match=texto.match(/\/d\/([^/]+)/);
-  if(match && match[1]){
-    return "https://drive.google.com/thumbnail?id="+encodeURIComponent(match[1])+"&sz=w1200";
-  }
-  return texto;
-}
-function verEvidencia(item){
-  const direccion =
-    `${item.calle} ${item.numero || ""}`;
-  const evidencia =
-    evidenciasHoy.find(e =>
-      claveDireccion(
-        String(e.zona || ""),
-        String(e.direccion || "")
-      ) ===
-      claveDireccion(
-        selectedCgm + " — " + selectedZone,
-        direccion
-      )
-    ) ||
-    evidenciasHoy.find(e =>
-      normalizar(String(e.direccion || "")) ===
-      normalizar(direccion) &&
-      normalizar(String(e.zona || "")).includes(normalizar(selectedZone))
-    );
-  if(!evidencia){
-    alert("No se encontró la evidencia registrada para hoy.");
-    return;
-  }
-  evidenciaActual = item;
-  evidenciaBase64 = "";
-  evidenciaLat = evidencia.latitud || "";
-  evidenciaLng = evidencia.longitud || "";
-  evidenceAddress.textContent =
-    `${direccion} — ${selectedCgm} — ${selectedZone}`;
-  if(evidencia.foto){
-    evidencePreview.src = convertirUrlImagenDrive(evidencia.foto);
-    evidencePreview.style.display = "block";
-    evidencePreview.onerror = () => {
-      evidencePreview.style.display = "none";
-      mostrarToast("⚠️ No se pudo visualizar la foto desde Drive.");
-    };
-  }else{
-    evidencePreview.style.display = "none";
-  }
-  gpsBox.innerHTML =
-    "✅ Evidencia registrada hoy." +
-    "<br><br>" +
-    (evidencia.latitud && evidencia.longitud
-      ? "📍 Latitud: " + evidencia.latitud +
-        "<br>Longitud: " + evidencia.longitud
-      : "📍 Sin coordenadas registradas.");
-  sendEvidence.style.display = "none";
-  takeEvidence.style.display = "none";
-  evidenceBackdrop.classList.add("show");
-}
-function cerrarEvidencia(){
-evidenceBackdrop.classList.remove(
-"show"
-);
-evidenciaActual =
-null;
-evidenciaBase64 =
-"";
-evidenciaLat =
-"";
-evidenciaLng =
-"";
-cameraInput.value =
-"";
-sendEvidence.style.display = "block";
-takeEvidence.style.display = "block";
-}
-function comprimirImagen(file){
-return new Promise((resolve,reject) => {
-const reader = new FileReader();
-reader.onload = event => {
-const img = new Image();
-img.onload = () => {
-let width = img.naturalWidth || img.width;
-let height = img.naturalHeight || img.height;
-const maxWidth = 1000;
-if(width > maxWidth){
-height = Math.round(
-height * maxWidth / width
-);
-width = maxWidth;
-}
-const canvas = document.createElement("canvas");
-canvas.width = width;
-canvas.height = height;
-const ctx = canvas.getContext("2d");
-if(!ctx){
-reject(new Error("No se pudo procesar la fotografía."));
-return;
-}
-ctx.drawImage(
-img,
-0,
-0,
-width,
-height
-);
-const resultado = canvas.toDataURL(
-"image/jpeg",
-0.65
-);
-canvas.width = 1;
-canvas.height = 1;
-resolve(resultado);
-};
-img.onerror = reject;
-img.src = event.target.result;
-};
-reader.onerror = reject;
-reader.readAsDataURL(file);
-});
-}
-async function prepararEvidencia(
-file
-){
+
+function dvAplicarCentrado(p){
+// FALLA ORIGINAL:
+// el mapa se declara como const map = new DVMap(), pero esta función
+// buscaba window.map. Por eso siempre encontraba undefined y salía
+// por if(!p || !window.map) return false.
+const mapa = (typeof map !== "undefined") ? map : window.map;
+
+if(!p || !mapa) return false;
+
+const lat = Number(p.lat);
+const lng = Number(p.lng);
+if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+
+const center = [lng, lat];
+const bearing = Number.isFinite(Number(p.bearing)) ? Number(p.bearing) : 0;
+
 try{
-gpsBox.innerHTML =
-"📷 Procesando fotografía...";
-evidenciaBase64 =
-await comprimirImagen(
-file
-);
-evidencePreview.src =
-evidenciaBase64;
-evidencePreview.style.display =
-"block";
-gpsBox.innerHTML =
-"📍 Obteniendo ubicación GPS...";
-const watchActivoAntesDeEvidencia =
-  recorridoActivo && recorridoWatchId !== null;
-if(watchActivoAntesDeEvidencia){
-  navigator.geolocation.clearWatch(recorridoWatchId);
-  recorridoWatchId = null;
+  if(typeof mapa.stop === "function") mapa.stop();
+
+  if(typeof mapa.easeTo === "function"){
+    mapa.easeTo({
+      center:center,
+      zoom:16.8,
+      pitch:45,
+      bearing:bearing,
+      offset:[0,120],
+      duration:450,
+      essential:true
+    });
+  }else{
+    if(typeof mapa.setCenter === "function") mapa.setCenter(center);
+    if(typeof mapa.setPitch === "function") mapa.setPitch(45);
+    if(typeof mapa.setBearing === "function") mapa.setBearing(bearing);
+    if(typeof mapa.setZoom === "function") mapa.setZoom(16.8);
+  }
+
+  // "Centrar" no solo centra: reactiva el modo navegación.
+  if(recorridoActivo){
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
+  }
+  dvHideCenterButton();
+  return true;
+}catch(e){
+  console.warn("Centrar vehículo:", e);
+  return false;
 }
-gpsBox.innerHTML =
-  "📍 Obteniendo ubicación GPS de la evidencia..." +
-  (watchActivoAntesDeEvidencia
-    ? "<br>🚛 Reanudando recorrido al terminar..."
-    : "");
+
+}
+
+function dvCenterOnVehicle(){
+// Prioridad: última posición entregada por el GPS nativo de la APK.
+if(dvAplicarCentrado(dvLastNativeLocation)) return;
+
+// Fallback: GPS del navegador para que también funcione en la AppWeb.
+if(!navigator.geolocation){
+  alert("Este dispositivo no permite obtener la ubicación GPS.");
+  return;
+}
+
 navigator.geolocation.getCurrentPosition(
-  position => {
-    evidenciaLat =
-      position.coords.latitude;
-    evidenciaLng =
-      position.coords.longitude;
-    const precisionEvidencia =
-      Number(position.coords.accuracy || 0);
-    gpsBox.innerHTML =
-      "✅ Ubicación obtenida" +
-      "<br>" +
-      "Latitud: " +
-      evidenciaLat.toFixed(6) +
-      "<br>" +
-      "Longitud: " +
-      evidenciaLng.toFixed(6) +
-      "<br>" +
-      "📡 Precisión: ±" +
-      Math.round(precisionEvidencia) +
-      " m";
-    sendEvidence.disabled =
-      false;
-    if(watchActivoAntesDeEvidencia && recorridoActivo){
-      iniciarSeguimientoGPS();
-    }
+  function(position){
+    const p = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      speed: position.coords.speed,
+      bearing: position.coords.heading
+    };
+
+    dvLastNativeLocation = p;
+    dvAplicarCentrado(p);
   },
-  error => {
-    console.error("GPS evidencia:",error);
-    let detalle =
-      "Activá la ubicación del dispositivo e intentá nuevamente.";
-    if(error && error.code === 1){
-      detalle =
-        "El navegador no tiene permiso para usar la ubicación.";
-    }else if(error && error.code === 2){
-      detalle =
-        "El dispositivo no pudo determinar la ubicación.";
-    }else if(error && error.code === 3){
-      detalle =
-        "El GPS tardó demasiado en responder.";
-    }
-    gpsBox.innerHTML =
-      "⚠️ No se pudo obtener la ubicación GPS." +
-      "<br><br>" +
-      detalle;
-    sendEvidence.disabled =
-      true;
-    if(watchActivoAntesDeEvidencia && recorridoActivo){
-      iniciarSeguimientoGPS();
-    }
+  function(error){
+    console.warn("GPS del navegador:", error);
+    alert("No se pudo obtener la ubicación GPS. Verificá que la ubicación esté activada y que el navegador tenga permiso.");
   },
   {
     enableHighAccuracy:true,
-    timeout:20000,
-    maximumAge:0
+    timeout:10000,
+    maximumAge:5000
   }
 );
+
 }
-catch(error){
-console.error(error);
-gpsBox.innerHTML =
-"❌ No se pudo procesar la fotografía.";
-}
-}
-async function enviarEvidencia(){
-if(!evidenciaActual)
-return;
-if(!evidenciaBase64){
-alert(
-"Primero sacá la fotografía."
-);
-return;
-}
-if(
-!evidenciaLat ||
-!evidenciaLng
-){
-alert(
-"No se pudo obtener la ubicación GPS."
-);
-return;
-}
-sendEvidence.disabled =
-true;
-sendEvidence.textContent =
-"Enviando...";
-const ahora =
-new Date();
-const fecha =
-ahora.toLocaleDateString(
-"es-AR"
-);
-const hora =
-ahora.toLocaleTimeString(
-"es-AR",
-{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit"
-}
-);
-const datos = {
-fecha:
-fecha,
-hora:
-hora,
-cgm:
-selectedCgm,
-zona:
-selectedZone,
-direccion:
-`${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
-latitud:
-evidenciaLat,
-longitud:
-evidenciaLng,
-foto:
-evidenciaBase64
+
+if(dvCenterButton) dvCenterButton.addEventListener("click", dvCenterOnVehicle);
+
+window.dvRegisterNativeLocationForCenter = function(p){
+if(!p) return;
+const lat = Number(p.lat);
+const lng = Number(p.lng);
+if(Number.isFinite(lat) && Number.isFinite(lng)){
+dvLastNativeLocation = {
+lat,
+lng,
+accuracy.isFinite(Number(p.accuracy)) ? Number(p.accuracy) : null,
+speed.isFinite(Number(p.speed)) ? Number(p.speed) : null,
+bearing.isFinite(Number(p.bearing)) ? Number(p.bearing) : 0
 };
+}
+};
+
+// GPS propio de la AppWeb: mantiene disponible la última posición.
+if(navigator.geolocation){
 try{
-await fetch(
-APPS_SCRIPT_URL,
+navigator.geolocation.watchPosition(
+function(position){
+dvLastNativeLocation = {
+lat: position.coords.latitude,
+lng: position.coords.longitude,
+accuracy: position.coords.accuracy,
+speed: position.coords.speed,
+bearing: position.coords.heading
+};
+},
+function(error){
+console.warn("Geolocalización WebApp:", error);
+},
 {
-method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":
-"text/plain;charset=utf-8"
-},
-body:
-JSON.stringify(
-datos
-)
+enableHighAccuracy,
+maximumAge:3000,
+timeout:15000
 }
 );
-cerrarEvidencia();
-mostrarToast(
-"📷 Evidencia enviada. Actualizando..."
-);
-setTimeout(
-() => {
-cargarEvidenciasHoy();
-},
-2000
-);
-}
-catch(error){
-console.error(error);
-alert(
-"No se pudo enviar la evidencia."
-);
-}
-finally{
-sendEvidence.disabled =
-false;
-sendEvidence.textContent =
-"✓ Registrar";
+}catch(e){
+console.warn("No se pudo iniciar GPS WebApp:", e);
 }
 }
-list.addEventListener(
-"click",
-event => {
-const button =
-event.target.closest(
-".evidence-btn"
-);
-if(!button)
-return;
-const index =
-Number(
-button.dataset.evidenceIndex
-);
-const item =
-currentVisibleDirections[index];
-if(item){
-abrirEvidencia(
-item
-);
-}
-}
-);
-cameraInput.addEventListener(
-"change",
-async () => {
-if(
-cameraInput.files &&
-cameraInput.files[0]
-){
-await prepararEvidencia(
-cameraInput.files[0]
-);
-}
-}
-);
-takeEvidence.addEventListener(
-"click",
-() => {
-cameraInput.click();
-}
-);
-sendEvidence.addEventListener(
-"click",
-enviarEvidencia
-);
-cancelEvidence.addEventListener(
-"click",
-cerrarEvidencia
-);
-evidenceBackdrop.addEventListener(
-"click",
-event => {
-if(
-event.target ===
-evidenceBackdrop
-){
-cerrarEvidencia();
-}
-}
-);
-startRoute.addEventListener("click",iniciarRecorrido);
-stopRoute.addEventListener("click",finalizarRecorrido);
-cgm.addEventListener(
-"change",
-() => {
-selectedCgm =
-cgm.value;
-selectedZone =
-"";
-search.value =
-"";
-actualizarZonasPorCGM();
-render();
-}
-);
-zone.addEventListener(
-"change",
-() => {
-  if(recorridoActivo && zone.value !== recorridoZona){
-    zone.value=recorridoZona;
-    selectedZone=recorridoZona;
-    alert("Finalizá el recorrido actual antes de cambiar de zona.");
-    return;
-  }
-  if(!recorridoActivo && recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  render();
-  actualizarBotonesRecorrido();
-}
-);
-search.addEventListener(
-"input",
-render
-);
-refresh.addEventListener(
-"click",
-() => {
-cargarDatos();
-}
-);
-cargarMapa();
-cargarDatos();
-setInterval(
-() => {
-cargarDatos();
-},
-5 * 60 * 1000
-);
-document.addEventListener(
-"visibilitychange",
-() => {
-if(!document.hidden){
-if(recorridoActivo) activarPantallaEncendida();
-cargarEvidenciasHoy();
-}
-}
-);
-</script>
-<script id="diaverde-auth">
-const DV_USUARIOS = [
-  { usuario:"Ale",       password:"boca",         nombre:"Ale" },
-  { usuario:"admin",     password:"banfield09",   nombre:"Dia Verde" },
-  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
-  { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
-  { usuario:"Francocrr", password:"boca",         nombre:"Pablo Vazques" },
-  { usuario:"chofer",    password:"comodin",      nombre:"Comodin" },
-  { usuario:"CarliDT",   password:"banfield",     nombre:"Carli" }
-];
-const DV_SESSION_KEY = "diaVerdeSesionV1";
-const DV_USER_KEY = "diaVerdeUsuarioV1";
-function dvUsuarioActual(){
-  try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
-  catch(e){ return null; }
-}
-function dvMostrarAplicacion(usuario){
-  const overlay = document.getElementById("dvLoginOverlay");
-  const bar = document.getElementById("dvUserBar");
-  const name = document.getElementById("dvUserName");
-  if(overlay) overlay.style.display = "none";
-  if(bar) bar.style.display = "flex";
-  if(name) name.textContent = usuario.nombre || usuario.usuario;
-}
-function dvMostrarLogin(){
-  const overlay = document.getElementById("dvLoginOverlay");
-  const bar = document.getElementById("dvUserBar");
-  if(overlay) overlay.style.display = "flex";
-  if(bar) bar.style.display = "none";
-}
-function dvIniciarSesion(){
-  const user = (document.getElementById("dvLoginUser").value || "").trim();
-  const pass = document.getElementById("dvLoginPass").value || "";
-  const error = document.getElementById("dvLoginError");
-  const encontrado = DV_USUARIOS.find(
-    u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass
-  );
-  if(!encontrado){
-    if(error) error.textContent = "Usuario o contraseña incorrectos.";
-    return;
-  }
-  localStorage.setItem(DV_SESSION_KEY, "1");
-  localStorage.setItem(DV_USER_KEY, JSON.stringify({
-    usuario: encontrado.usuario,
-    nombre: encontrado.nombre
-  }));
-  if(error) error.textContent = "";
-  dvMostrarAplicacion(encontrado);
-  try {
-    if(typeof recuperarRecorrido === "function") recuperarRecorrido();
-  } catch(e) {
-    console.error("Recuperación de recorrido:", e);
-  }
-}
-function dvCerrarSesion(){
-  localStorage.removeItem(DV_SESSION_KEY);
-  localStorage.removeItem(DV_USER_KEY);
-  dvMostrarLogin();
-  const u = document.getElementById("dvLoginUser");
-  const p = document.getElementById("dvLoginPass");
-  if(u) u.value = "";
-  if(p) p.value = "";
-  if(u) u.focus();
-}
-function dvComprobarSesion(){
-  const sesion = localStorage.getItem(DV_SESSION_KEY);
-  const usuario = dvUsuarioActual();
-  if(sesion === "1" && usuario){
-    dvMostrarAplicacion(usuario);
-  }else{
-    dvMostrarLogin();
-  }
-}
-document.addEventListener("DOMContentLoaded", function(){
-  const btn = document.getElementById("dvLoginBtn");
-  const logout = document.getElementById("dvLogout");
-  const pass = document.getElementById("dvLoginPass");
-  if(btn) btn.addEventListener("click", dvIniciarSesion);
-  if(logout) logout.addEventListener("click", dvCerrarSesion);
-  if(pass) pass.addEventListener("keydown", function(e){
-    if(e.key === "Enter") dvIniciarSesion();
+
+function dvWatchMapInteraction(){
+const mapa = (typeof map !== "undefined") ? map : window.map;
+if(!mapa || typeof mapa.on !== "function") return false;
+
+if(!window.__dvCenterInteractionBound){
+  window.__dvCenterInteractionBound = true;
+
+  ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(function(ev){
+    mapa.on(ev, dvShowCenterButton);
   });
-  dvComprobarSesion();
-});
+}
+return true;
 
+}
 
-</script>
+let tries = 0;
+const timer = setInterval(function(){
+if(dvWatchMapInteraction() || ++tries > 40) clearInterval(timer);
+},250);
 
-<script>
-(function(){
-  window.dvCamionReciclableSVG = function(){
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" width="72" height="48" aria-label="Camión de reciclaje">' +
-      '<defs><linearGradient id="dvTruckG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#43d17a"/><stop offset="1" stop-color="#087f3f"/></linearGradient></defs>' +
-      '<g stroke="#123" stroke-width="3" stroke-linejoin="round">' +
-      '<path fill="url(#dvTruckG)" d="M7 17h67v40H7z"/>' +
-      '<path fill="#20a85a" d="M74 29h24l14 14v14H74z"/>' +
-      '<path fill="#bdebd0" d="M82 33h14l9 10H82z"/>' +
-      '<path fill="#fff" d="M22 28h38v10H22z"/>' +
-      '<path fill="none" stroke="#fff" d="M27 49c4-8 10-8 14 0m4 0c4-8 10-8 14 0"/>' +
-      '<circle fill="#222" cx="29" cy="61" r="9"/><circle fill="#777" cx="29" cy="61" r="4"/>' +
-      '<circle fill="#222" cx="91" cy="61" r="9"/><circle fill="#777" cx="91" cy="61" r="4"/>' +
-      '</g></svg>';
-  };
+window.dvCenterOnVehicle = dvCenterOnVehicle;
 })();
-</script>
 
 
-<script id="dv-pines-geograficos-fix">
+
+
 (function(){
-  /*
-   * Asegura que los pines que ya son markers geográficos no se conviertan
-   * accidentalmente en overlays fijos de pantalla.
-   */
-  window.dvAsegurarPinesGeograficos = function(){
-    try{
-      if(!window.map) return;
+if(window.__dvNativeCenterBridgeInstalled) return;
+window.__dvNativeCenterBridgeInstalled = true;
 
-      /*
-       * Si el wrapper expone cada marker, no hacemos transformaciones manuales:
-       * dejamos que el motor del mapa sea el único responsable de su posición.
-       */
-      if(window.map.eachLayer){
-        window.map.eachLayer(function(layer){
-          if(!layer) return;
-          if(layer.getLatLng && layer.getElement){
-            const el = layer.getElement();
-            if(el){
-              el.style.position = "absolute";
-              el.style.transformOrigin = "center center";
-              el.style.pointerEvents = "auto";
-            }
-          }
-        });
-      }
-    }catch(e){}
-  };
-
-  /*
-   * Después de mover/inclinar/girar el mapa, dejamos que el motor termine
-   * su reposicionamiento antes de revisar los markers.
-   */
-  if(window.map && window.map.on){
-    ["moveend","zoomend","rotateend","pitchend","move"].forEach(function(ev){
-      try{
-        window.map.on(ev, function(){
-          requestAnimationFrame(window.dvAsegurarPinesGeograficos);
-        });
-      }catch(e){}
-    });
-  }
-
-  setTimeout(window.dvAsegurarPinesGeograficos, 500);
+const oldOnNativeLocation = window.onNativeLocation;
+window.onNativeLocation = function(p){
+try{
+if(window.dvRegisterNativeLocationForCenter){
+window.dvRegisterNativeLocationForCenter(p);
+}
+}catch(e){}
+if(typeof oldOnNativeLocation === "function"){
+return oldOnNativeLocation.apply(this, arguments);
+}
+};
 })();
+
 </script>
 
+<script id="dv-navigation-location-bridge"> (function(){ if(window.__dvNavigationBridgeInstalled)return; window.__dvNavigationBridgeInstalled=true; const old=window.onNativeLocation; // GPS NATIVO -> RECORRIDO + SEGUIMIENTO EN TIEMPO REAL window.dvSetNavigationLocation=function(p){ if(p && window.dvRegisterNativeLocationForCenter){ window.dvRegisterNativeLocationForCenter(p); } if(!p || !recorridoActivo) return; const lat=Number(p.lat); const lng=Number(p.lng); const accuracy=Number(p.accuracy); const speed=Number(p.speed); const bearing=Number(p.bearing); if(!Number.isFinite(lat)||!Number.isFinite(lng)) return; // El GPS nativo pasa a ser la fuente principal de navegación. // Reutilizamos el mismo registrador para conservar recorrido, // persistencia, filtros de saltos y actualización visual. registrarPuntoRecorrido({ coords:{ latitude:lat, longitude:lng, accuracy:Number.isFinite(accuracy)?accuracy:null, speed:Number.isFinite(speed)?speed:null, heading:Number.isFinite(bearing)?bearing:null } }); }; window.onNativeLocation=function(p){ try{ if(window.dvSetNavigationLocation)window.dvSetNavigationLocation(p); }catch(e){} if(typeof old==="function")return old.apply(this,arguments); }; })(); </script>
 
 
 
@@ -2630,51 +2053,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
-<script id="dv-navigation-pro-js">
-(function(){
-  let last=null;
-  let bound=false;
-  function getMap(){return window.map||null;}
-  function centerVehicle(){
-    const map=getMap();
-    if(!map||!map._map||!last)return;
-    const lat=Number(last.lat),lng=Number(last.lng);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-    const bearing=Number.isFinite(Number(last.bearing))?Number(last.bearing):map._map.getBearing();
-    const h=map._map.getContainer().clientHeight||600;
-    map._map.stop();
-    map._map.easeTo({center:[lng,lat],zoom:18,bearing:bearing,pitch:45,padding:{top:0,right:0,bottom:Math.round(h*.24),left:0},duration:500,essential:true});
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.remove("dv-visible");
-  }
-  function showCenter(){
-    if(typeof recorridoActivo!=="undefined"&&!recorridoActivo)return;
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.classList.add("dv-visible");
-    mapaUsuarioMovio=true;
-    mapaSiguiendoVehiculo=false;
-  }
-  function bind(){
-    const map=getMap();
-    if(!map||typeof map.on!=="function")return false;
-    if(bound)return true;
-    bound=true;
-    ["dragstart","zoomstart","rotatestart","pitchstart"].forEach(ev=>map.on(ev,showCenter));
-    const b=document.getElementById("dvCenterButton");
-    if(b)b.addEventListener("click",centerVehicle);
-    return true;
-  }
-  window.dvRegisterNativeLocationForCenter=function(p){if(p)last=p;};
-  const previous=window.onNativeLocation;
-  window.onNativeLocation=function(p){
-    if(p)last=p;
-    if(typeof previous==="function")return previous.apply(this,arguments);
-  };
-  const timer=setInterval(function(){if(bind())clearInterval(timer);},200);
-  window.dvCenterOnVehicle=centerVehicle;
-})();
-</script>
-</body>
-</html>
+</body> </html>
+
+<script>dv19InstallLifecycle();</script>
+
+Cerrar
