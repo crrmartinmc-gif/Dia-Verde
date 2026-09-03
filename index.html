@@ -1991,8 +1991,11 @@ resultado.error ||
 "Error en el histórico."
 );
 }
-evidenciasHoy =
-resultado.evidencias || [];
+// IMPORTANTE: no reemplazar el estado local por una respuesta
+// momentáneamente incompleta/desactualizada del servidor.
+// Fusionamos servidor + estado local para evitar que los realizados
+// vuelvan a "Pendiente" unos segundos después.
+dv20MergeEvidence(resultado.evidencias || []);
 statusText.textContent =
 "Actualizado correctamente";
 actualizarHora();
@@ -2010,11 +2013,11 @@ console.log(
 "El histórico no pudo consultarse:",
 error
 );
-evidenciasHoy = [];
+// Si una consulta de histórico falla temporalmente, NO borrar
+// los estados que ya tenemos localmente.
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
-render();
 refrescarEstadosMarcadoresReclamos();
 }
 }
@@ -2619,38 +2622,46 @@ direccion:
 foto:
 evidenciaBase64
 };
-// Envío en segundo plano: no esperamos a que Apps Script termine.
 try{
-  fetch(
-    APPS_SCRIPT_URL,
-    {
-      method:"POST",
-      mode:"no-cors",
-      headers:{
-        "Content-Type":"text/plain;charset=utf-8"
-      },
-      body:JSON.stringify(datos)
-    }
-  ).catch(error => {
-    console.error("Error enviando evidencia en segundo plano:", error);
-  });
-}catch(error){
-  console.error("No se pudo iniciar el envío:", error);
+await fetch(
+APPS_SCRIPT_URL,
+{
+method:"POST",
+mode:"no-cors",
+headers:{
+"Content-Type":
+"text/plain;charset=utf-8"
+},
+body:
+JSON.stringify(
+datos
+)
 }
-
-// Cerramos inmediatamente el modal. El POST continúa en segundo plano.
+);
 cerrarEvidencia();
-mostrarToast("📷 Evidencia enviada. Guardando foto...");
-
-// Después verificamos el histórico real.
-setTimeout(() => {
-  cargarEvidenciasHoy();
-}, 2500);
-
-sendEvidence.disabled = false;
-sendEvidence.textContent = "✓ Registrar";
+mostrarToast(
+"📷 Evidencia enviada. Actualizando..."
+);
+setTimeout(
+() => {
+cargarEvidenciasHoy();
+},
+2000
+);
 }
-
+catch(error){
+console.error(error);
+alert(
+"No se pudo enviar la evidencia."
+);
+}
+finally{
+sendEvidence.disabled =
+false;
+sendEvidence.textContent =
+"✓ Registrar";
+}
+}
 list.addEventListener(
 "click",
 event => {
