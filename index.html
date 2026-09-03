@@ -456,6 +456,94 @@ footer{background:linear-gradient(145deg,#031a0e,#06331d);border-top:1px solid #
 }
 </style>
 
+
+<style id="dv29-conflict-fixes">
+/* PINES: Pendiente SIEMPRE rojo. No hereda el blanco del estilo base. */
+.dv-reclamo-pin.pendiente::before{
+  background:#d32f2f !important;
+  border-color:#fff !important;
+}
+.dv-reclamo-pin.pendiente span{
+  color:#fff !important;
+}
+
+/* POPUP */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip{
+  background:#fff !important;
+}
+.leaflet-popup-content{
+  color:#17231c !important;
+}
+.leaflet-popup-content *{
+  color:#17231c !important;
+}
+
+/* LOGIN: nunca exceder el ancho real del teléfono */
+#dvLoginOverlay{
+  width:100vw;
+  max-width:100vw;
+  overflow:hidden;
+  padding:16px !important;
+}
+#dvLoginBox{
+  width:min(420px, calc(100vw - 32px)) !important;
+  max-width:calc(100vw - 32px) !important;
+  box-sizing:border-box !important;
+  padding:26px !important;
+}
+#dvLoginBox input{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+#dvLoginBtn{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* CHOFER RESPONSIVE */
+@media(max-width:600px){
+  header{padding:14px !important}
+  .header-inner{width:100%;gap:10px}
+  .brand{gap:10px;min-width:0}
+  .logo{width:44px;height:44px;flex:0 0 44px;font-size:22px}
+  h1{font-size:21px !important}
+  .sub{font-size:12px !important}
+  main{padding:10px !important}
+  .layout{display:block !important}
+  .sidebar{padding:14px !important}
+  .map-card{padding:10px !important}
+  .map-wrap{height:calc(100svh - 250px) !important;min-height:420px !important}
+  #map{height:100% !important;min-height:420px !important}
+  .card-title h2{font-size:18px}
+  .card-title p{font-size:12px}
+  .route-controls{gap:8px}
+  .route-btn{min-height:50px;font-size:14px}
+  .address{padding:12px}
+  .address strong{font-size:14px}
+  .maps,.evidence-btn{padding:9px 8px;font-size:12px}
+}
+
+/* ADMIN: botón siempre visible cuando el usuario es admin */
+#dv22AdminOpen.dv-admin-visible{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+@media(max-width:600px){
+  #dv22AdminOpen.dv-admin-visible{
+    right:12px !important;
+    top:10px !important;
+    padding:9px 12px !important;
+    font-size:12px !important;
+    border-radius:12px !important;
+  }
+}
+</style>
+
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -2298,58 +2386,63 @@ zona:
 zona
 });
 }
+let dvEvidenciasRequestId = 0;
+const DV_EVIDENCIAS_CACHE_KEY = "diaVerdeEvidenciasHoyCacheV1";
+
 function cargarEvidenciasHoy(){
-fetch(
-APPS_SCRIPT_URL +
-"?accion=evidenciasHoy&t="+
-Date.now()
-)
-.then(
-response => {
-if(!response.ok){
-throw new Error(
-"No se pudo consultar el histórico."
-);
-}
-return response.json();
-}
-)
-.then(
-resultado => {
-if(!resultado.ok){
-throw new Error(
-resultado.error ||
-"Error en el histórico."
-);
-}
-evidenciasHoy =
-resultado.evidencias || [];
-statusText.textContent =
-"Actualizado correctamente";
-actualizarHora();
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-refrescarEstadosMarcadoresReclamos();
-}
-)
-.catch(
-error => {
-console.error(error);
-console.log(
-"El histórico no pudo consultarse:",
-error
-);
-evidenciasHoy = [];
-statusText.textContent =
-"Direcciones cargadas";
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-}
-);
+  const requestId = ++dvEvidenciasRequestId;
+  let cacheUsada = false;
+
+  try{
+    const cached = JSON.parse(localStorage.getItem(DV_EVIDENCIAS_CACHE_KEY) || "null");
+    if(Array.isArray(cached)){
+      evidenciasHoy = cached;
+      cacheUsada = true;
+      if(selectedZone){
+        render();
+        refrescarEstadosMarcadoresReclamos();
+      }
+    }
+  }catch(e){}
+
+  fetch(APPS_SCRIPT_URL + "?accion=evidenciasHoy&t=" + Date.now(), {cache:"no-store"})
+    .then(response => {
+      if(!response.ok) throw new Error("No se pudo consultar el histórico.");
+      return response.json();
+    })
+    .then(resultado => {
+      if(requestId !== dvEvidenciasRequestId) return;
+      if(!resultado.ok) throw new Error(resultado.error || "Error en el histórico.");
+
+      const nuevas = Array.isArray(resultado.evidencias) ? resultado.evidencias : [];
+      evidenciasHoy = nuevas;
+
+      try{
+        localStorage.setItem(DV_EVIDENCIAS_CACHE_KEY, JSON.stringify(nuevas));
+      }catch(e){}
+
+      statusText.textContent = "Actualizado correctamente";
+      actualizarHora();
+      if(selectedZone) render();
+      refrescarEstadosMarcadoresReclamos();
+    })
+    .catch(error => {
+      if(requestId !== dvEvidenciasRequestId) return;
+      console.error(error);
+
+      // IMPORTANTE: no borrar evidencias anteriores ante un error temporal.
+      // Esto evita que el pin pase Realizado -> Pendiente -> Realizado.
+      if(!cacheUsada && !Array.isArray(evidenciasHoy)) evidenciasHoy = [];
+
+      statusText.textContent = cacheUsada
+        ? "Usando datos guardados · esperando actualización"
+        : "No se pudo actualizar el histórico";
+
+      if(selectedZone){
+        render();
+        refrescarEstadosMarcadoresReclamos();
+      }
+    });
 }
 function claveDireccion(
 zona,
@@ -3670,7 +3763,65 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 
+
+(function(){
+  function dvActualizarAdminSeguro(){
+    const u = typeof dvUsuarioActual === "function" ? dvUsuarioActual() : null;
+    const esAdmin = !!u && String(u.usuario || "").trim().toLowerCase() === "admin";
+
+    if(typeof window.dv22RefreshAdmin === "function"){
+      window.dv22RefreshAdmin();
+      return;
+    }
+
+    // Si el panel todavía no cargó, reintentar después del orden de scripts.
+    setTimeout(function(){
+      if(typeof window.dv22RefreshAdmin === "function"){
+        window.dv22RefreshAdmin();
+      }
+    },120);
+  }
+
+  window.addEventListener("storage", function(e){
+    if(e.key === DV_USER_KEY || e.key === DV_SESSION_KEY) dvActualizarAdminSeguro();
+  });
+
+  // También cubre login/logout dentro de la misma pestaña.
+  const originalIniciar = window.dvIniciarSesion;
+  if(typeof originalIniciar === "function"){
+    window.dvIniciarSesion = function(){
+      const r = originalIniciar.apply(this, arguments);
+      setTimeout(dvActualizarAdminSeguro, 50);
+      setTimeout(dvActualizarAdminSeguro, 250);
+      return r;
+    };
+  }
+})();
+
 </body>
+
+<script id="dv29-admin-force">
+(function(){
+  function sync(){
+    try{
+      const u = typeof dvUsuarioActual === "function" ? dvUsuarioActual() : null;
+      const isAdmin = !!u && String(u.usuario||"").trim().toLowerCase()==="admin";
+      const btn = document.getElementById("dv22AdminOpen");
+      if(btn){
+        btn.style.setProperty("display", isAdmin ? "block" : "none", "important");
+        btn.style.setProperty("visibility", isAdmin ? "visible" : "hidden", "important");
+        btn.classList.toggle("dv-admin-visible", isAdmin);
+      }
+    }catch(e){}
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    setTimeout(sync,100);
+    setTimeout(sync,500);
+    setTimeout(sync,1500);
+  });
+})();
+</script>
+
 </html>
 
 <script>dv21StartSync();</script>
