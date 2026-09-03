@@ -2597,6 +2597,24 @@ direccion:
 foto:
 evidenciaBase64
 };
+// V22: estado optimista local. La PC/móvil no espera a que Apps Script
+// termine de procesar la foto para mostrar "Realizado hoy".
+if(typeof dv20MarkLocalEvidence==="function"){
+  dv20MarkLocalEvidence({
+    fecha:fecha,
+    hora:hora,
+    cgm:selectedCgm,
+    zona:selectedZone,
+    direccion:`${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
+    estado:"Realizado hoy",
+    usuario:(typeof dvUsuarioActual==="function" && dvUsuarioActual()) ?
+      dvUsuarioActual().usuario : ""
+  });
+}
+if(selectedZone){
+  render();
+  refrescarEstadosMarcadoresReclamos();
+}
 try{
 await fetch(
 APPS_SCRIPT_URL,
@@ -2762,7 +2780,7 @@ cargarEvidenciasHoy();
 <script id="diaverde-auth">
 const DV_USUARIOS = [
   { usuario:"Ale",       password:"boca",          nombre:"Ale" },
-  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde" },
+  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde", rol:"admin" },
   { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
   { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
   { usuario:"Francocrr", password:"boca",          nombre:"Pablo Vazques" },
@@ -2803,7 +2821,8 @@ function dvIniciarSesion(){
   localStorage.setItem(DV_SESSION_KEY, "1");
   localStorage.setItem(DV_USER_KEY, JSON.stringify({
     usuario: encontrado.usuario,
-    nombre: encontrado.nombre
+    nombre: encontrado.nombre,
+    rol: encontrado.rol || "chofer"
   }));
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
@@ -3081,6 +3100,216 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+
+<script id="dv-admin-panel">
+// ===== V22 PANEL ADMINISTRADOR =====
+(function(){
+  function dv22User(){
+    try{
+      return typeof dvUsuarioActual==="function" ? dvUsuarioActual() : null;
+    }catch(e){ return null; }
+  }
+  function dv22IsAdmin(){
+    const u=dv22User();
+    return !!u && (
+      String(u.rol||"").toLowerCase()==="admin" ||
+      String(u.usuario||"").toLowerCase()==="admin"
+    );
+  }
+
+  const css=`
+  #dv22AdminOpen{position:fixed;right:14px;top:14px;z-index:5000;
+    border:0;border-radius:12px;padding:11px 15px;background:#04552b;color:#fff;
+    font-weight:800;box-shadow:0 6px 18px #0003;cursor:pointer;display:none}
+  #dv22Admin{position:fixed;inset:0;z-index:6000;background:#07111d;color:#eaf2f7;
+    display:none;font-family:Arial,Helvetica,sans-serif;overflow:auto}
+  #dv22Admin *{box-sizing:border-box}
+  .dv22-head{height:68px;background:#07182a;border-bottom:1px solid #1c3143;
+    display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:2}
+  .dv22-brand{display:flex;align-items:center;gap:12px}.dv22-leaf{font-size:30px}
+  .dv22-title{font-size:19px;font-weight:900}.dv22-sub{font-size:11px;color:#91a6b7;margin-top:3px}
+  .dv22-status{display:flex;align-items:center;gap:8px;font-size:12px}
+  .dv22-dot{width:10px;height:10px;border-radius:50%;background:#25c76f;box-shadow:0 0 10px #25c76f}
+  .dv22-close{border:1px solid #33495a;background:#102436;color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer}
+  .dv22-wrap{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 68px)}
+  .dv22-side{background:#091a2b;border-right:1px solid #1c3143;padding:18px 12px}
+  .dv22-nav{display:block;width:100%;text-align:left;border:0;background:transparent;color:#c7d5df;
+    padding:11px 12px;border-radius:10px;margin-bottom:4px;font-weight:700;cursor:pointer}
+  .dv22-nav.active,.dv22-nav:hover{background:#174c35;color:#fff}
+  .dv22-content{padding:18px;max-width:1500px;width:100%;margin:auto}
+  .dv22-kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px}
+  .dv22-card{background:#0d2032;border:1px solid #1d3447;border-radius:13px;padding:14px}
+  .dv22-kpi-label{font-size:10px;text-transform:uppercase;color:#8fa5b5;font-weight:800}
+  .dv22-kpi{font-size:25px;font-weight:900;margin-top:7px}
+  .dv22-green{color:#42d889}.dv22-yellow{color:#f4c84d}.dv22-red{color:#ff6b62}.dv22-blue{color:#55aaff}
+  .dv22-main{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:12px;margin-top:12px}
+  .dv22-map{height:430px;border-radius:12px;background:#122b40;position:relative;overflow:hidden;
+    border:1px solid #274258}
+  .dv22-map-grid{position:absolute;inset:0;background-image:linear-gradient(#ffffff09 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff09 1px,transparent 1px);background-size:40px 40px;transform:rotate(-8deg) scale(1.2)}
+  .dv22-road{position:absolute;height:4px;background:#1f7a52;border-radius:5px;transform-origin:left center}
+  .dv22-vehicle{position:absolute;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+    background:#1b7b3e;border:3px solid #8cffb5;box-shadow:0 0 18px #25c76f66;font-size:20px}
+  .dv22-alert{border:1px solid #5c3540;background:#251b25;border-radius:10px;padding:11px;margin-top:8px;font-size:12px}
+  .dv22-alert.warn{border-color:#665328;background:#292419}.dv22-alert small{display:block;color:#8fa5b5;margin-top:3px}
+  .dv22-bottom{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;margin-top:12px}
+  .dv22-table{width:100%;border-collapse:collapse;font-size:12px}.dv22-table th,.dv22-table td{padding:9px 6px;border-bottom:1px solid #20384b;text-align:left}
+  .dv22-table th{color:#8fa5b5;font-size:10px;text-transform:uppercase}
+  .dv22-pill{padding:4px 7px;border-radius:20px;background:#174c35;color:#74e4a2;font-weight:800}
+  .dv22-empty{color:#8fa5b5;padding:16px 0;text-align:center}
+  @media(max-width:1050px){.dv22-kpis{grid-template-columns:repeat(3,1fr)}.dv22-main{grid-template-columns:1fr}.dv22-bottom{grid-template-columns:1fr}}
+  @media(max-width:700px){.dv22-wrap{grid-template-columns:1fr}.dv22-side{display:flex;overflow:auto}.dv22-nav{white-space:nowrap;width:auto}.dv22-kpis{grid-template-columns:repeat(2,1fr)}}
+  `;
+  function addCss(){
+    if(document.getElementById("dv22Style"))return;
+    const s=document.createElement("style");s.id="dv22Style";s.textContent=css;document.head.appendChild(s);
+  }
+
+  function evidenceStats(){
+    const list=Array.isArray(window.evidenciasHoy)?window.evidenciasHoy:[];
+    let done=0,pending=0;
+    list.forEach(e=>{
+      const st=String(e.estado||e.Estado||"").toLowerCase();
+      if(st.includes("realizado")||st.includes("complet"))done++;
+      else pending++;
+    });
+    return {total:list.length,done,pending};
+  }
+
+  function render(){
+    const p=document.getElementById("dv22Admin");
+    if(!p)return;
+    const s=evidenceStats();
+    document.getElementById("dv22Done").textContent=s.done;
+    document.getElementById("dv22Pending").textContent=s.pending;
+    document.getElementById("dv22Evidence").textContent=s.total;
+    const active=(typeof recorridoActivo!=="undefined"&&recorridoActivo)?1:0;
+    document.getElementById("dv22Active").textContent=active;
+    document.getElementById("dv22Gps").textContent=
+      (typeof gpsActivo!=="undefined"&&gpsActivo)?"1":"—";
+    document.getElementById("dv22Last").textContent=new Date().toLocaleTimeString("es-AR");
+  }
+
+  function make(){
+    if(document.getElementById("dv22Admin"))return;
+    addCss();
+    const open=document.createElement("button");
+    open.id="dv22AdminOpen";open.textContent="👑 Administración";
+    document.body.appendChild(open);
+
+    const p=document.createElement("div");p.id="dv22Admin";
+    p.innerHTML=`
+      <div class="dv22-head">
+        <div class="dv22-brand"><span class="dv22-leaf">🌱</span>
+          <div><div class="dv22-title">DÍA VERDE</div><div class="dv22-sub">PANEL ADMINISTRADOR</div></div>
+        </div>
+        <div class="dv22-status"><span class="dv22-dot"></span>SISTEMA OPERATIVO
+          <button class="dv22-close" id="dv22Close">Cerrar</button></div>
+      </div>
+      <div class="dv22-wrap">
+        <aside class="dv22-side">
+          <button class="dv22-nav active">🗺️ MAPA EN VIVO</button>
+          <button class="dv22-nav">🚛 FLOTA / VEHÍCULOS</button>
+          <button class="dv22-nav">📍 RECLAMOS</button>
+          <button class="dv22-nav">📷 EVIDENCIAS</button>
+          <button class="dv22-nav">📊 ESTADÍSTICAS</button>
+          <button class="dv22-nav">👥 USUARIOS</button>
+          <button class="dv22-nav">🏢 CGM / ZONAS</button>
+          <button class="dv22-nav">🚨 ALERTAS</button>
+          <button class="dv22-nav">⚙️ CONFIGURACIÓN</button>
+        </aside>
+        <main class="dv22-content">
+          <section class="dv22-kpis">
+            <div class="dv22-card"><div class="dv22-kpi-label">Vehículos activos</div><div class="dv22-kpi dv22-blue" id="dv22Active">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">GPS conectados</div><div class="dv22-kpi dv22-green" id="dv22Gps">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Pendientes</div><div class="dv22-kpi dv22-red" id="dv22Pending">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Realizados hoy</div><div class="dv22-kpi dv22-green" id="dv22Done">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Evidencias</div><div class="dv22-kpi dv22-blue" id="dv22Evidence">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Última actualización</div><div class="dv22-kpi" id="dv22Last">—</div></div>
+          </section>
+
+          <section class="dv22-main">
+            <div class="dv22-card">
+              <div style="font-weight:900;margin-bottom:10px">🗺️ MAPA EN TIEMPO REAL</div>
+              <div class="dv22-map">
+                <div class="dv22-map-grid"></div>
+                <div class="dv22-road" style="left:8%;top:70%;width:75%;transform:rotate(-19deg)"></div>
+                <div class="dv22-road" style="left:20%;top:28%;width:68%;transform:rotate(13deg)"></div>
+                <div class="dv22-vehicle" style="left:25%;top:43%">🚛</div>
+                <div class="dv22-vehicle" style="left:57%;top:31%">🚛</div>
+                <div class="dv22-vehicle" style="left:70%;top:62%;background:#806b1c;border-color:#f4d45d">🚛</div>
+                <div class="dv22-vehicle" style="left:43%;top:67%;background:#8c2925;border-color:#ff766c">🚛</div>
+              </div>
+              <div style="margin-top:9px;color:#8fa5b5;font-size:11px">
+                🟢 En recorrido &nbsp; 🟡 Detenido &nbsp; 🔴 Sin GPS &nbsp; ⚪ Sin actividad
+              </div>
+            </div>
+            <div>
+              <div class="dv22-card">
+                <b>🚨 ALERTAS ACTIVAS</b>
+                <div class="dv22-alert">🔴 GPS sin actualización<small>Revisar vehículo desconectado</small></div>
+                <div class="dv22-alert warn">🟡 Vehículo detenido<small>Requiere atención</small></div>
+              </div>
+              <div class="dv22-card" style="margin-top:12px">
+                <b>📍 RESUMEN DE RECLAMOS</b>
+                <div style="font-size:29px;font-weight:900;margin-top:8px" id="dv22Summary">—</div>
+                <small style="color:#8fa5b5">registros cargados actualmente</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="dv22-bottom">
+            <div class="dv22-card"><b>🚛 VEHÍCULOS EN RECORRIDO</b>
+              <table class="dv22-table"><thead><tr><th>Vehículo</th><th>Estado</th><th>GPS</th></tr></thead>
+              <tbody id="dv22Fleet"><tr><td colspan="3" class="dv22-empty">Esperando telemetría</td></tr></tbody></table>
+            </div>
+            <div class="dv22-card"><b>📊 ESTADO</b>
+              <div style="margin-top:14px">Realizados <strong id="dv22Done2">—</strong></div>
+              <div style="margin-top:8px">Pendientes <strong id="dv22Pending2">—</strong></div>
+              <div style="margin-top:8px">Evidencias <strong id="dv22Evidence2">—</strong></div>
+            </div>
+            <div class="dv22-card"><b>👥 ADMINISTRACIÓN</b>
+              <div style="margin-top:14px">Usuario: <strong>admin</strong></div>
+              <div style="margin-top:8px">Rol: <span class="dv22-pill">ADMIN</span></div>
+              <div style="margin-top:8px;color:#8fa5b5;font-size:11px">Control general del sistema</div>
+            </div>
+          </section>
+        </main>
+      </div>`;
+    document.body.appendChild(p);
+    open.onclick=()=>{p.style.display="block";render()};
+    document.getElementById("dv22Close").onclick=()=>p.style.display="none";
+  }
+
+  function update(){
+    if(!dv22IsAdmin())return;
+    make(); document.getElementById("dv22AdminOpen").style.display="block";
+    render();
+    const s=evidenceStats();
+    const summary=document.getElementById("dv22Summary");
+    if(summary)summary.textContent=s.total;
+    ["dv22Done2","dv22Pending2","dv22Evidence2"].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      if(el)el.textContent=[s.done,s.pending,s.total][i];
+    });
+    const fleet=document.getElementById("dv22Fleet");
+    if(fleet){
+      const active=(typeof recorridoActivo!=="undefined"&&recorridoActivo);
+      fleet.innerHTML=active
+        ? `<tr><td>Vehículo actual</td><td><span class="dv22-pill">EN RECORRIDO</span></td><td>🟢</td></tr>`
+        : `<tr><td colspan="3" class="dv22-empty">Sin recorridos activos en este cliente</td></tr>`;
+    }
+  }
+
+  function init(){
+    if(!dv22IsAdmin())return;
+    make(); update(); setInterval(update,3000);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
+  else init();
+})();
+</script>
 
 </body>
 </html>
