@@ -1431,45 +1431,104 @@ async function geocodificarDireccion(d){
     return null;
   }
 }
+let dvMarcadoresRenderKey = "";
+
+function dvClaveListaMarcadores(lista){
+  if(!Array.isArray(lista)) return "";
+  return lista.map(d => [
+    d.calle || "",
+    d.numero || "",
+    d.localidad || "",
+    d.lat ?? d.Lat ?? d.latitude ?? "",
+    d.lng ?? d.Lng ?? d.lon ?? d.longitude ?? ""
+  ].join("|")).join("||");
+}
+
 async function mostrarMarcadoresGeocodificados(lista){
+  if(!Array.isArray(lista) || !lista.length){
+    if(dvMarcadoresRenderKey !== ""){
+      limpiarMarcadoresReclamos();
+      dvMarcadoresRenderKey = "";
+    }
+    return;
+  }
+
+  const renderKey = dvClaveListaMarcadores(lista);
+
+  /*
+   * Si las direcciones son las mismas, no borrar/recrear los pines.
+   * Solo actualizar su estado.
+   */
+  if(
+    renderKey === dvMarcadoresRenderKey &&
+    reclamosMarkersLayer
+  ){
+    refrescarEstadosMarcadoresReclamos();
+    return;
+  }
+
+  const generacion = ++geocodingGeneration;
   limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)||!lista.length) return;
-  const generacion=++geocodingGeneration;
-  const capa=asegurarCapaReclamos();
+  dvMarcadoresRenderKey = renderKey;
+
+  const capa = asegurarCapaReclamos();
   if(!capa) return;
-  const pendientes=[];
+
+  const pendientes = [];
+
   for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
+    const pos = obtenerLatLngReclamo(d);
+
     if(pos){
       agregarMarcadorReclamo(d);
     }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
+      const cache = cargarCacheGeocoding();
+      const key = claveGeocoding(d);
+
       if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
+        agregarMarcadorReclamo({
+          ...d,
+          lat:Number(cache[key].lat),
+          lng:Number(cache[key].lng)
+        });
       }else{
         pendientes.push(d);
       }
     }
   }
-  const limite=3;
-  let indice=0;
+
+  const limite = 3;
+  let indice = 0;
+
   async function trabajador(){
-    while(indice<pendientes.length){
-      if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-      if(generacion!==geocodingGeneration) return;
+    while(indice < pendientes.length){
+      if(generacion !== geocodingGeneration) return;
+
+      const d = pendientes[indice++];
+      const pos = await geocodificarDireccion(d);
+
+      if(generacion !== geocodingGeneration) return;
+
       if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+        agregarMarcadorReclamo({
+          ...d,
+          lat:pos[0],
+          lng:pos[1]
+        });
       }
-      await new Promise(r=>setTimeout(r,350));
+
+      await new Promise(r => setTimeout(r,350));
     }
   }
+
   await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
+    Array.from(
+      {length:Math.min(limite,pendientes.length)},
+      () => trabajador()
+    )
   );
 }
+
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
@@ -2399,8 +2458,8 @@ function cargarEvidenciasHoy(){
       evidenciasHoy = cached;
       cacheUsada = true;
       if(selectedZone){
-        render();
         refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
       }
     }
   }catch(e){}
@@ -2423,8 +2482,10 @@ function cargarEvidenciasHoy(){
 
       statusText.textContent = "Actualizado correctamente";
       actualizarHora();
-      if(selectedZone) render();
-      refrescarEstadosMarcadoresReclamos();
+      if(selectedZone){
+        refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
+      }
     })
     .catch(error => {
       if(requestId !== dvEvidenciasRequestId) return;
@@ -2439,11 +2500,63 @@ function cargarEvidenciasHoy(){
         : "No se pudo actualizar el histórico";
 
       if(selectedZone){
-        render();
         refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
       }
     });
 }
+function dvActualizarEstadosLista(){
+  try{
+    const filas = list ? list.querySelectorAll(".address") : [];
+    filas.forEach((fila, index) => {
+      const item = currentVisibleDirections[index];
+      if(!item) return;
+
+      const realizado = estaRealizadaHoy(item);
+
+      const pin = fila.querySelector(".pin");
+      if(pin){
+        pin.textContent = realizado ? "✅" : "📍";
+      }
+
+      const small = fila.querySelector("small");
+      if(small){
+        small.innerHTML =
+          esc(item.localidad) +
+          " · " +
+          (realizado ? "🟢 Realizado hoy" : "🔴 Pendiente");
+      }
+
+      const actions = fila.querySelector(".address-actions");
+      if(!actions) return;
+
+      const existing = actions.querySelector(".evidence-btn-dv31");
+      const direccion = `${item.calle} ${item.numero || ""}`;
+
+      if(realizado){
+        if(!existing){
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "evidence-btn evidence-btn-dv31";
+          btn.textContent = "📷 Ver evidencia";
+          btn.style.cssText =
+            "display:inline-block!important;visibility:visible!important;" +
+            "opacity:1!important;background:#e9f7ed!important;" +
+            "color:#087a3d!important;border:1px solid #63b57f!important;" +
+            "padding:10px 14px!important;border-radius:9px!important;" +
+            "font-size:13px!important;font-weight:800!important;cursor:pointer!important;";
+          btn.onclick = () => verEvidencia(item);
+          actions.appendChild(btn);
+        }
+      }else if(existing){
+        existing.remove();
+      }
+    });
+  }catch(error){
+    console.warn("Actualizar estados sin redibujar mapa:", error);
+  }
+}
+
 function claveDireccion(
 zona,
 direccion
@@ -2517,82 +2630,80 @@ normalizar(selected)
 );
 }
 let dvZonaCentradaKey = null;
-function mostrarMapa(
-nombreZona
-){
-if(activeLayer){
-map.removeLayer(
-activeLayer
-);
-activeLayer =
-null;
-}
-const nombrePoligono =
-nombrePoligonoPara(
-selectedCgm,
-nombreZona
-);
-const feature =
-zonasGeo.find(
-f =>
-normalizar(
-f.properties.name
-) ===
-normalizar(
-nombrePoligono
-)
-);
-if(!feature){
-zoneBadge.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.style.display =
-"block";
-title.textContent =
-"Mapa de la zona";
-mapSubtitle.textContent =
-"No se encontró el polígono correspondiente.";
-return;
-}
-activeLayer =
-L.geoJSON(
-feature,
-{
-style:{
-color:"#087a3d",
-weight:3,
-fillColor:"#7acb91",
-fillOpacity:.30
-}
-}
-).addTo(map);
-const bounds =
-activeLayer.getBounds();
-if(bounds.isValid()){
+let dvZonaLayerKey = null;
+
+function mostrarMapa(nombreZona){
   const zonaKey =
     normalizar(selectedCgm) + "||" + normalizar(nombreZona);
 
-  // Centrar la zona solo al cambiar la selección.
-  if(dvZonaCentradaKey !== zonaKey){
-    map.fitBounds(bounds,{padding:[25,25]});
-    dvZonaCentradaKey = zonaKey;
+  const nombrePoligono = nombrePoligonoPara(
+    selectedCgm,
+    nombreZona
+  );
+
+  const feature = zonasGeo.find(
+    f =>
+      normalizar(f.properties.name) ===
+      normalizar(nombrePoligono)
+  );
+
+  if(!feature){
+    if(activeLayer){
+      map.removeLayer(activeLayer);
+      activeLayer = null;
+    }
+    dvZonaLayerKey = null;
+    dvZonaCentradaKey = null;
+    dvZonaLayerKey = null;
+    zoneBadge.textContent = selectedCgm + " — " + nombreZona;
+    zoneBadge.style.display = "block";
+    title.textContent = "Mapa de la zona";
+    mapSubtitle.textContent =
+      "No se encontró el polígono correspondiente.";
+    return;
   }
+
+  /*
+   * NO reconstruir el polígono durante una actualización de estados.
+   * Solo se crea cuando cambia realmente CGM/zona.
+   */
+  if(!activeLayer || dvZonaLayerKey !== zonaKey){
+    if(activeLayer){
+      map.removeLayer(activeLayer);
+      activeLayer = null;
+    }
+    dvZonaLayerKey = null;
+    dvZonaCentradaKey = null;
+
+    activeLayer = L.geoJSON(
+      feature,
+      {
+        style:{
+          color:"#087a3d",
+          weight:3,
+          fillColor:"#7acb91",
+          fillOpacity:.30
+        }
+      }
+    ).addTo(map);
+
+    dvZonaLayerKey = zonaKey;
+
+    const bounds = activeLayer.getBounds();
+    if(bounds.isValid() && dvZonaCentradaKey !== zonaKey){
+      map.fitBounds(bounds,{padding:[25,25]});
+      dvZonaCentradaKey = zonaKey;
+    }
+  }
+
+  title.textContent = "Mapa de " + nombreZona;
+  mapSubtitle.textContent =
+    selectedCgm + " — " + nombreZona;
+  zoneBadge.textContent =
+    selectedCgm + " — " + nombreZona;
+  zoneBadge.style.display = "block";
 }
-title.textContent =
-"Mapa de " +
-nombreZona;
-mapSubtitle.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.style.display =
-"block";
-}
+
 function render(){
 selectedCgm =
 cgm.value;
