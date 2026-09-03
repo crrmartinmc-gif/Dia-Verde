@@ -248,6 +248,174 @@ footer{
 }
 </style>
 
+
+<style id="dv25-final-visual">
+/* =========================================================
+   V25 — DISEÑO VISUAL UNIFICADO
+   Solo CSS: no modifica lógica, datos ni funciones.
+   ========================================================= */
+
+/* ---------- CHOFER: estilo centro de control verde ---------- */
+body{
+  background:
+    radial-gradient(circle at 12% 0%,#0d4b2d 0,transparent 30%),
+    radial-gradient(circle at 90% 8%,#07351f 0,transparent 28%),
+    linear-gradient(145deg,#03170d,#061f14 55%,#021109);
+}
+header{
+  background:linear-gradient(145deg,#032514,#075f32 55%,#06351f);
+  border-bottom:1px solid #50c77c55;
+  box-shadow:0 12px 35px #0008,inset 0 1px #ffffff12;
+}
+.header-inner{max-width:1400px}
+main{max-width:1400px;padding:24px}
+.layout{grid-template-columns:330px minmax(0,1fr);gap:20px}
+.card{
+  background:linear-gradient(145deg,#0a3925,#052217);
+  border:1px solid #2d6f4c;
+  color:#f0fff5;
+  box-shadow:0 18px 45px #0008,inset 0 1px #ffffff0a;
+}
+.sidebar{padding:22px}
+.section-label{font-size:14px;color:#67e197;letter-spacing:1px}
+label{font-size:16px;color:#edfff3}
+select,input{
+  min-height:52px;
+  background:#052619;
+  color:#effff5;
+  border-color:#31734f;
+  font-size:16px;
+  box-shadow:inset 0 2px 9px #0006,0 3px 10px #0003;
+}
+select:focus,input:focus{border-color:#69e69a;box-shadow:0 0 0 3px #38d47a26,inset 0 2px 9px #0006}
+.refresh{
+  min-height:52px;
+  font-size:16px;
+  background:linear-gradient(145deg,#16a456,#087139);
+  box-shadow:0 10px 25px #0007,inset 0 1px #ffffff25;
+}
+.info-box,.route-status{
+  background:linear-gradient(145deg,#0b3b26,#062619);
+  color:#c9e7d4;
+  border-color:#2d6f4c;
+}
+.stat{
+  background:linear-gradient(145deg,#0c3c27,#062519);
+  border-color:#2d6f4c;
+  box-shadow:0 10px 24px #0005,inset 0 1px #ffffff0a;
+}
+.stat-icon,.card-title-icon{
+  width:46px;height:46px;
+  background:linear-gradient(145deg,#1a9653,#07592f);
+  color:#e7ffef;
+  box-shadow:0 8px 18px #0006,inset 0 1px #ffffff25;
+}
+.stat strong{color:#f4fff7;font-size:24px}
+.stat small,.update,.card-title p{color:#a7c7b5}
+.map-card{padding:20px}
+#map{
+  border:1px solid #347b55;
+  box-shadow:inset 0 0 55px #0008,0 20px 46px #0008;
+}
+.zone-badge{
+  background:linear-gradient(145deg,#128044,#064725);
+  box-shadow:0 12px 26px #0008,inset 0 1px #ffffff25;
+  font-size:16px;
+}
+.route-btn{
+  min-height:52px;
+  font-size:16px;
+  box-shadow:0 10px 23px #0007,inset 0 1px #ffffff18;
+}
+.route-start{background:linear-gradient(145deg,#16a456,#087139)}
+.route-stop{background:linear-gradient(145deg,#cf382e,#8e1c15)}
+.results{padding:20px}
+.count-pill{background:#0d4e2e;color:#9bf0b6;border:1px solid #367b54}
+.address-list{border-color:#2d6f4c}
+.address{background:linear-gradient(145deg,#0a3824,#062217);border-bottom-color:#23563b}
+.address:hover{background:#0d442b}
+.address strong{font-size:16px;color:#f1fff6}
+.address small{color:#a7c7b5}
+.pin{background:linear-gradient(145deg,#1a9552,#07592f);box-shadow:0 7px 16px #0006}
+.maps,.evidence-btn{
+  color:#9bf0b6;background:#07291a;border-color:#3e8d60;
+}
+.maps:hover,.evidence-btn:hover{background:#0d472b}
+.evidence-btn.done{background:#0d4e2e;border-color:#61b27e}
+footer{background:linear-gradient(145deg,#031a0e,#06331d);border-top:1px solid #2d6f4c}
+
+/* ---------- PINS + POPUPS DE RECLAMOS ---------- */
+.dv-reclamo-popup{
+  color:#17231c !important;
+  background:#fff !important;
+  font-family:Arial,sans-serif;
+  font-size:14px;
+}
+.dv-reclamo-popup .titulo{
+  color:#163b24 !important;
+  font-size:16px;
+  font-weight:900;
+}
+.dv-reclamo-popup .estado{
+  color:#17231c !important;
+  font-weight:800;
+}
+.dv-reclamo-popup *{
+  color:#17231c !important;
+}
+.maplibregl-popup-content{
+  color:#17231c !important;
+  background:#fff !important;
+}
+.maplibregl-popup-content *{
+  color:#17231c;
+}
+.maplibregl-popup-close-button{
+  color:#17231c !important;
+  font-size:18px;
+}
+
+/* ---------- ADMIN: menú proporcionado + iconos grandes ---------- */
+#dv22Admin .dv22-wrap{grid-template-columns:205px 1fr}
+#dv22Admin .dv22-side{padding:18px 14px}
+#dv22Admin .dv22-nav{
+  height:76px;
+  flex-direction:row;
+  justify-content:flex-start;
+  text-align:left;
+  gap:13px;
+  padding:10px 14px;
+  margin-bottom:9px;
+  font-size:14px;
+  border-radius:16px;
+}
+#dv22Admin .dv22-nav span{
+  font-size:14px;
+  line-height:1.1;
+  white-space:nowrap;
+}
+#dv22Admin .dv22-nav::first-letter{font-size:29px}
+#dv22Admin .dv22-content{padding:22px 24px}
+#dv22Admin .dv22-kpis{gap:14px}
+#dv22Admin .dv22-card{border-radius:18px}
+#dv22Admin .dv22-kpi-label{font-size:10px}
+#dv22Admin .dv22-kpi{font-size:30px}
+#dv22Admin .dv22-map{height:525px;border-radius:16px}
+#dv22Admin .dv22-head{padding:0 26px}
+#dv22Admin .dv22-title{font-size:23px}
+#dv22Admin .dv22-sub{font-size:11px}
+@media(max-width:1050px){
+  #dv22Admin .dv22-wrap{grid-template-columns:92px 1fr}
+  #dv22Admin .dv22-nav{height:76px;justify-content:center;text-align:center;flex-direction:column;gap:4px;padding:7px}
+  #dv22Admin .dv22-nav span{font-size:11px}
+}
+@media(max-width:700px){
+  #dv22Admin .dv22-wrap{grid-template-columns:1fr}
+  #dv22Admin .dv22-side{display:flex;overflow:auto}
+  #dv22Admin .dv22-nav{min-width:105px;height:72px}
+}
+</style>
+
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
