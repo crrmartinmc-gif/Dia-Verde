@@ -765,13 +765,37 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+let dvNavCameraMoving = false;
+
+map.on("dragstart",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(){
+  // easeTo() del modo navegación también dispara zoomstart.
+  // No debemos confundirlo con un zoom manual del usuario.
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("moveend",function(){
+  if(dvNavCameraMoving){
+    dvNavCameraMoving=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV4";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -890,678 +914,71 @@ function claveGeocoding(d){
     `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
   );
 }
-function dvDireccionBase(d){
-  const calle=String(
-    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
-  ).trim();
-  const numero=String(d.numero || "").trim();
-  return `${calle} ${numero}`.replace(/\s+/g," ").trim();
-}
-
-function dvCalleGeocoding(d){
-  let s=String(
-    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
-  ).trim();
-
-  const reemplazos=[
-    [/\bav\.?\b/gi,"Avenida"],
-    [/\bavda\.?\b/gi,"Avenida"],
-    [/\bgral\.?\b/gi,"General"],
-    [/\bcnel\.?\b/gi,"Coronel"],
-    [/\bcrnel\.?\b/gi,"Coronel"],
-    [/\bpje\.?\b/gi,"Pasaje"],
-    [/\bpas\.?\b/gi,"Pasaje"],
-    [/\bdr\.?\b/gi,"Doctor"],
-    [/\bing\.?\b/gi,"Ingeniero"],
-    [/\btte\.?\b/gi,"Teniente"],
-    [/\bcap\.?\b/gi,"Capitan"],
-    [/\bpres\.?\b/gi,"Presidente"]
-  ];
-
-  reemplazos.forEach(([rx,val])=>{ s=s.replace(rx,val); });
-  return s.replace(/\s+/g," ").trim();
-}
-
-function dvNumeroGeocoding(d){
-  return String(d.numero || "").trim().replace(/\s+/g," ");
-}
-
-function dvLocalidadCanonica(d){
-  const l=normalizar(d.localidad || selectedCgm || "");
-
-  if(l==="lomas" || l==="lomas de zamora") return "Lomas de Zamora";
-  if(l==="turdera") return "Turdera";
-  if(l==="banfield") return "Banfield";
-  if(l==="temperley") return "Temperley";
-  if(l==="llavallol") return "Llavallol";
-  if(l==="santa catalina") return "Santa Catalina";
-
-  return String(d.localidad || selectedCgm || "").trim();
-}
-
-function dvLocalidadesGeocoding(d){
-  const loc=dvLocalidadCanonica(d);
-
-  const aliases={
-    "Turdera":[
-      "Turdera, Lomas de Zamora, Buenos Aires, Argentina",
-      "Turdera, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Lomas de Zamora":[
-      "Lomas de Zamora, Buenos Aires, Argentina",
-      "Lomas, Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Banfield":[
-      "Banfield, Lomas de Zamora, Buenos Aires, Argentina",
-      "Banfield, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Temperley":[
-      "Temperley, Lomas de Zamora, Buenos Aires, Argentina",
-      "Temperley, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Llavallol":[
-      "Llavallol, Lomas de Zamora, Buenos Aires, Argentina",
-      "Llavallol, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Santa Catalina":[
-      "Santa Catalina, Lomas de Zamora, Buenos Aires, Argentina",
-      "Santa Catalina, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ]
-  };
-
-  return aliases[loc] || [
-    `${loc}, Lomas de Zamora, Buenos Aires, Argentina`,
-    `${loc}, Buenos Aires, Argentina`,
-    "Lomas de Zamora, Buenos Aires, Argentina"
-  ];
-}
-function dvBboxMapa(){
-  try{
-    if(
-      typeof activeLayer !== "undefined" &&
-      activeLayer &&
-      typeof activeLayer.getBounds === "function"
-    ){
-      const b=activeLayer.getBounds();
-
-      if(b && b.isValid()){
-        const sw=b.getSouthWest();
-        const ne=b.getNorthEast();
-
-        return {
-          west:sw.lng-.01,
-          south:sw.lat-.01,
-          east:ne.lng+.01,
-          north:ne.lat+.01
-        };
-      }
-    }
-  }catch(e){}
-
-  return null;
-}
-
-function dvConsultasGeocoding(d){
-  const calle=dvCalleGeocoding(d);
-  const numero=dvNumeroGeocoding(d);
-
-  if(!calle && !numero) return [];
-
-  const localidades=dvLocalidadesGeocoding(d);
-  const consultas=[];
-
-  // Primero la forma estructurada/normal de la dirección.
-  localidades.forEach(loc=>{
-    consultas.push({
-      texto:`${calle} ${numero}, ${loc}`.replace(/\s+/g," ").trim(),
-      calle,
-      numero,
-      localidad:loc
-    });
-  });
-
-  // Después una variante sin altura. Algunas calles aparecen en OSM
-  // sin housenumber/interpolación completa.
-  if(calle){
-    localidades.forEach(loc=>{
-      consultas.push({
-        texto:`${calle}, ${loc}`.replace(/\s+/g," ").trim(),
-        calle,
-        numero:"",
-        localidad:loc
-      });
-    });
-  }
-
-  // Último respaldo territorial, especialmente útil para Turdera y Lomas.
-  if(calle && numero){
-    consultas.push({
-      texto:`${calle} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`,
-      calle,
-      numero,
-      localidad:"Lomas de Zamora"
-    });
-  }
-
-  return consultas;
-}
-
-function dvCacheValida(v){
-  return !!v &&
-    Number.isFinite(Number(v.lat)) &&
-    Number.isFinite(Number(v.lng)) &&
-    Math.abs(Number(v.lat))<=90 &&
-    Math.abs(Number(v.lng))<=180;
-}
-
-function dvPosValida(pos){
-  return Array.isArray(pos) &&
-    pos.length>=2 &&
-    Number.isFinite(Number(pos[0])) &&
-    Number.isFinite(Number(pos[1])) &&
-    Math.abs(Number(pos[0]))<=90 &&
-    Math.abs(Number(pos[1]))<=180;
-}
-
-function dvResultadoLocalidadValido(r,d){
-  if(!r) return false;
-
-  const address=r.address || {};
-  const display=normalizar(r.display_name || "");
-
-  if(!dvEsTurdera(d)) return true;
-
-  return (
-    normalizar(address.city || "").includes("lomas de zamora") ||
-    normalizar(address.town || "").includes("turdera") ||
-    normalizar(address.suburb || "").includes("turdera") ||
-    display.includes("turdera") ||
-    display.includes("lomas de zamora")
-  );
-}
-
-async function dvFetchJSON(url){
-  const controller=new AbortController();
-
-  const timer=setTimeout(
-    ()=>controller.abort(),
-    12000
-  );
-
-  try{
-    const response=await fetch(
-      url,
-      {
-        signal:controller.signal,
-        cache:"no-store",
-        headers:{
-          "Accept":"application/json"
-        }
-      }
-    );
-
-    if(!response.ok) return null;
-
-    return await response.json();
-  }catch(error){
-    console.warn("Geocodificador:",error);
-    return null;
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
-async function dvNominatimEstructurado(consulta,d){
-  const params=new URLSearchParams();
-
-  params.set("format","jsonv2");
-  params.set("limit","5");
-  params.set("countrycodes","ar");
-  params.set("addressdetails","1");
-
-  if(consulta.calle) params.set("street",consulta.calle);
-  if(consulta.numero) params.set("housenumber",consulta.numero);
-
-  // Para direcciones del partido de Lomas, la localidad puede estar
-  // representada como suburb/town. Usamos Lomas de Zamora como
-  // contenedor territorial en la consulta estructurada.
-  const loc=dvLocalidadCanonica(d);
-
-  params.set(
-    "city",
-    loc==="Lomas de Zamora" ||
-    loc==="Turdera" ||
-    loc==="Santa Catalina"
-      ? "Lomas de Zamora"
-      : loc
-  );
-  params.set("county","Lomas de Zamora");
-  params.set("state","Buenos Aires");
-  params.set("country","Argentina");
-
-  const resultados=await dvFetchJSON(
-    "https://nominatim.openstreetmap.org/search?"+params.toString()
-  );
-
-  if(!Array.isArray(resultados) || !resultados.length){
-    return null;
-  }
-
-  const bbox=dvBboxMapa();
-
-  const candidatos=resultados
-    .map(r=>{
-      const pos=[
-        Number(r.lat),
-        Number(r.lon)
-      ];
-
-      if(!dvPosValida(pos)) return null;
-
-      const dentro=!bbox || (
-        pos[0]>=bbox.south &&
-        pos[0]<=bbox.north &&
-        pos[1]>=bbox.west &&
-        pos[1]<=bbox.east
-      );
-
-      return {
-        raw:r,
-        pos,
-        dentro,
-        coincide:dvResultadoLocalidadValido(r,d),
-        importancia:Number(r.importance || 0)
-      };
-    })
-    .filter(Boolean);
-
-  const buenos=candidatos
-    .filter(x=>x.coincide)
-    .sort((a,b)=>{
-      if(a.dentro!==b.dentro) return a.dentro ? -1 : 1;
-      return b.importancia-a.importancia;
-    });
-
-  if(buenos.length){
-    return {
-      pos:buenos[0].pos,
-      proveedor:"Nominatim"
-    };
-  }
-
-  return null;
-}
-
-async function dvNominatimLibre(consulta,d){
-  const params=new URLSearchParams();
-
-  params.set("format","jsonv2");
-  params.set("limit","5");
-  params.set("countrycodes","ar");
-  params.set("addressdetails","1");
-  params.set("q",consulta.texto);
-
-  const bbox=dvBboxMapa();
-
-  if(bbox){
-    params.set(
-      "viewbox",
-      `${bbox.west},${bbox.north},${bbox.east},${bbox.south}`
-    );
-  }
-
-  const resultados=await dvFetchJSON(
-    "https://nominatim.openstreetmap.org/search?"+params.toString()
-  );
-
-  if(!Array.isArray(resultados) || !resultados.length){
-    return null;
-  }
-
-  const candidatos=resultados
-    .map(r=>{
-      const pos=[
-        Number(r.lat),
-        Number(r.lon)
-      ];
-
-      if(!dvPosValida(pos)) return null;
-
-      return {
-        raw:r,
-        pos,
-        coincide:dvResultadoLocalidadValido(r,d),
-        importancia:Number(r.importance || 0)
-      };
-    })
-    .filter(Boolean)
-    .filter(x=>x.coincide)
-    .sort((a,b)=>b.importancia-a.importancia);
-
-  if(candidatos.length){
-    return {
-      pos:candidatos[0].pos,
-      proveedor:"Nominatim"
-    };
-  }
-
-  return null;
-}
-
-async function dvPhoton(consulta,d){
-  const url=
-    "https://photon.komoot.io/api/" +
-    "?limit=5" +
-    "&lang=es" +
-    "&q=" +
-    encodeURIComponent(consulta.texto);
-
-  const resultado=await dvFetchJSON(url);
-
-  if(
-    !resultado ||
-    !Array.isArray(resultado.features)
-  ){
-    return null;
-  }
-
-  const candidatos=resultado.features
-    .map(feature=>{
-      const coords=
-        feature &&
-        feature.geometry &&
-        feature.geometry.coordinates;
-
-      if(!Array.isArray(coords) || coords.length<2){
-        return null;
-      }
-
-      const lng=Number(coords[0]);
-      const lat=Number(coords[1]);
-
-      if(!dvPosValida([lat,lng])) return null;
-
-      const props=feature.properties || {};
-      const display=normalizar(
-        [
-          props.name,
-          props.street,
-          props.city,
-          props.district,
-          props.state
-        ].filter(Boolean).join(", ")
-      );
-
-      const loc=normalizar(dvLocalidadCanonica(d));
-
-      let coincide=true;
-
-      if(dvEsTurdera(d)){
-        coincide=
-          display.includes("turdera") ||
-          display.includes("lomas de zamora");
-      }else if(loc==="lomas de zamora"){
-        coincide=
-          display.includes("lomas de zamora") ||
-          display.includes("lomas");
-      }
-
-      return {
-        pos:[lat,lng],
-        coincide
-      };
-    })
-    .filter(Boolean)
-    .filter(x=>x.coincide);
-
-  if(candidatos.length){
-    return {
-      pos:candidatos[0].pos,
-      proveedor:"Photon"
-    };
-  }
-
-  return null;
-}
-
-function dvGuardarGeo(d,pos,proveedor){
-  if(!dvPosValida(pos)) return;
-
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-
-  cache[key]={
-    lat:Number(pos[0]),
-    lng:Number(pos[1]),
-    proveedor:proveedor || "",
-    actualizado:new Date().toISOString()
-  };
-
-  guardarCacheGeocoding(cache);
-}
-
 async function geocodificarDireccion(d){
   const directa=obtenerLatLngReclamo(d);
-
   if(directa) return directa;
-
   const cache=cargarCacheGeocoding();
   const key=claveGeocoding(d);
-
-  if(dvCacheValida(cache[key])){
-    return [
-      Number(cache[key].lat),
-      Number(cache[key].lng)
-    ];
+  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+    return [Number(cache[key].lat),Number(cache[key].lng)];
   }
-
-  const consultas=dvConsultasGeocoding(d);
-
-  if(!consultas.length) return null;
-
-  /*
-   * 1) Intento estructurado:
-   * calle + altura + localidad.
-   * Es más fiable para direcciones argentinas que mandar todo
-   * como texto libre.
-   */
-  for(const consulta of consultas){
-    if(consulta.numero){
-      const resultado=
-        await dvNominatimEstructurado(
-          consulta,
-          d
-        );
-
-      if(resultado && resultado.pos){
-        dvGuardarGeo(
-          d,
-          resultado.pos,
-          resultado.proveedor
-        );
-        return resultado.pos;
-      }
-    }
-  }
-
-  /*
-   * 2) Texto libre: sólo después del intento estructurado.
-   */
-  for(const consulta of consultas){
-    const resultado=
-      await dvNominatimLibre(
-        consulta,
-        d
-      );
-
-    if(resultado && resultado.pos){
-      dvGuardarGeo(
-        d,
-        resultado.pos,
-        resultado.proveedor
-      );
-      return resultado.pos;
-    }
-  }
-
-  /*
-   * 3) Segundo proveedor.
-   */
-  for(const consulta of consultas){
-    const resultado=
-      await dvPhoton(
-        consulta,
-        d
-      );
-
-    if(resultado && resultado.pos){
-      dvGuardarGeo(
-        d,
-        resultado.pos,
-        resultado.proveedor
-      );
-      return resultado.pos;
-    }
-  }
-
-  console.warn(
-    "No se pudo geolocalizar:",
-    dvDireccionBase(d),
-    dvLocalidadCanonica(d)
-  );
-
-  return null;
-}
-
-function dvFirmaReclamos(lista){
-  return (Array.isArray(lista)?lista:[])
-    .map(d=>
-      claveGeocoding(d) +
-      "|" +
-      String(d.lat || "") +
-      "|" +
-      String(d.lng || "")
-    )
-    .join("||");
-}
-
-let dvGeoListaActual=[];
-let dvGeoFirmaActual="";
-let dvGeoIndice=0;
-let dvGeoEjecutando=false;
-
-async function dvProcesarColaGeocoding(generacion){
-  if(dvGeoEjecutando) return;
-
-  dvGeoEjecutando=true;
-
+  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
+  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
   try{
-    while(
-      dvGeoIndice<dvGeoListaActual.length
-    ){
-      if(generacion!==geocodingGeneration) return;
-
-      const d=
-        dvGeoListaActual[dvGeoIndice++];
-
-      try{
-        const pos=
-          await geocodificarDireccion(d);
-
-        if(
-          generacion!==geocodingGeneration
-        ) return;
-
-        if(pos){
-          agregarMarcadorReclamo({
-            ...d,
-            lat:Number(pos[0]),
-            lng:Number(pos[1])
-          });
-        }
-      }catch(error){
-        console.warn(
-          "Error ubicando reclamo:",
-          error
-        );
-      }
-
-      /*
-       * Nominatim es un servicio público y su política pide
-       * un uso muy conservador. Un único trabajador evita
-       * bloqueos/rate-limit y hace que la cola sea estable.
-       */
-      await new Promise(
-        resolve=>setTimeout(resolve,1100)
-      );
-    }
-  }finally{
-    if(generacion===geocodingGeneration){
-      dvGeoEjecutando=false;
-    }
+    const response=await fetch(url,{headers:{"Accept":"application/json"}});
+    if(!response.ok) return null;
+    const resultados=await response.json();
+    if(!resultados.length) return null;
+    const lat=Number(resultados[0].lat);
+    const lng=Number(resultados[0].lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+    cache[key]={lat,lng};
+    guardarCacheGeocoding(cache);
+    return [lat,lng];
+  }catch(error){
+    console.warn("Geocodificación:",q,error);
+    return null;
   }
 }
-
 async function mostrarMarcadoresGeocodificados(lista){
-  if(!Array.isArray(lista)) return;
-
-  const firma=dvFirmaReclamos(lista);
-
-  /*
-   * Si render() vuelve a ejecutarse por un cambio de estado,
-   * pero la lista de direcciones es exactamente la misma,
-   * NO borramos los pines ni reiniciamos la cola.
-   */
-  if(firma===dvGeoFirmaActual){
-    return;
-  }
-
-  dvGeoFirmaActual=firma;
-  geocodingGeneration++;
-
   limpiarMarcadoresReclamos();
-
-  const generacion=geocodingGeneration;
-
-  dvGeoListaActual=[];
-  dvGeoIndice=0;
-
-  const cache=cargarCacheGeocoding();
-
+  if(!Array.isArray(lista)||!lista.length) return;
+  const generacion=++geocodingGeneration;
+  const capa=asegurarCapaReclamos();
+  if(!capa) return;
+  const pendientes=[];
   for(const d of lista){
-    const directa=obtenerLatLngReclamo(d);
-
-    if(directa){
+    const pos=obtenerLatLngReclamo(d);
+    if(pos){
       agregarMarcadorReclamo(d);
-      continue;
+    }else{
+      const cache=cargarCacheGeocoding();
+      const key=claveGeocoding(d);
+      if(cache[key]){
+        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
+      }else{
+        pendientes.push(d);
+      }
     }
-
-    const key=claveGeocoding(d);
-
-    if(dvCacheValida(cache[key])){
-      agregarMarcadorReclamo({
-        ...d,
-        lat:Number(cache[key].lat),
-        lng:Number(cache[key].lng)
-      });
-      continue;
-    }
-
-    dvGeoListaActual.push(d);
   }
-
-  /*
-   * La cola no bloquea el render ni la interfaz.
-   * Se inicia y los pines aparecen individualmente.
-   */
-  dvProcesarColaGeocoding(generacion);
+  const limite=3;
+  let indice=0;
+  async function trabajador(){
+    while(indice<pendientes.length){
+      if(generacion!==geocodingGeneration) return;
+      const d=pendientes[indice++];
+      const pos=await geocodificarDireccion(d);
+      if(generacion!==geocodingGeneration) return;
+      if(pos){
+        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+      }
+      await new Promise(r=>setTimeout(r,350));
+    }
+  }
+  await Promise.all(
+    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
+  );
 }
-
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
@@ -1749,26 +1166,138 @@ function crearIconoVehiculo(rumbo){
   });
 }
 
+
+let dvNavLastPosition=null;
+let dvNavBearing=null;
+
+function dvNavNormalizeBearing(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return null;
+  return ((n%360)+360)%360;
+}
+
+function dvNavBearingBetween(a,b){
+  if(!a||!b) return null;
+  const lat1=Number(a.lat)*Math.PI/180;
+  const lat2=Number(b.lat)*Math.PI/180;
+  const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=
+    Math.cos(lat1)*Math.sin(lat2)-
+    Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
+}
+
+function dvNavSmoothBearing(next){
+  next=dvNavNormalizeBearing(next);
+  if(next===null) return dvNavBearing;
+  if(dvNavBearing===null){
+    dvNavBearing=next;
+    return dvNavBearing;
+  }
+  const delta=((next-dvNavBearing+540)%360)-180;
+  // Suavizado fuerte para que el mapa no tiemble con el GPS.
+  dvNavBearing=dvNavNormalizeBearing(
+    dvNavBearing + delta*0.22
+  );
+  return dvNavBearing;
+}
+
+function dvNavReset(){
+  dvNavLastPosition=null;
+  dvNavBearing=null;
+}
+
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
+  const actual={lat:lat,lng:lng};
+
+  // Primer GPS del recorrido: entrar de verdad en modo navegación.
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
+    dvNavLastPosition=actual;
 
-    // Entrar automáticamente en navegación al recibir el primer GPS.
-    map.setView([lat,lng],18,{animate:true});
-    try{ map.setPitch(35); }catch(e){}
+    const gpsHeading=Number(recorridoHeading);
+    dvNavBearing=
+      Number.isFinite(gpsHeading)
+        ? dvNavNormalizeBearing(gpsHeading)
+        : 0;
+
+    try{
+      // Una sola operación de MapLibre establece TODO el estado de navegación.
+      map.stop();
+      dvNavCameraMoving=true;
+      map.easeTo({
+        center:[lng,lat],
+        zoom:17,
+        pitch:35,
+        bearing:dvNavBearing,
+        offset:[0,120],
+        duration:700,
+        essential:true
+      });
+    }catch(e){
+      try{
+        map.setView([lat,lng],17,{animate:true});
+        map.setPitch(35);
+        map.setBearing(dvNavBearing||0);
+      }catch(e2){}
+    }
     return;
   }
 
-  // Seguimiento continuo con la implementación probada del DVMap.
-  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map.panTo([lat,lng],{
-      animate:true,
-      duration:.45
+  if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
+    return;
+
+  // El rumbo se obtiene primero del movimiento real entre puntos.
+  // Esto funciona aunque el teléfono no entregue coords.heading.
+  let movimiento=null;
+  if(dvNavLastPosition){
+    const d=distanciaMetros(dvNavLastPosition,actual);
+    if(d >= 3){
+      movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
+    }
+  }
+
+  dvNavLastPosition=actual;
+
+  if(movimiento!==null){
+    dvNavSmoothBearing(movimiento);
+  }else if(dvNavBearing===null){
+    const gpsHeading=Number(recorridoHeading);
+    if(Number.isFinite(gpsHeading))
+      dvNavBearing=dvNavNormalizeBearing(gpsHeading);
+  }
+
+  const bearing=
+    dvNavBearing!==null
+      ? dvNavBearing
+      : 0;
+
+  try{
+    // Modo navegación: centro adelantado, inclinación 35° y giro
+    // siguiendo el sentido de marcha.
+    dvNavCameraMoving=true;
+    map.easeTo({
+      center:[lng,lat],
+      zoom:17,
+      pitch:35,
+      bearing:bearing,
+      offset:[0,120],
+      duration:450,
+      essential:true
     });
-    try{ map.setPitch(35); }catch(e){}
+  }catch(e){
+    // Fallback seguro: el seguimiento que ya estaba probado.
+    try{
+      map.panTo([lat,lng],{
+        animate:true,
+        duration:.45
+      });
+      map.setPitch(35);
+    }catch(e2){}
   }
 }
 
@@ -1946,6 +1475,7 @@ async function liberarPantallaEncendida(){
   try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
+  dvNavReset();
   if(!selectedZone){
     alert("Primero seleccioná una zona.");
     return;
@@ -1989,6 +1519,7 @@ function iniciarRecorrido(){
   mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
+  dvNavReset();
   if(!recorridoActivo)return;
   if(recorridoWatchId!==null){
     navigator.geolocation.clearWatch(recorridoWatchId);
@@ -2101,19 +1632,12 @@ return rows;
 function procesarFilasSheets(rows){
 data=[];
 rows.forEach(row=>{
-  // Estructura real de "Direcciones Día Verde CGM":
-  // A/B/C = Llavallol (C = Zona)
-  // D/E/F = Banfield  (F = Zona)
-  // G/H/I = Temperley (I = Zona)
-  // J/K   = Turdera   (sin columna Zona)
-  // L/M/N = Lomas     (L = Calle, M = N°, N = Zona)
-  // O/P/Q = Santa Catalina, si existe en una versión posterior de la hoja.
-  agregar(row,0,1,2,"Llavallol");
-  agregar(row,3,4,5,"Banfield");
-  agregar(row,6,7,8,"Temperley");
-  agregar(row,9,10,null,"Turdera");
-  agregar(row,11,12,13,"Lomas");
-  if(row.length>14) agregar(row,14,15,16,"Santa Catalina");
+agregar(row,0,1,2,"Llavallol");
+agregar(row,3,4,5,"Banfield");
+agregar(row,6,7,8,"Temperley");
+agregar(row,9,10,null,"Turdera");
+agregar(row,11,12,13,"Lomas");
+agregar(row,14,15,16,"Santa Catalina");
 });
 cargarCGMs();
 actualizarZonasPorCGM();
@@ -2401,7 +1925,8 @@ statusText.textContent =
 "Actualizado correctamente";
 actualizarHora();
 if(selectedZone){
-  refrescarEstadosMarcadoresReclamos();
+render();
+refrescarEstadosMarcadoresReclamos();
 }
 refrescarEstadosMarcadoresReclamos();
 }
@@ -2417,7 +1942,8 @@ evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
-  refrescarEstadosMarcadoresReclamos();
+render();
+refrescarEstadosMarcadoresReclamos();
 }
 }
 );
@@ -2494,6 +2020,7 @@ normalizar(item.zona) ===
 normalizar(selected)
 );
 }
+let dvZonaCentradaKey = null;
 function mostrarMapa(
 nombreZona
 ){
@@ -2547,12 +2074,14 @@ fillOpacity:.30
 const bounds =
 activeLayer.getBounds();
 if(bounds.isValid()){
-map.fitBounds(
-bounds,
-{
-padding:[25,25]
-}
-);
+  const zonaKey =
+    normalizar(selectedCgm) + "||" + normalizar(nombreZona);
+
+  // Centrar la zona solo al cambiar la selección.
+  if(dvZonaCentradaKey !== zonaKey){
+    map.fitBounds(bounds,{padding:[25,25]});
+    dvZonaCentradaKey = zonaKey;
+  }
 }
 title.textContent =
 "Mapa de " +
@@ -3123,6 +2652,7 @@ stopRoute.addEventListener("click",finalizarRecorrido);
 cgm.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
 selectedCgm =
 cgm.value;
 selectedZone =
@@ -3136,6 +2666,7 @@ render();
 zone.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
   if(recorridoActivo && zone.value !== recorridoZona){
     zone.value=recorridoZona;
     selectedZone=recorridoZona;
