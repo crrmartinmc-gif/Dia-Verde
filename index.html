@@ -1405,32 +1405,139 @@ function claveGeocoding(d){
     `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
   );
 }
-async function geocodificarDireccion(d){
-  const directa=obtenerLatLngReclamo(d);
-  if(directa) return directa;
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
+function construirConsultasGeocoding(d){
+  const calle = String(d.calle || d.direccion || d.Direccion || "").trim();
+  const numero = String(d.numero || "").trim();
+  const localidad = String(d.localidad || selectedCgm || "").trim();
+
+  const base = `${calle} ${numero}`.trim();
+  const consultas = [];
+
+  if(base && localidad){
+    consultas.push(`${base}, ${localidad}, Buenos Aires, Argentina`);
   }
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
+  if(base){
+    consultas.push(`${base}, Lomas de Zamora, Buenos Aires, Argentina`);
+    consultas.push(`${base}, Buenos Aires, Argentina`);
+  }
+  if(localidad){
+    consultas.push(`${localidad}, Buenos Aires, Argentina`);
+  }
+
+  return [...new Set(consultas)];
+}
+
+function guardarCoordenadaEnObjeto(d,pos){
+  if(!pos) return d;
+  return {
+    ...d,
+    lat:pos[0],
+    lng:pos[1]
+  };
+}
+
+async function consultarNominatim(query){
+  const url =
+    "https://nominatim.openstreetmap.org/search" +
+    "?format=jsonv2&limit=1&countrycodes=ar" +
+    "&addressdetails=1&q=" +
+    encodeURIComponent(query);
+
   try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
+    const response = await fetch(
+      url,
+      {
+        cache:"no-store",
+        headers:{
+          "Accept":"application/json"
+        }
+      }
+    );
+
+    if(!response.ok){
+      return null;
+    }
+
+    const resultados = await response.json();
+
+    if(!Array.isArray(resultados) || !resultados.length){
+      return null;
+    }
+
+    const lat = Number(resultados[0].lat);
+    const lng = Number(resultados[0].lon);
+
+    if(
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      Math.abs(lat)>90 ||
+      Math.abs(lng)>180
+    ){
+      return null;
+    }
+
     return [lat,lng];
   }catch(error){
-    console.warn("Geocodificación:",q,error);
+    console.warn("Geocodificación Nominatim:",query,error);
     return null;
   }
 }
+
+async function geocodificarDireccion(d){
+  const directa = obtenerLatLngReclamo(d);
+  if(directa) return directa;
+
+  const cache = cargarCacheGeocoding();
+  const key = claveGeocoding(d);
+
+  if(
+    cache[key] &&
+    Number.isFinite(Number(cache[key].lat)) &&
+    Number.isFinite(Number(cache[key].lng))
+  ){
+    return [
+      Number(cache[key].lat),
+      Number(cache[key].lng)
+    ];
+  }
+
+  const consultas = construirConsultasGeocoding(d);
+
+  for(const query of consultas){
+    // Un pequeño intervalo evita superar los límites de Nominatim.
+    await new Promise(resolve => setTimeout(resolve,1100));
+
+    let pos = await consultarNominatim(query);
+
+    // Segundo intento de la misma consulta si el servidor respondió
+    // temporalmente con error/vacío.
+    if(!pos){
+      await new Promise(resolve => setTimeout(resolve,1800));
+      pos = await consultarNominatim(query);
+    }
+
+    if(pos){
+      cache[key] = {
+        lat:pos[0],
+        lng:pos[1],
+        query:query,
+        actualizado:new Date().toISOString()
+      };
+      guardarCacheGeocoding(cache);
+      return pos;
+    }
+  }
+
+  console.warn(
+    "No se pudo ubicar reclamo:",
+    d.calle,
+    d.numero,
+    d.localidad
+  );
+
+  return null;
+}
+
 let dvMarcadoresRenderKey = "";
 
 function dvClaveListaMarcadores(lista){
@@ -1497,7 +1604,11 @@ async function mostrarMarcadoresGeocodificados(lista){
     }
   }
 
-  const limite = 3;
+  /*
+   * Nominatim debe tratarse como servicio de baja frecuencia.
+   * Procesamos secuencialmente para evitar bloqueos/rate-limit y,
+   * además, conservamos inmediatamente cada pin que sí encontramos.
+   */
   let indice = 0;
 
   async function trabajador(){
@@ -1510,23 +1621,14 @@ async function mostrarMarcadoresGeocodificados(lista){
       if(generacion !== geocodingGeneration) return;
 
       if(pos){
-        agregarMarcadorReclamo({
-          ...d,
-          lat:pos[0],
-          lng:pos[1]
-        });
+        agregarMarcadorReclamo(
+          guardarCoordenadaEnObjeto(d,pos)
+        );
       }
-
-      await new Promise(r => setTimeout(r,350));
     }
   }
 
-  await Promise.all(
-    Array.from(
-      {length:Math.min(limite,pendientes.length)},
-      () => trabajador()
-    )
-  );
+  await trabajador();
 }
 
 function resetearRotacionMapa(){
