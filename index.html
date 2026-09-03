@@ -2619,46 +2619,38 @@ direccion:
 foto:
 evidenciaBase64
 };
+// Envío en segundo plano: no esperamos a que Apps Script termine.
 try{
-await fetch(
-APPS_SCRIPT_URL,
-{
-method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":
-"text/plain;charset=utf-8"
-},
-body:
-JSON.stringify(
-datos
-)
+  fetch(
+    APPS_SCRIPT_URL,
+    {
+      method:"POST",
+      mode:"no-cors",
+      headers:{
+        "Content-Type":"text/plain;charset=utf-8"
+      },
+      body:JSON.stringify(datos)
+    }
+  ).catch(error => {
+    console.error("Error enviando evidencia en segundo plano:", error);
+  });
+}catch(error){
+  console.error("No se pudo iniciar el envío:", error);
 }
-);
+
+// Cerramos inmediatamente el modal. El POST continúa en segundo plano.
 cerrarEvidencia();
-mostrarToast(
-"📷 Evidencia enviada. Actualizando..."
-);
-setTimeout(
-() => {
-cargarEvidenciasHoy();
-},
-2000
-);
+mostrarToast("📷 Evidencia enviada. Guardando foto...");
+
+// Después verificamos el histórico real.
+setTimeout(() => {
+  cargarEvidenciasHoy();
+}, 2500);
+
+sendEvidence.disabled = false;
+sendEvidence.textContent = "✓ Registrar";
 }
-catch(error){
-console.error(error);
-alert(
-"No se pudo enviar la evidencia."
-);
-}
-finally{
-sendEvidence.disabled =
-false;
-sendEvidence.textContent =
-"✓ Registrar";
-}
-}
+
 list.addEventListener(
 "click",
 event => {
