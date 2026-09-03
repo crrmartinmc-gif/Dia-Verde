@@ -103,6 +103,447 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 }
 </style>
 
+
+<style id="dv24-green-3d-visual">
+:root{
+  --dv24-deep:#031b10;
+  --dv24-dark:#062719;
+  --dv24-panel:#0a3020;
+  --dv24-panel2:#0d3b27;
+  --dv24-green:#087a3d;
+  --dv24-green2:#0b5f31;
+  --dv24-lime:#65d98c;
+  --dv24-text:#f2fff7;
+  --dv24-muted:#a7c5b3;
+  --dv24-border:#2b6949;
+}
+
+/* ===== CHOFER: misma estética 3D, ahora verde oscuro ===== */
+body{
+  background:
+    radial-gradient(circle at 15% 0%,#0b4328 0,transparent 32%),
+    radial-gradient(circle at 90% 10%,#07351f 0,transparent 30%),
+    linear-gradient(145deg,var(--dv24-deep),#071d14 55%,#03150c);
+  color:var(--dv24-text);
+}
+header{
+  background:
+    linear-gradient(145deg,rgba(5,39,24,.98),rgba(8,83,45,.94)),
+    radial-gradient(circle at 20% 0%,#1a8b50,transparent 42%);
+  border-bottom:1px solid #4aa66d55;
+  box-shadow:0 12px 34px #0008, inset 0 1px #ffffff12;
+  position:relative;
+  z-index:5;
+}
+.logo{
+  background:linear-gradient(145deg,#eafff0,#b8f0cc);
+  box-shadow:0 8px 20px #0006,inset 0 2px #fff;
+}
+h1{font-size:30px;text-shadow:0 4px 14px #0008}
+.sub{font-size:16px;color:#d0eadb}
+main{max-width:1280px;padding:24px}
+.layout{grid-template-columns:315px 1fr;gap:20px}
+.card{
+  background:
+    linear-gradient(145deg,rgba(11,55,35,.96),rgba(5,31,20,.97));
+  border:1px solid var(--dv24-border);
+  box-shadow:0 18px 45px #0008,inset 0 1px #ffffff0b;
+  color:var(--dv24-text);
+}
+.sidebar{padding:22px}
+.section-label{color:var(--dv24-lime);font-size:13px;letter-spacing:1.1px}
+label{color:#e8f8ee;font-size:15px}
+select,input{
+  background:#062417;color:#eafff0;border-color:#2b6949;
+  box-shadow:inset 0 2px 8px #0005,0 2px 8px #0003;
+}
+select:focus,input:focus{border-color:#65d98c;box-shadow:0 0 0 3px #2bca6a2b, inset 0 2px 8px #0005}
+.refresh{
+  background:linear-gradient(145deg,#159452,#076832);
+  box-shadow:0 9px 22px #0006,inset 0 1px #ffffff22;
+  font-size:15px;
+}
+.info-box,.route-status{
+  background:linear-gradient(145deg,#0b3925,#062318);
+  color:#c8e5d2;border-color:#2b6949;
+  box-shadow:inset 0 1px #ffffff09,0 8px 20px #0004;
+}
+.stat{
+  background:linear-gradient(145deg,#0b3925,#062318);
+  border-color:#2b6949;
+  box-shadow:0 9px 20px #0004,inset 0 1px #ffffff09;
+}
+.stat-icon,.card-title-icon{
+  background:linear-gradient(145deg,#1b8f50,#07572d);
+  color:#dfffe9;
+  box-shadow:0 7px 16px #0006,inset 0 1px #ffffff25;
+}
+.stat small,.update,.card-title p{color:var(--dv24-muted)}
+.stat strong,.card-title h2{color:#f4fff8}
+.map-card{padding:20px}
+#map{
+  border:1px solid #347653;
+  box-shadow:inset 0 0 45px #0007,0 18px 42px #0008;
+}
+.zone-badge{
+  background:linear-gradient(145deg,#0e713a,#043c21);
+  box-shadow:0 10px 24px #0008,inset 0 1px #ffffff25;
+  font-size:15px;
+}
+.route-controls{gap:12px}
+.route-btn{
+  font-size:15px;
+  box-shadow:0 9px 22px #0006,inset 0 1px #ffffff18;
+}
+.route-start{background:linear-gradient(145deg,#159452,#076832)}
+.route-stop{background:linear-gradient(145deg,#c9362c,#8f1d14)}
+.results{padding:20px}
+.count-pill{
+  background:#0d4b2c;color:#9af0b6;border:1px solid #327851;
+  box-shadow:inset 0 1px #ffffff12,0 6px 15px #0004;
+}
+.address-list{border-color:#2b6949}
+.address{background:linear-gradient(145deg,#0b3824,#062318);border-bottom-color:#214f38}
+.address:hover{background:#0e432a}
+.address strong{font-size:16px;color:#f1fff7}
+.address small{color:#a7c5b3}
+.pin{background:linear-gradient(145deg,#1a8e4e,#07562d);box-shadow:0 6px 14px #0005}
+.maps,.evidence-btn{
+  color:#9af0b6;background:#082a1a;border-color:#3c8c5d;
+  box-shadow:0 5px 14px #0004,inset 0 1px #ffffff12;
+}
+.maps:hover,.evidence-btn:hover{background:#0d482b}
+.evidence-btn.done{background:#0d4b2c;border-color:#5aa979}
+footer{
+  background:linear-gradient(145deg,#031b10,#062e1b);
+  border-top:1px solid #2b6949;
+  box-shadow:0 -12px 30px #0006;
+}
+
+/* ===== ADMIN: iconos y letras más grandes ===== */
+.dv22-nav{
+  height:82px;
+  font-size:12px;
+  gap:7px;
+  letter-spacing:.2px;
+}
+.dv22-nav span{font-size:12px;font-weight:900}
+.dv22-nav::first-line{font-size:28px}
+.dv22-side{padding:16px 9px}
+.dv22-nav.active,.dv22-nav:hover{
+  transform:translateY(-1px);
+  box-shadow:inset 0 1px #ffffff20,0 12px 26px #0006;
+}
+.dv22-title{font-size:22px}
+.dv22-sub{font-size:11px}
+.dv22-kpi-label{font-size:10px}
+.dv22-kpi{font-size:30px}
+.dv22-card{box-shadow:0 16px 38px #0006,inset 0 1px #ffffff0b}
+.dv22-map{box-shadow:inset 0 0 65px #0009,0 22px 50px #0007}
+@media(max-width:700px){
+  .dv22-nav{height:76px}
+  .dv22-nav span{font-size:11px}
+  main{padding:14px}
+  .sidebar{padding:17px}
+}
+</style>
+
+
+<style id="dv25-final-visual">
+/* =========================================================
+   V25 — DISEÑO VISUAL UNIFICADO
+   Solo CSS: no modifica lógica, datos ni funciones.
+   ========================================================= */
+
+/* ---------- CHOFER: estilo centro de control verde ---------- */
+body{
+  background:
+    radial-gradient(circle at 12% 0%,#0d4b2d 0,transparent 30%),
+    radial-gradient(circle at 90% 8%,#07351f 0,transparent 28%),
+    linear-gradient(145deg,#03170d,#061f14 55%,#021109);
+}
+header{
+  background:linear-gradient(145deg,#032514,#075f32 55%,#06351f);
+  border-bottom:1px solid #50c77c55;
+  box-shadow:0 12px 35px #0008,inset 0 1px #ffffff12;
+}
+.header-inner{max-width:1400px}
+main{max-width:1400px;padding:24px}
+.layout{grid-template-columns:330px minmax(0,1fr);gap:20px}
+.card{
+  background:linear-gradient(145deg,#0a3925,#052217);
+  border:1px solid #2d6f4c;
+  color:#f0fff5;
+  box-shadow:0 18px 45px #0008,inset 0 1px #ffffff0a;
+}
+.sidebar{padding:22px}
+.section-label{font-size:14px;color:#67e197;letter-spacing:1px}
+label{font-size:16px;color:#edfff3}
+select,input{
+  min-height:52px;
+  background:#052619;
+  color:#effff5;
+  border-color:#31734f;
+  font-size:16px;
+  box-shadow:inset 0 2px 9px #0006,0 3px 10px #0003;
+}
+select:focus,input:focus{border-color:#69e69a;box-shadow:0 0 0 3px #38d47a26,inset 0 2px 9px #0006}
+.refresh{
+  min-height:52px;
+  font-size:16px;
+  background:linear-gradient(145deg,#16a456,#087139);
+  box-shadow:0 10px 25px #0007,inset 0 1px #ffffff25;
+}
+.info-box,.route-status{
+  background:linear-gradient(145deg,#0b3b26,#062619);
+  color:#c9e7d4;
+  border-color:#2d6f4c;
+}
+.stat{
+  background:linear-gradient(145deg,#0c3c27,#062519);
+  border-color:#2d6f4c;
+  box-shadow:0 10px 24px #0005,inset 0 1px #ffffff0a;
+}
+.stat-icon,.card-title-icon{
+  width:46px;height:46px;
+  background:linear-gradient(145deg,#1a9653,#07592f);
+  color:#e7ffef;
+  box-shadow:0 8px 18px #0006,inset 0 1px #ffffff25;
+}
+.stat strong{color:#f4fff7;font-size:24px}
+.stat small,.update,.card-title p{color:#a7c7b5}
+.map-card{padding:20px}
+#map{
+  border:1px solid #347b55;
+  box-shadow:inset 0 0 55px #0008,0 20px 46px #0008;
+}
+.zone-badge{
+  background:linear-gradient(145deg,#128044,#064725);
+  box-shadow:0 12px 26px #0008,inset 0 1px #ffffff25;
+  font-size:16px;
+}
+.route-btn{
+  min-height:52px;
+  font-size:16px;
+  box-shadow:0 10px 23px #0007,inset 0 1px #ffffff18;
+}
+.route-start{background:linear-gradient(145deg,#16a456,#087139)}
+.route-stop{background:linear-gradient(145deg,#cf382e,#8e1c15)}
+.results{padding:20px}
+.count-pill{background:#0d4e2e;color:#9bf0b6;border:1px solid #367b54}
+.address-list{border-color:#2d6f4c}
+.address{background:linear-gradient(145deg,#0a3824,#062217);border-bottom-color:#23563b}
+.address:hover{background:#0d442b}
+.address strong{font-size:16px;color:#f1fff6}
+.address small{color:#a7c7b5}
+.pin{background:linear-gradient(145deg,#1a9552,#07592f);box-shadow:0 7px 16px #0006}
+.maps,.evidence-btn{
+  color:#9bf0b6;background:#07291a;border-color:#3e8d60;
+}
+.maps:hover,.evidence-btn:hover{background:#0d472b}
+.evidence-btn.done{background:#0d4e2e;border-color:#61b27e}
+footer{background:linear-gradient(145deg,#031a0e,#06331d);border-top:1px solid #2d6f4c}
+
+/* ---------- PINS + POPUPS DE RECLAMOS ---------- */
+.dv-reclamo-popup{
+  color:#17231c !important;
+  background:#fff !important;
+  font-family:Arial,sans-serif;
+  font-size:14px;
+}
+.dv-reclamo-popup .titulo{
+  color:#163b24 !important;
+  font-size:16px;
+  font-weight:900;
+}
+.dv-reclamo-popup .estado{
+  color:#17231c !important;
+  font-weight:800;
+}
+.dv-reclamo-popup *{
+  color:#17231c !important;
+}
+.maplibregl-popup-content{
+  color:#17231c !important;
+  background:#fff !important;
+}
+.maplibregl-popup-content *{
+  color:#17231c;
+}
+.maplibregl-popup-close-button{
+  color:#17231c !important;
+  font-size:18px;
+}
+
+/* ---------- ADMIN: menú proporcionado + iconos grandes ---------- */
+#dv22Admin .dv22-wrap{grid-template-columns:205px 1fr}
+#dv22Admin .dv22-side{padding:18px 14px}
+#dv22Admin .dv22-nav{
+  height:76px;
+  flex-direction:row;
+  justify-content:flex-start;
+  text-align:left;
+  gap:13px;
+  padding:10px 14px;
+  margin-bottom:9px;
+  font-size:14px;
+  border-radius:16px;
+}
+#dv22Admin .dv22-nav span{
+  font-size:14px;
+  line-height:1.1;
+  white-space:nowrap;
+}
+#dv22Admin .dv22-nav::first-letter{font-size:29px}
+#dv22Admin .dv22-content{padding:22px 24px}
+#dv22Admin .dv22-kpis{gap:14px}
+#dv22Admin .dv22-card{border-radius:18px}
+#dv22Admin .dv22-kpi-label{font-size:10px}
+#dv22Admin .dv22-kpi{font-size:30px}
+#dv22Admin .dv22-map{height:525px;border-radius:16px}
+#dv22Admin .dv22-head{padding:0 26px}
+#dv22Admin .dv22-title{font-size:23px}
+#dv22Admin .dv22-sub{font-size:11px}
+@media(max-width:1050px){
+  #dv22Admin .dv22-wrap{grid-template-columns:92px 1fr}
+  #dv22Admin .dv22-nav{height:76px;justify-content:center;text-align:center;flex-direction:column;gap:4px;padding:7px}
+  #dv22Admin .dv22-nav span{font-size:11px}
+}
+@media(max-width:700px){
+  #dv22Admin .dv22-wrap{grid-template-columns:1fr}
+  #dv22Admin .dv22-side{display:flex;overflow:auto}
+  #dv22Admin .dv22-nav{min-width:105px;height:72px}
+}
+</style>
+
+\n<style id="dv26-critical-fixes">\n/* PIN PENDIENTE: ya no queda blanco sobre el mapa */\n.dv-reclamo-pin.pendiente::before{\n  background:#087a3d !important;\n  border-color:#ffffff !important;\n}\n.dv-reclamo-pin.pendiente span{color:#ffffff !important;}\n\n/* POPUP RECLAMO: forzamos contraste incluso si otra regla global hereda blanco */\n.leaflet-container .leaflet-popup-content-wrapper,\n.leaflet-container .leaflet-popup-tip{background:#ffffff !important;}\n.leaflet-container .leaflet-popup-content,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup *,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup div,\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup strong{\n  color:#17231c !important;\n  opacity:1 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .titulo{\n  color:#176331 !important;\n  font-weight:900 !important;\n}\n.leaflet-container .leaflet-popup-content .dv-reclamo-popup .estado{\n  color:#17231c !important;\n  font-weight:800 !important;\n}\n.leaflet-container .leaflet-popup-close-button{color:#17231c !important;}\n\n/* ADMINISTRACIÓN: oculto por defecto para cualquier chofer */\n#dv22AdminOpen{display:none !important;}\n#dv22AdminOpen.dv-admin-visible{display:block !important;}\n</style>\n
+<style id="dv27-final-fixes">
+/* ===== RECLAMOS: PENDIENTE SIEMPRE ROJO ===== */
+.dv-reclamo-pin.pendiente::before{
+  background:#c62828 !important;
+  border:3px solid #ffffff !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.30) !important;
+}
+.dv-reclamo-pin.pendiente span{color:#ffffff !important;}
+.dv-reclamo-pin.realizado::before{background:#66bb6a !important;}
+.dv-reclamo-pin.suspendido::before{background:#8d6e63 !important;}
+.dv-reclamo-pin.amarillo::before{background:#f9a825 !important;}
+.dv-reclamo-pin.rojo::before{background:#c62828 !important;}
+
+/* Popup de reclamo: máximo contraste */
+.maplibregl-popup-content,
+.maplibregl-popup-content .dv-reclamo-popup,
+.maplibregl-popup-content .dv-reclamo-popup *{
+  color:#17231c !important;
+  opacity:1 !important;
+}
+.maplibregl-popup-content{background:#ffffff !important;}
+.maplibregl-popup-content .dv-reclamo-popup .titulo{color:#176331 !important;font-weight:900 !important;}
+.maplibregl-popup-content .dv-reclamo-popup .estado{color:#17231c !important;font-weight:900 !important;}
+.maplibregl-popup-close-button{color:#17231c !important;}
+
+/* ===== ADMIN: visible SOLO para el usuario cuyo nombre de usuario es admin ===== */
+#dv22AdminOpen{display:none !important;}
+#dv22AdminOpen.dv-admin-visible{display:block !important;}
+</style>
+
+<style id="dv28-only-two-statuses">
+/* Únicos estados visibles en Día Verde */
+.estado.espera,.estado.suspendido,.estado.rechazado,.estado.anulado,
+.estado-en-espera,.estado-suspendido,.estado-rechazado,.estado-anulado,
+.pendiente-espera{
+  display:none !important;
+}
+</style>
+
+
+<style id="dv29-conflict-fixes">
+/* PINES: Pendiente SIEMPRE rojo. No hereda el blanco del estilo base. */
+.dv-reclamo-pin.pendiente::before{
+  background:#d32f2f !important;
+  border-color:#fff !important;
+}
+.dv-reclamo-pin.pendiente span{
+  color:#fff !important;
+}
+
+/* POPUP */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip{
+  background:#fff !important;
+}
+.leaflet-popup-content{
+  color:#17231c !important;
+}
+.leaflet-popup-content *{
+  color:#17231c !important;
+}
+
+/* LOGIN: nunca exceder el ancho real del teléfono */
+#dvLoginOverlay{
+  width:100vw;
+  max-width:100vw;
+  overflow:hidden;
+  padding:16px !important;
+}
+#dvLoginBox{
+  width:min(420px, calc(100vw - 32px)) !important;
+  max-width:calc(100vw - 32px) !important;
+  box-sizing:border-box !important;
+  padding:26px !important;
+}
+#dvLoginBox input{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+#dvLoginBtn{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* CHOFER RESPONSIVE */
+@media(max-width:600px){
+  header{padding:14px !important}
+  .header-inner{width:100%;gap:10px}
+  .brand{gap:10px;min-width:0}
+  .logo{width:44px;height:44px;flex:0 0 44px;font-size:22px}
+  h1{font-size:21px !important}
+  .sub{font-size:12px !important}
+  main{padding:10px !important}
+  .layout{display:block !important}
+  .sidebar{padding:14px !important}
+  .map-card{padding:10px !important}
+  .map-wrap{height:calc(100svh - 250px) !important;min-height:420px !important}
+  #map{height:100% !important;min-height:420px !important}
+  .card-title h2{font-size:18px}
+  .card-title p{font-size:12px}
+  .route-controls{gap:8px}
+  .route-btn{min-height:50px;font-size:14px}
+  .address{padding:12px}
+  .address strong{font-size:14px}
+  .maps,.evidence-btn{padding:9px 8px;font-size:12px}
+}
+
+/* ADMIN: botón siempre visible cuando el usuario es admin */
+#dv22AdminOpen.dv-admin-visible{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+@media(max-width:600px){
+  #dv22AdminOpen.dv-admin-visible{
+    right:12px !important;
+    top:10px !important;
+    padding:9px 12px !important;
+    font-size:12px !important;
+    border-radius:12px !important;
+  }
+}
+</style>
+
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -372,6 +813,56 @@ id="toast"
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script>
+// ===== V21 SINCRONIZACION RAPIDA PC + MOVIL =====
+const DV21_SYNC_MS=3000;
+let dv21SyncBusy=false;
+
+async function dv21SyncEvidencias(){
+  if(dv21SyncBusy || typeof cargarEvidenciasHoy!=="function") return;
+  dv21SyncBusy=true;
+  try{
+    // Reuse the existing official server loader so URLs, parameters and
+    // authorization remain unchanged.
+    await cargarEvidenciasHoy();
+  }catch(e){
+    console.warn("V21 sync:",e);
+  }finally{
+    dv21SyncBusy=false;
+  }
+}
+
+function dv21StartSync(){
+  if(window.dv21Timer) clearInterval(window.dv21Timer);
+  window.dv21Timer=setInterval(dv21SyncEvidencias,DV21_SYNC_MS);
+}
+
+// ===== V20 SYNC MERGE =====
+function dv20EvidenceKey(e){
+  if(!e)return"";
+  return [e.direccion||e.address||e.Direccion||"",e.zona||e.cgm||e.CGM||"",
+    e.usuario||e.Usuario||"",e.fecha||e.Fecha||"",e.hora||e.Hora||"",
+    e.timestamp||e.Timestamp||""].join("|").toLowerCase().trim();
+}
+function dv20MergeEvidence(serverList){
+  const local=Array.isArray(evidenciasHoy)?evidenciasHoy:[];
+  const server=Array.isArray(serverList)?serverList:[];
+  const map=new Map();
+  server.forEach(e=>{const k=dv20EvidenceKey(e);if(k)map.set(k,e)});
+  local.forEach(e=>{const k=dv20EvidenceKey(e);if(k)map.set(k,e)});
+  evidenciasHoy=[...map.values()];
+  try{localStorage.setItem(`diaVerde_evidencias_${DV19_DAY_KEY()}`,
+    JSON.stringify(evidenciasHoy.map(e=>({...e,day:DV19_DAY_KEY(),_local:true}))));}catch(e){}
+  return evidenciasHoy;
+}
+function dv20MarkLocalEvidence(e){
+  if(!e)return;
+  const k=dv20EvidenceKey(e);
+  evidenciasHoy=(Array.isArray(evidenciasHoy)?evidenciasHoy:[])
+    .filter(x=>dv20EvidenceKey(x)!==k);
+  evidenciasHoy.push({...e,_local:true,day:DV19_DAY_KEY()});
+  try{localStorage.setItem(`diaVerde_evidencias_${DV19_DAY_KEY()}`,JSON.stringify(evidenciasHoy));}catch(err){}
+}
+
 const SHEET_ID =
 "1ysCEVN9PljeIcIFxvBsoxL9iXOdWbVTjm4mn8GcPkK8";
 const GID =
@@ -765,13 +1256,37 @@ const L={
   polyline:(points,opts)=>new DVPolyline(points,opts),
   geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
-map.on("dragstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("zoomstart",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
-map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiendoVehiculo=false;}});
+let dvNavCameraMoving = false;
+
+map.on("dragstart",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("zoomstart",function(){
+  // easeTo() del modo navegación también dispara zoomstart.
+  // No debemos confundirlo con un zoom manual del usuario.
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("click",function(){
+  if(recorridoActivo && !dvNavCameraMoving){
+    mapaUsuarioMovio=true;
+    mapaSiguiendoVehiculo=false;
+  }
+});
+map.on("moveend",function(){
+  if(dvNavCameraMoving){
+    dvNavCameraMoving=false;
+  }
+});
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV4";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV5";
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -814,11 +1329,11 @@ function popupReclamoMedioAmbiente(d){
     ? estaRealizadaHoy(d)
     : false;
   const estado = realizado ? "Realizado" : "Pendiente";
-  return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
-      (realizado ? '🟢 ' : '⚪ ')+
+  return '<div class="dv-reclamo-popup" style="color:#17231c!important;background:#fff!important;font-family:Arial,sans-serif;">'+
+    '<div class="titulo" style="color:#176331!important;font-weight:900;">♻️ Vecino Reciclador</div>'+
+    '<div style="color:#17231c!important;">📍 <strong style="color:#17231c!important;">'+escaparHTML(direccion)+'</strong></div>'+
+    '<div class="estado" style="color:#17231c!important;font-weight:800;">'+
+      (realizado ? '🟢 ' : '🔴 ')+
       escaparHTML(estado)+
     '</div>'+
     '</div>';
@@ -890,199 +1405,48 @@ function claveGeocoding(d){
     `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
   );
 }
-function dvDireccionBase(d){
-  const calle=String(
-    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
-  ).trim();
-  const numero=String(d.numero || "").trim();
-  return `${calle} ${numero}`.replace(/\s+/g," ").trim();
-}
+function construirConsultasGeocoding(d){
+  const calle = String(d.calle || d.direccion || d.Direccion || "").trim();
+  const numero = String(d.numero || "").trim();
+  const localidad = String(d.localidad || selectedCgm || "").trim();
 
-function dvCalleGeocoding(d){
-  let s=String(
-    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
-  ).trim();
+  const base = `${calle} ${numero}`.trim();
+  const consultas = [];
 
-  const reemplazos=[
-    [/\bav\.?\b/gi,"Avenida"],
-    [/\bavda\.?\b/gi,"Avenida"],
-    [/\bgral\.?\b/gi,"General"],
-    [/\bcnel\.?\b/gi,"Coronel"],
-    [/\bcrnel\.?\b/gi,"Coronel"],
-    [/\bpje\.?\b/gi,"Pasaje"],
-    [/\bpas\.?\b/gi,"Pasaje"],
-    [/\bdr\.?\b/gi,"Doctor"],
-    [/\bing\.?\b/gi,"Ingeniero"],
-    [/\btte\.?\b/gi,"Teniente"],
-    [/\bcap\.?\b/gi,"Capitan"],
-    [/\bpres\.?\b/gi,"Presidente"]
-  ];
-
-  reemplazos.forEach(([rx,val])=>{ s=s.replace(rx,val); });
-  return s.replace(/\s+/g," ").trim();
-}
-
-function dvNumeroGeocoding(d){
-  return String(d.numero || "").trim().replace(/\s+/g," ");
-}
-
-function dvLocalidadCanonica(d){
-  const l=normalizar(d.localidad || selectedCgm || "");
-
-  if(l==="lomas" || l==="lomas de zamora") return "Lomas de Zamora";
-  if(l==="turdera") return "Turdera";
-  if(l==="banfield") return "Banfield";
-  if(l==="temperley") return "Temperley";
-  if(l==="llavallol") return "Llavallol";
-  if(l==="santa catalina") return "Santa Catalina";
-
-  return String(d.localidad || selectedCgm || "").trim();
-}
-
-function dvLocalidadesGeocoding(d){
-  const loc=dvLocalidadCanonica(d);
-
-  const aliases={
-    "Turdera":[
-      "Turdera, Lomas de Zamora, Buenos Aires, Argentina",
-      "Turdera, Buenos Aires, Argentina",
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Lomas de Zamora":[
-      "Lomas de Zamora, Buenos Aires, Argentina"
-    ],
-    "Banfield":[
-      "Banfield, Lomas de Zamora, Buenos Aires, Argentina",
-      "Banfield, Buenos Aires, Argentina"
-    ],
-    "Temperley":[
-      "Temperley, Lomas de Zamora, Buenos Aires, Argentina",
-      "Temperley, Buenos Aires, Argentina"
-    ],
-    "Llavallol":[
-      "Llavallol, Lomas de Zamora, Buenos Aires, Argentina",
-      "Llavallol, Buenos Aires, Argentina"
-    ],
-    "Santa Catalina":[
-      "Santa Catalina, Lomas de Zamora, Buenos Aires, Argentina",
-      "Santa Catalina, Buenos Aires, Argentina"
-    ]
-  };
-
-  return aliases[loc] || [
-    `${loc}, Lomas de Zamora, Buenos Aires, Argentina`,
-    `${loc}, Buenos Aires, Argentina`
-  ];
-}
-
-function dvBboxMapa(){
-  try{
-    if(
-      typeof activeLayer !== "undefined" &&
-      activeLayer &&
-      typeof activeLayer.getBounds === "function"
-    ){
-      const b=activeLayer.getBounds();
-
-      if(b && b.isValid()){
-        const sw=b.getSouthWest();
-        const ne=b.getNorthEast();
-
-        return {
-          west:sw.lng-.01,
-          south:sw.lat-.01,
-          east:ne.lng+.01,
-          north:ne.lat+.01
-        };
-      }
-    }
-  }catch(e){}
-
-  return null;
-}
-
-function dvConsultasGeocoding(d){
-  const calle=dvCalleGeocoding(d);
-  const numero=dvNumeroGeocoding(d);
-
-  if(!calle && !numero) return [];
-
-  const localidades=dvLocalidadesGeocoding(d);
-  const consultas=[];
-
-  // Primero la forma estructurada/normal de la dirección.
-  localidades.forEach(loc=>{
-    consultas.push({
-      texto:`${calle} ${numero}, ${loc}`.replace(/\s+/g," ").trim(),
-      calle,
-      numero,
-      localidad:loc
-    });
-  });
-
-  // Después una variante sin altura. Algunas calles aparecen en OSM
-  // sin housenumber/interpolación completa.
-  if(calle){
-    localidades.forEach(loc=>{
-      consultas.push({
-        texto:`${calle}, ${loc}`.replace(/\s+/g," ").trim(),
-        calle,
-        numero:"",
-        localidad:loc
-      });
-    });
+  if(base && localidad){
+    consultas.push(`${base}, ${localidad}, Buenos Aires, Argentina`);
+  }
+  if(base){
+    consultas.push(`${base}, Lomas de Zamora, Buenos Aires, Argentina`);
+    consultas.push(`${base}, Buenos Aires, Argentina`);
+  }
+  if(localidad){
+    consultas.push(`${localidad}, Buenos Aires, Argentina`);
   }
 
-  return consultas;
+  return [...new Set(consultas)];
 }
 
-function dvCacheValida(v){
-  return !!v &&
-    Number.isFinite(Number(v.lat)) &&
-    Number.isFinite(Number(v.lng)) &&
-    Math.abs(Number(v.lat))<=90 &&
-    Math.abs(Number(v.lng))<=180;
+function guardarCoordenadaEnObjeto(d,pos){
+  if(!pos) return d;
+  return {
+    ...d,
+    lat:pos[0],
+    lng:pos[1]
+  };
 }
 
-function dvPosValida(pos){
-  return Array.isArray(pos) &&
-    pos.length>=2 &&
-    Number.isFinite(Number(pos[0])) &&
-    Number.isFinite(Number(pos[1])) &&
-    Math.abs(Number(pos[0]))<=90 &&
-    Math.abs(Number(pos[1]))<=180;
-}
-
-function dvResultadoLocalidadValido(r,d){
-  if(!r) return false;
-
-  const address=r.address || {};
-  const display=normalizar(r.display_name || "");
-
-  if(!dvEsTurdera(d)) return true;
-
-  return (
-    normalizar(address.city || "").includes("lomas de zamora") ||
-    normalizar(address.town || "").includes("turdera") ||
-    normalizar(address.suburb || "").includes("turdera") ||
-    display.includes("turdera") ||
-    display.includes("lomas de zamora")
-  );
-}
-
-async function dvFetchJSON(url){
-  const controller=new AbortController();
-
-  const timer=setTimeout(
-    ()=>controller.abort(),
-    8000
-  );
+async function consultarNominatim(query){
+  const url =
+    "https://nominatim.openstreetmap.org/search" +
+    "?format=jsonv2&limit=1&countrycodes=ar" +
+    "&addressdetails=1&q=" +
+    encodeURIComponent(query);
 
   try{
-    const response=await fetch(
+    const response = await fetch(
       url,
       {
-        signal:controller.signal,
         cache:"no-store",
         headers:{
           "Accept":"application/json"
@@ -1090,466 +1454,303 @@ async function dvFetchJSON(url){
       }
     );
 
-    if(!response.ok) return null;
+    if(!response.ok){
+      return null;
+    }
 
-    return await response.json();
+    const resultados = await response.json();
+
+    if(!Array.isArray(resultados) || !resultados.length){
+      return null;
+    }
+
+    const lat = Number(resultados[0].lat);
+    const lng = Number(resultados[0].lon);
+
+    if(
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      Math.abs(lat)>90 ||
+      Math.abs(lng)>180
+    ){
+      return null;
+    }
+
+    return [lat,lng];
   }catch(error){
-    console.warn("Geocodificador:",error);
-    return null;
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
-async function dvNominatimEstructurado(consulta,d){
-  const params=new URLSearchParams();
-
-  params.set("format","jsonv2");
-  params.set("limit","5");
-  params.set("countrycodes","ar");
-  params.set("addressdetails","1");
-
-  if(consulta.calle) params.set("street",consulta.calle);
-  if(consulta.numero) params.set("housenumber",consulta.numero);
-
-  // Para Lomas y localidades vecinas usamos el campo city.
-  const loc=dvLocalidadCanonica(d);
-
-  if(
-    loc==="Lomas de Zamora" ||
-    loc==="Banfield" ||
-    loc==="Temperley" ||
-    loc==="Llavallol" ||
-    loc==="Turdera" ||
-    loc==="Santa Catalina"
-  ){
-    params.set(
-      "city",
-      loc==="Santa Catalina"
-        ? "Lomas de Zamora"
-        : loc
-    );
-  }
-
-  params.set("state","Buenos Aires");
-  params.set("country","Argentina");
-
-  const resultados=await dvFetchJSON(
-    "https://nominatim.openstreetmap.org/search?"+params.toString()
-  );
-
-  if(!Array.isArray(resultados) || !resultados.length){
+    console.warn("Geocodificación Nominatim:",query,error);
     return null;
   }
-
-  const bbox=dvBboxMapa();
-
-  const candidatos=resultados
-    .map(r=>{
-      const pos=[
-        Number(r.lat),
-        Number(r.lon)
-      ];
-
-      if(!dvPosValida(pos)) return null;
-
-      const dentro=!bbox || (
-        pos[0]>=bbox.south &&
-        pos[0]<=bbox.north &&
-        pos[1]>=bbox.west &&
-        pos[1]<=bbox.east
-      );
-
-      return {
-        raw:r,
-        pos,
-        dentro,
-        coincide:dvResultadoLocalidadValido(r,d),
-        importancia:Number(r.importance || 0)
-      };
-    })
-    .filter(Boolean);
-
-  const buenos=candidatos
-    .filter(x=>x.coincide)
-    .sort((a,b)=>{
-      if(a.dentro!==b.dentro) return a.dentro ? -1 : 1;
-      return b.importancia-a.importancia;
-    });
-
-  if(buenos.length){
-    return {
-      pos:buenos[0].pos,
-      proveedor:"Nominatim"
-    };
-  }
-
-  return null;
-}
-
-async function dvNominatimLibre(consulta,d){
-  const params=new URLSearchParams();
-
-  params.set("format","jsonv2");
-  params.set("limit","5");
-  params.set("countrycodes","ar");
-  params.set("addressdetails","1");
-  params.set("q",consulta.texto);
-
-  const bbox=dvBboxMapa();
-
-  if(bbox){
-    params.set(
-      "viewbox",
-      `${bbox.west},${bbox.north},${bbox.east},${bbox.south}`
-    );
-  }
-
-  const resultados=await dvFetchJSON(
-    "https://nominatim.openstreetmap.org/search?"+params.toString()
-  );
-
-  if(!Array.isArray(resultados) || !resultados.length){
-    return null;
-  }
-
-  const candidatos=resultados
-    .map(r=>{
-      const pos=[
-        Number(r.lat),
-        Number(r.lon)
-      ];
-
-      if(!dvPosValida(pos)) return null;
-
-      return {
-        raw:r,
-        pos,
-        coincide:dvResultadoLocalidadValido(r,d),
-        importancia:Number(r.importance || 0)
-      };
-    })
-    .filter(Boolean)
-    .filter(x=>x.coincide)
-    .sort((a,b)=>b.importancia-a.importancia);
-
-  if(candidatos.length){
-    return {
-      pos:candidatos[0].pos,
-      proveedor:"Nominatim"
-    };
-  }
-
-  return null;
-}
-
-async function dvPhoton(consulta,d){
-  const url=
-    "https://photon.komoot.io/api/" +
-    "?limit=5" +
-    "&lang=es" +
-    "&q=" +
-    encodeURIComponent(consulta.texto);
-
-  const resultado=await dvFetchJSON(url);
-
-  if(
-    !resultado ||
-    !Array.isArray(resultado.features)
-  ){
-    return null;
-  }
-
-  const candidatos=resultado.features
-    .map(feature=>{
-      const coords=
-        feature &&
-        feature.geometry &&
-        feature.geometry.coordinates;
-
-      if(!Array.isArray(coords) || coords.length<2){
-        return null;
-      }
-
-      const lng=Number(coords[0]);
-      const lat=Number(coords[1]);
-
-      if(!dvPosValida([lat,lng])) return null;
-
-      const props=feature.properties || {};
-      const display=normalizar(
-        [
-          props.name,
-          props.street,
-          props.city,
-          props.district,
-          props.state
-        ].filter(Boolean).join(", ")
-      );
-
-      const loc=normalizar(dvLocalidadCanonica(d));
-
-      let coincide=true;
-
-      if(dvEsTurdera(d)){
-        coincide=
-          display.includes("turdera") ||
-          display.includes("lomas de zamora");
-      }else if(loc==="lomas de zamora"){
-        coincide=
-          display.includes("lomas de zamora") ||
-          display.includes("lomas");
-      }
-
-      return {
-        pos:[lat,lng],
-        coincide
-      };
-    })
-    .filter(Boolean)
-    .filter(x=>x.coincide);
-
-  if(candidatos.length){
-    return {
-      pos:candidatos[0].pos,
-      proveedor:"Photon"
-    };
-  }
-
-  return null;
-}
-
-function dvGuardarGeo(d,pos,proveedor){
-  if(!dvPosValida(pos)) return;
-
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-
-  cache[key]={
-    lat:Number(pos[0]),
-    lng:Number(pos[1]),
-    proveedor:proveedor || "",
-    actualizado:new Date().toISOString()
-  };
-
-  guardarCacheGeocoding(cache);
 }
 
 async function geocodificarDireccion(d){
-  const directa=obtenerLatLngReclamo(d);
+  // V32 PRO: refuerzo exclusivo del geocodificador.
+  // Se conserva intacta la arquitectura de pines de V32.
 
+  const directa=obtenerLatLngReclamo(d);
   if(directa) return directa;
 
   const cache=cargarCacheGeocoding();
   const key=claveGeocoding(d);
 
-  if(dvCacheValida(cache[key])){
-    return [
-      Number(cache[key].lat),
-      Number(cache[key].lng)
-    ];
+  if(
+    cache[key] &&
+    Number.isFinite(Number(cache[key].lat)) &&
+    Number.isFinite(Number(cache[key].lng))
+  ){
+    return [Number(cache[key].lat),Number(cache[key].lng)];
   }
 
-  const consultas=dvConsultasGeocoding(d);
+  const calle=String(
+    d.calle || d.direccion || d.Direccion ||
+    d.domicilio || d.Domicilio || ""
+  ).trim();
 
-  if(!consultas.length) return null;
+  const numero=String(d.numero || "").trim();
 
-  /*
-   * 1) Intento estructurado:
-   * calle + altura + localidad.
-   * Es más fiable para direcciones argentinas que mandar todo
-   * como texto libre.
-   */
-  for(const consulta of consultas){
-    if(consulta.numero){
-      const resultado=
-        await dvNominatimEstructurado(
-          consulta,
-          d
+  const localidad=String(
+    d.localidad || selectedCgm || ""
+  ).trim();
+
+  if(!calle && !numero) return null;
+
+  const calleNormalizada=calle
+    .replace(/\bav\.?\b/gi,"Avenida")
+    .replace(/\bavda\.?\b/gi,"Avenida")
+    .replace(/\bgral\.?\b/gi,"General")
+    .replace(/\bcnel\.?\b/gi,"Coronel")
+    .replace(/\bcrnel\.?\b/gi,"Coronel")
+    .replace(/\bpje\.?\b/gi,"Pasaje")
+    .replace(/\bpas\.?\b/gi,"Pasaje")
+    .replace(/\bdr\.?\b/gi,"Doctor")
+    .replace(/\bing\.?\b/gi,"Ingeniero")
+    .replace(/\btte\.?\b/gi,"Teniente")
+    .replace(/\bpres\.?\b/gi,"Presidente")
+    .replace(/\s+/g," ")
+    .trim();
+
+  const consultas=[];
+  const add=q=>{
+    q=String(q||"").replace(/\s+/g," ").trim();
+    if(q && !consultas.includes(q)) consultas.push(q);
+  };
+
+  // Misma estrategia progresiva de V32, ampliada con variantes.
+  if(numero){
+    if(localidad){
+      add(`${calle} ${numero}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
+      add(`${calleNormalizada} ${numero}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
+      add(`${calle} ${numero}, ${localidad}, Buenos Aires, Argentina`);
+    }
+
+    add(`${calle} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
+    add(`${calleNormalizada} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
+    add(`${calle} ${numero}, Buenos Aires, Argentina`);
+  }
+
+  // Fallback para calles que OSM tiene sin altura.
+  if(calleNormalizada){
+    if(localidad){
+      add(`${calleNormalizada}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
+    }
+    add(`${calleNormalizada}, Lomas de Zamora, Buenos Aires, Argentina`);
+  }
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  async function buscar(query){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),8500);
+
+    try{
+      const url=
+        "https://nominatim.openstreetmap.org/search" +
+        "?format=jsonv2" +
+        "&limit=5" +
+        "&countrycodes=ar" +
+        "&addressdetails=1" +
+        "&q="+encodeURIComponent(query);
+
+      const response=await fetch(url,{
+        signal:controller.signal,
+        cache:"no-store",
+        headers:{"Accept":"application/json"}
+      });
+
+      if(!response.ok) return null;
+
+      const data=await response.json();
+      if(!Array.isArray(data) || !data.length) return null;
+
+      const loc=normalizar(localidad);
+      const candidatos=data.map(r=>{
+        const lat=Number(r.lat),lng=Number(r.lon);
+        if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+
+        const display=normalizar(r.display_name||"");
+        const a=r.address||{};
+
+        const coincideLocalidad=loc && (
+          normalizar(a.city||"").includes(loc) ||
+          normalizar(a.town||"").includes(loc) ||
+          normalizar(a.village||"").includes(loc) ||
+          normalizar(a.suburb||"").includes(loc) ||
+          display.includes(loc)
         );
 
-      if(resultado && resultado.pos){
-        dvGuardarGeo(
-          d,
-          resultado.pos,
-          resultado.proveedor
-        );
-        return resultado.pos;
+        const esLomas=
+          display.includes("lomas de zamora") ||
+          normalizar(a.city||"").includes("lomas de zamora");
+
+        const tipo=String(r.type||"");
+        const esDireccion=[
+          "house","residential","building",
+          "street","road","path"
+        ].includes(tipo);
+
+        return {
+          pos:[lat,lng],
+          score:
+            (coincideLocalidad?1000:0)+
+            (esLomas?300:0)+
+            (esDireccion?100:0)+
+            Number(r.importance||0)
+        };
+      }).filter(Boolean);
+
+      if(!candidatos.length) return null;
+
+      candidatos.sort((a,b)=>b.score-a.score);
+      return candidatos[0].pos;
+    }catch(e){
+      console.warn("Geocodificación:",query,e);
+      return null;
+    }finally{
+      clearTimeout(timeout);
+    }
+  }
+
+  // Consultas secuenciales: evita rate-limit y no bloquea toda la aplicación.
+  for(const query of consultas){
+    for(let intento=1;intento<=2;intento++){
+      const pos=await buscar(query);
+
+      if(pos){
+        cache[key]={
+          lat:pos[0],
+          lng:pos[1],
+          actualizado:new Date().toISOString()
+        };
+        guardarCacheGeocoding(cache);
+        return pos;
       }
+
+      if(intento===1) await sleep(700);
     }
-  }
 
-  /*
-   * 2) Texto libre: sólo después del intento estructurado.
-   */
-  for(const consulta of consultas){
-    const resultado=
-      await dvNominatimLibre(
-        consulta,
-        d
-      );
-
-    if(resultado && resultado.pos){
-      dvGuardarGeo(
-        d,
-        resultado.pos,
-        resultado.proveedor
-      );
-      return resultado.pos;
-    }
-  }
-
-  /*
-   * 3) Segundo proveedor.
-   */
-  for(const consulta of consultas){
-    const resultado=
-      await dvPhoton(
-        consulta,
-        d
-      );
-
-    if(resultado && resultado.pos){
-      dvGuardarGeo(
-        d,
-        resultado.pos,
-        resultado.proveedor
-      );
-      return resultado.pos;
-    }
+    await sleep(700);
   }
 
   console.warn(
-    "No se pudo geolocalizar:",
-    dvDireccionBase(d),
-    dvLocalidadCanonica(d)
+    "No se pudo geocodificar:",
+    `${calle} ${numero}`,
+    localidad
   );
 
   return null;
 }
 
-function dvFirmaReclamos(lista){
-  return (Array.isArray(lista)?lista:[])
-    .map(d=>
-      claveGeocoding(d) +
-      "|" +
-      String(d.lat || "") +
-      "|" +
-      String(d.lng || "")
-    )
-    .join("||");
-}
+let dvMarcadoresRenderKey = "";
 
-let dvGeoListaActual=[];
-let dvGeoFirmaActual="";
-let dvGeoIndice=0;
-let dvGeoEjecutando=false;
-
-async function dvProcesarColaGeocoding(generacion){
-  if(dvGeoEjecutando) return;
-
-  dvGeoEjecutando=true;
-
-  try{
-    while(
-      dvGeoIndice<dvGeoListaActual.length
-    ){
-      if(generacion!==geocodingGeneration) return;
-
-      const d=
-        dvGeoListaActual[dvGeoIndice++];
-
-      try{
-        const pos=
-          await geocodificarDireccion(d);
-
-        if(
-          generacion!==geocodingGeneration
-        ) return;
-
-        if(pos){
-          agregarMarcadorReclamo({
-            ...d,
-            lat:Number(pos[0]),
-            lng:Number(pos[1])
-          });
-        }
-      }catch(error){
-        console.warn(
-          "Error ubicando reclamo:",
-          error
-        );
-      }
-
-      /*
-       * Nominatim es un servicio público y su política pide
-       * un uso muy conservador. Un único trabajador evita
-       * bloqueos/rate-limit y hace que la cola sea estable.
-       */
-      await new Promise(
-        resolve=>setTimeout(resolve,1100)
-      );
-    }
-  }finally{
-    if(generacion===geocodingGeneration){
-      dvGeoEjecutando=false;
-    }
-  }
+function dvClaveListaMarcadores(lista){
+  if(!Array.isArray(lista)) return "";
+  return lista.map(d => [
+    d.calle || "",
+    d.numero || "",
+    d.localidad || "",
+    d.lat ?? d.Lat ?? d.latitude ?? "",
+    d.lng ?? d.Lng ?? d.lon ?? d.longitude ?? ""
+  ].join("|")).join("||");
 }
 
 async function mostrarMarcadoresGeocodificados(lista){
-  if(!Array.isArray(lista)) return;
-
-  const firma=dvFirmaReclamos(lista);
-
-  /*
-   * Si render() vuelve a ejecutarse por un cambio de estado,
-   * pero la lista de direcciones es exactamente la misma,
-   * NO borramos los pines ni reiniciamos la cola.
-   */
-  if(firma===dvGeoFirmaActual){
+  if(!Array.isArray(lista) || !lista.length){
+    if(dvMarcadoresRenderKey !== ""){
+      limpiarMarcadoresReclamos();
+      dvMarcadoresRenderKey = "";
+    }
     return;
   }
 
-  dvGeoFirmaActual=firma;
-  geocodingGeneration++;
+  const renderKey = dvClaveListaMarcadores(lista);
 
+  /*
+   * Si las direcciones son las mismas, no borrar/recrear los pines.
+   * Solo actualizar su estado.
+   */
+  if(
+    renderKey === dvMarcadoresRenderKey &&
+    reclamosMarkersLayer
+  ){
+    refrescarEstadosMarcadoresReclamos();
+    return;
+  }
+
+  const generacion = ++geocodingGeneration;
   limpiarMarcadoresReclamos();
+  dvMarcadoresRenderKey = renderKey;
 
-  const generacion=geocodingGeneration;
+  const capa = asegurarCapaReclamos();
+  if(!capa) return;
 
-  dvGeoListaActual=[];
-  dvGeoIndice=0;
-
-  const cache=cargarCacheGeocoding();
+  const pendientes = [];
 
   for(const d of lista){
-    const directa=obtenerLatLngReclamo(d);
+    const pos = obtenerLatLngReclamo(d);
 
-    if(directa){
+    if(pos){
       agregarMarcadorReclamo(d);
-      continue;
+    }else{
+      const cache = cargarCacheGeocoding();
+      const key = claveGeocoding(d);
+
+      if(cache[key]){
+        agregarMarcadorReclamo({
+          ...d,
+          lat:Number(cache[key].lat),
+          lng:Number(cache[key].lng)
+        });
+      }else{
+        pendientes.push(d);
+      }
     }
-
-    const key=claveGeocoding(d);
-
-    if(dvCacheValida(cache[key])){
-      agregarMarcadorReclamo({
-        ...d,
-        lat:Number(cache[key].lat),
-        lng:Number(cache[key].lng)
-      });
-      continue;
-    }
-
-    dvGeoListaActual.push(d);
   }
 
   /*
-   * La cola no bloquea el render ni la interfaz.
-   * Se inicia y los pines aparecen individualmente.
+   * Nominatim debe tratarse como servicio de baja frecuencia.
+   * Procesamos secuencialmente para evitar bloqueos/rate-limit y,
+   * además, conservamos inmediatamente cada pin que sí encontramos.
    */
-  dvProcesarColaGeocoding(generacion);
+  let indice = 0;
+
+  async function trabajador(){
+    while(indice < pendientes.length){
+      if(generacion !== geocodingGeneration) return;
+
+      const d = pendientes[indice++];
+      const pos = await geocodificarDireccion(d);
+
+      if(generacion !== geocodingGeneration) return;
+
+      if(pos){
+        agregarMarcadorReclamo(
+          guardarCoordenadaEnObjeto(d,pos)
+        );
+      }
+    }
+  }
+
+  await trabajador();
 }
 
 function resetearRotacionMapa(){
@@ -1739,26 +1940,138 @@ function crearIconoVehiculo(rumbo){
   });
 }
 
+
+let dvNavLastPosition=null;
+let dvNavBearing=null;
+
+function dvNavNormalizeBearing(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return null;
+  return ((n%360)+360)%360;
+}
+
+function dvNavBearingBetween(a,b){
+  if(!a||!b) return null;
+  const lat1=Number(a.lat)*Math.PI/180;
+  const lat2=Number(b.lat)*Math.PI/180;
+  const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=
+    Math.cos(lat1)*Math.sin(lat2)-
+    Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
+}
+
+function dvNavSmoothBearing(next){
+  next=dvNavNormalizeBearing(next);
+  if(next===null) return dvNavBearing;
+  if(dvNavBearing===null){
+    dvNavBearing=next;
+    return dvNavBearing;
+  }
+  const delta=((next-dvNavBearing+540)%360)-180;
+  // Suavizado fuerte para que el mapa no tiemble con el GPS.
+  dvNavBearing=dvNavNormalizeBearing(
+    dvNavBearing + delta*0.22
+  );
+  return dvNavBearing;
+}
+
+function dvNavReset(){
+  dvNavLastPosition=null;
+  dvNavBearing=null;
+}
+
 function activarSeguimientoVisual(lat,lng,forzarZoom=false){
   if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
 
+  const actual={lat:lat,lng:lng};
+
+  // Primer GPS del recorrido: entrar de verdad en modo navegación.
   if(forzarZoom){
     mapaSiguiendoVehiculo=true;
     mapaUsuarioMovio=false;
+    dvNavLastPosition=actual;
 
-    // Entrar automáticamente en navegación al recibir el primer GPS.
-    map.setView([lat,lng],18,{animate:true});
-    try{ map.setPitch(35); }catch(e){}
+    const gpsHeading=Number(recorridoHeading);
+    dvNavBearing=
+      Number.isFinite(gpsHeading)
+        ? dvNavNormalizeBearing(gpsHeading)
+        : 0;
+
+    try{
+      // Una sola operación de MapLibre establece TODO el estado de navegación.
+      map.stop();
+      dvNavCameraMoving=true;
+      map.easeTo({
+        center:[lng,lat],
+        zoom:17,
+        pitch:35,
+        bearing:dvNavBearing,
+        offset:[0,120],
+        duration:700,
+        essential:true
+      });
+    }catch(e){
+      try{
+        map.setView([lat,lng],17,{animate:true});
+        map.setPitch(35);
+        map.setBearing(dvNavBearing||0);
+      }catch(e2){}
+    }
     return;
   }
 
-  // Seguimiento continuo con la implementación probada del DVMap.
-  if(recorridoActivo && mapaSiguiendoVehiculo && !mapaUsuarioMovio){
-    map.panTo([lat,lng],{
-      animate:true,
-      duration:.45
+  if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
+    return;
+
+  // El rumbo se obtiene primero del movimiento real entre puntos.
+  // Esto funciona aunque el teléfono no entregue coords.heading.
+  let movimiento=null;
+  if(dvNavLastPosition){
+    const d=distanciaMetros(dvNavLastPosition,actual);
+    if(d >= 3){
+      movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
+    }
+  }
+
+  dvNavLastPosition=actual;
+
+  if(movimiento!==null){
+    dvNavSmoothBearing(movimiento);
+  }else if(dvNavBearing===null){
+    const gpsHeading=Number(recorridoHeading);
+    if(Number.isFinite(gpsHeading))
+      dvNavBearing=dvNavNormalizeBearing(gpsHeading);
+  }
+
+  const bearing=
+    dvNavBearing!==null
+      ? dvNavBearing
+      : 0;
+
+  try{
+    // Modo navegación: centro adelantado, inclinación 35° y giro
+    // siguiendo el sentido de marcha.
+    dvNavCameraMoving=true;
+    map.easeTo({
+      center:[lng,lat],
+      zoom:17,
+      pitch:35,
+      bearing:bearing,
+      offset:[0,120],
+      duration:450,
+      essential:true
     });
-    try{ map.setPitch(35); }catch(e){}
+  }catch(e){
+    // Fallback seguro: el seguimiento que ya estaba probado.
+    try{
+      map.panTo([lat,lng],{
+        animate:true,
+        duration:.45
+      });
+      map.setPitch(35);
+    }catch(e2){}
   }
 }
 
@@ -1936,6 +2249,7 @@ async function liberarPantallaEncendida(){
   try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
+  dvNavReset();
   if(!selectedZone){
     alert("Primero seleccioná una zona.");
     return;
@@ -1979,6 +2293,7 @@ function iniciarRecorrido(){
   mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
+  dvNavReset();
   if(!recorridoActivo)return;
   if(recorridoWatchId!==null){
     navigator.geolocation.clearWatch(recorridoWatchId);
@@ -2354,57 +2669,118 @@ zona:
 zona
 });
 }
+let dvEvidenciasRequestId = 0;
+const DV_EVIDENCIAS_CACHE_KEY = "diaVerdeEvidenciasHoyCacheV1";
+
 function cargarEvidenciasHoy(){
-fetch(
-APPS_SCRIPT_URL +
-"?accion=evidenciasHoy&t="+
-Date.now()
-)
-.then(
-response => {
-if(!response.ok){
-throw new Error(
-"No se pudo consultar el histórico."
-);
+  const requestId = ++dvEvidenciasRequestId;
+  let cacheUsada = false;
+
+  try{
+    const cached = JSON.parse(localStorage.getItem(DV_EVIDENCIAS_CACHE_KEY) || "null");
+    if(Array.isArray(cached)){
+      evidenciasHoy = cached;
+      cacheUsada = true;
+      if(selectedZone){
+        refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
+      }
+    }
+  }catch(e){}
+
+  fetch(APPS_SCRIPT_URL + "?accion=evidenciasHoy&t=" + Date.now(), {cache:"no-store"})
+    .then(response => {
+      if(!response.ok) throw new Error("No se pudo consultar el histórico.");
+      return response.json();
+    })
+    .then(resultado => {
+      if(requestId !== dvEvidenciasRequestId) return;
+      if(!resultado.ok) throw new Error(resultado.error || "Error en el histórico.");
+
+      const nuevas = Array.isArray(resultado.evidencias) ? resultado.evidencias : [];
+      evidenciasHoy = nuevas;
+
+      try{
+        localStorage.setItem(DV_EVIDENCIAS_CACHE_KEY, JSON.stringify(nuevas));
+      }catch(e){}
+
+      statusText.textContent = "Actualizado correctamente";
+      actualizarHora();
+      if(selectedZone){
+        refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
+      }
+    })
+    .catch(error => {
+      if(requestId !== dvEvidenciasRequestId) return;
+      console.error(error);
+
+      // IMPORTANTE: no borrar evidencias anteriores ante un error temporal.
+      // Esto evita que el pin pase Realizado -> Pendiente -> Realizado.
+      if(!cacheUsada && !Array.isArray(evidenciasHoy)) evidenciasHoy = [];
+
+      statusText.textContent = cacheUsada
+        ? "Usando datos guardados · esperando actualización"
+        : "No se pudo actualizar el histórico";
+
+      if(selectedZone){
+        refrescarEstadosMarcadoresReclamos();
+        dvActualizarEstadosLista();
+      }
+    });
 }
-return response.json();
+function dvActualizarEstadosLista(){
+  try{
+    const filas = list ? list.querySelectorAll(".address") : [];
+    filas.forEach((fila, index) => {
+      const item = currentVisibleDirections[index];
+      if(!item) return;
+
+      const realizado = estaRealizadaHoy(item);
+
+      const pin = fila.querySelector(".pin");
+      if(pin){
+        pin.textContent = realizado ? "✅" : "📍";
+      }
+
+      const small = fila.querySelector("small");
+      if(small){
+        small.innerHTML =
+          esc(item.localidad) +
+          " · " +
+          (realizado ? "🟢 Realizado hoy" : "🔴 Pendiente");
+      }
+
+      const actions = fila.querySelector(".address-actions");
+      if(!actions) return;
+
+      const existing = actions.querySelector(".evidence-btn-dv31");
+      const direccion = `${item.calle} ${item.numero || ""}`;
+
+      if(realizado){
+        if(!existing){
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "evidence-btn evidence-btn-dv31";
+          btn.textContent = "📷 Ver evidencia";
+          btn.style.cssText =
+            "display:inline-block!important;visibility:visible!important;" +
+            "opacity:1!important;background:#e9f7ed!important;" +
+            "color:#087a3d!important;border:1px solid #63b57f!important;" +
+            "padding:10px 14px!important;border-radius:9px!important;" +
+            "font-size:13px!important;font-weight:800!important;cursor:pointer!important;";
+          btn.onclick = () => verEvidencia(item);
+          actions.appendChild(btn);
+        }
+      }else if(existing){
+        existing.remove();
+      }
+    });
+  }catch(error){
+    console.warn("Actualizar estados sin redibujar mapa:", error);
+  }
 }
-)
-.then(
-resultado => {
-if(!resultado.ok){
-throw new Error(
-resultado.error ||
-"Error en el histórico."
-);
-}
-evidenciasHoy =
-resultado.evidencias || [];
-statusText.textContent =
-"Actualizado correctamente";
-actualizarHora();
-if(selectedZone){
-  refrescarEstadosMarcadoresReclamos();
-}
-refrescarEstadosMarcadoresReclamos();
-}
-)
-.catch(
-error => {
-console.error(error);
-console.log(
-"El histórico no pudo consultarse:",
-error
-);
-evidenciasHoy = [];
-statusText.textContent =
-"Direcciones cargadas";
-if(selectedZone){
-  refrescarEstadosMarcadoresReclamos();
-}
-}
-);
-}
+
 function claveDireccion(
 zona,
 direccion
@@ -2477,80 +2853,81 @@ normalizar(item.zona) ===
 normalizar(selected)
 );
 }
-function mostrarMapa(
-nombreZona
-){
-if(activeLayer){
-map.removeLayer(
-activeLayer
-);
-activeLayer =
-null;
+let dvZonaCentradaKey = null;
+let dvZonaLayerKey = null;
+
+function mostrarMapa(nombreZona){
+  const zonaKey =
+    normalizar(selectedCgm) + "||" + normalizar(nombreZona);
+
+  const nombrePoligono = nombrePoligonoPara(
+    selectedCgm,
+    nombreZona
+  );
+
+  const feature = zonasGeo.find(
+    f =>
+      normalizar(f.properties.name) ===
+      normalizar(nombrePoligono)
+  );
+
+  if(!feature){
+    if(activeLayer){
+      map.removeLayer(activeLayer);
+      activeLayer = null;
+    }
+    dvZonaLayerKey = null;
+    dvZonaCentradaKey = null;
+    dvZonaLayerKey = null;
+    zoneBadge.textContent = selectedCgm + " — " + nombreZona;
+    zoneBadge.style.display = "block";
+    title.textContent = "Mapa de la zona";
+    mapSubtitle.textContent =
+      "No se encontró el polígono correspondiente.";
+    return;
+  }
+
+  /*
+   * NO reconstruir el polígono durante una actualización de estados.
+   * Solo se crea cuando cambia realmente CGM/zona.
+   */
+  if(!activeLayer || dvZonaLayerKey !== zonaKey){
+    if(activeLayer){
+      map.removeLayer(activeLayer);
+      activeLayer = null;
+    }
+    dvZonaLayerKey = null;
+    dvZonaCentradaKey = null;
+
+    activeLayer = L.geoJSON(
+      feature,
+      {
+        style:{
+          color:"#087a3d",
+          weight:3,
+          fillColor:"#7acb91",
+          fillOpacity:.30
+        }
+      }
+    ).addTo(map);
+
+    dvZonaLayerKey = zonaKey;
+
+    const bounds = activeLayer.getBounds();
+    if(bounds.isValid() && dvZonaCentradaKey !== zonaKey){
+      map.fitBounds(bounds,{padding:[25,25]});
+      dvZonaCentradaKey = zonaKey;
+    }
+  }
+
+  title.textContent = "Mapa de " + nombreZona;
+  mapSubtitle.textContent =
+    selectedCgm + " — " + nombreZona;
+  zoneBadge.textContent =
+    selectedCgm + " — " + nombreZona;
+  zoneBadge.style.display = "block";
 }
-const nombrePoligono =
-nombrePoligonoPara(
-selectedCgm,
-nombreZona
-);
-const feature =
-zonasGeo.find(
-f =>
-normalizar(
-f.properties.name
-) ===
-normalizar(
-nombrePoligono
-)
-);
-if(!feature){
-zoneBadge.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.style.display =
-"block";
-title.textContent =
-"Mapa de la zona";
-mapSubtitle.textContent =
-"No se encontró el polígono correspondiente.";
-return;
-}
-activeLayer =
-L.geoJSON(
-feature,
-{
-style:{
-color:"#087a3d",
-weight:3,
-fillColor:"#7acb91",
-fillOpacity:.30
-}
-}
-).addTo(map);
-const bounds =
-activeLayer.getBounds();
-if(bounds.isValid()){
-map.fitBounds(
-bounds,
-{
-padding:[25,25]
-}
-);
-}
-title.textContent =
-"Mapa de " +
-nombreZona;
-mapSubtitle.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.textContent =
-selectedCgm +
-" — " +
-nombreZona;
-zoneBadge.style.display =
-"block";
-}
+
 function render(){
 selectedCgm =
 cgm.value;
@@ -3001,6 +3378,24 @@ direccion:
 foto:
 evidenciaBase64
 };
+// V22: estado optimista local. La PC/móvil no espera a que Apps Script
+// termine de procesar la foto para mostrar "Realizado hoy".
+if(typeof dv20MarkLocalEvidence==="function"){
+  dv20MarkLocalEvidence({
+    fecha:fecha,
+    hora:hora,
+    cgm:selectedCgm,
+    zona:selectedZone,
+    direccion:`${evidenciaActual.calle} ${evidenciaActual.numero || ""}`,
+    estado:"Realizado hoy",
+    usuario:(typeof dvUsuarioActual==="function" && dvUsuarioActual()) ?
+      dvUsuarioActual().usuario : ""
+  });
+}
+if(selectedZone){
+  render();
+  refrescarEstadosMarcadoresReclamos();
+}
 try{
 await fetch(
 APPS_SCRIPT_URL,
@@ -3106,6 +3501,7 @@ stopRoute.addEventListener("click",finalizarRecorrido);
 cgm.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
 selectedCgm =
 cgm.value;
 selectedZone =
@@ -3119,6 +3515,7 @@ render();
 zone.addEventListener(
 "change",
 () => {
+  dvZonaCentradaKey=null;
   if(recorridoActivo && zone.value !== recorridoZona){
     zone.value=recorridoZona;
     selectedZone=recorridoZona;
@@ -3164,7 +3561,7 @@ cargarEvidenciasHoy();
 <script id="diaverde-auth">
 const DV_USUARIOS = [
   { usuario:"Ale",       password:"boca",          nombre:"Ale" },
-  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde" },
+  { usuario:"admin",     password:"banfield09",    nombre:"Dia Verde", rol:"admin" },
   { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
   { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
   { usuario:"Francocrr", password:"boca",          nombre:"Pablo Vazques" },
@@ -3205,10 +3602,12 @@ function dvIniciarSesion(){
   localStorage.setItem(DV_SESSION_KEY, "1");
   localStorage.setItem(DV_USER_KEY, JSON.stringify({
     usuario: encontrado.usuario,
-    nombre: encontrado.nombre
+    nombre: encontrado.nombre,
+    rol: encontrado.rol || "chofer"
   }));
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
+  try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   try {
     if(typeof recuperarRecorrido === "function") recuperarRecorrido();
   } catch(e) {
@@ -3219,6 +3618,7 @@ function dvCerrarSesion(){
   localStorage.removeItem(DV_SESSION_KEY);
   localStorage.removeItem(DV_USER_KEY);
   dvMostrarLogin();
+  try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   const u = document.getElementById("dvLoginUser");
   const p = document.getElementById("dvLoginPass");
   if(u) u.value = "";
@@ -3230,8 +3630,10 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
+    try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   }else{
     dvMostrarLogin();
+    try { if(typeof window.dv22RefreshAdmin === "function") window.dv22RefreshAdmin(); } catch(e) {}
   }
 }
 document.addEventListener("DOMContentLoaded", function(){
@@ -3484,5 +3886,277 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+<script id="dv-admin-panel">
+// ===== V22 PANEL ADMINISTRADOR =====
+(function(){
+  function dv22User(){
+    try{
+      return typeof dvUsuarioActual==="function" ? dvUsuarioActual() : null;
+    }catch(e){ return null; }
+  }
+  function dv22IsAdmin(){
+    const u=dv22User();
+    return !!u && String(u.usuario||"").trim().toLowerCase()==="admin";
+  }
+
+  const css=`
+  #dv22AdminOpen{position:fixed;right:16px;top:16px;z-index:5000;border:1px solid #ffffff30;border-radius:14px;padding:11px 16px;background:linear-gradient(145deg,#185c3f,#08763a);color:#fff;font-weight:900;box-shadow:0 12px 32px #0006;cursor:pointer;display:none}
+  #dv22Admin{position:fixed;inset:0;z-index:6000;background:#06131d;color:#edf8f3;display:none;font-family:Arial,Helvetica,sans-serif;overflow:auto}
+  #dv22Admin *{box-sizing:border-box}
+  .dv22-head{height:74px;background:linear-gradient(180deg,#0c2635,#071923);border-bottom:1px solid #2a4759;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:20;box-shadow:0 10px 34px #0006}
+  .dv22-brand{display:flex;align-items:center;gap:13px}.dv22-leaf{font-size:33px;filter:drop-shadow(0 5px 9px #0007)}
+  .dv22-title{font-size:20px;font-weight:900;letter-spacing:.5px}.dv22-sub{font-size:10px;color:#91aab9;margin-top:4px;letter-spacing:1.5px}
+  .dv22-status{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:900}.dv22-dot{width:10px;height:10px;border-radius:50%;background:#2cdb7b;box-shadow:0 0 18px #2cdb7b}
+  .dv22-close{border:1px solid #ffffff25;background:#102c3d;color:#fff;border-radius:11px;padding:9px 13px;cursor:pointer}
+  .dv22-wrap{display:grid;grid-template-columns:90px 1fr;min-height:calc(100vh - 74px)}
+  .dv22-side{background:linear-gradient(180deg,#081d2b,#061520);border-right:1px solid #203c4d;padding:14px 10px}
+  .dv22-nav{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:68px;text-align:center;border:1px solid transparent;background:transparent;color:#8fa8b7;padding:7px 3px;border-radius:16px;margin-bottom:7px;font-size:10px;font-weight:900;cursor:pointer;gap:5px}
+  .dv22-nav.active,.dv22-nav:hover{background:linear-gradient(145deg,#165a3e,#0c3828);border-color:#4ac58055;color:#fff;box-shadow:inset 0 1px #ffffff20,0 9px 22px #0004}
+  .dv22-content{padding:18px;max-width:1700px;width:100%;margin:auto}
+  .dv22-kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px}
+  .dv22-card{background:linear-gradient(145deg,#112c3e,#091c2a);border:1px solid #2b485a;border-radius:18px;padding:15px;box-shadow:0 14px 34px #0005,inset 0 1px #ffffff0b;position:relative;overflow:hidden}
+  .dv22-card:before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,#ffffff09,transparent 36%);pointer-events:none}
+  .dv22-kpi-label{font-size:9px;text-transform:uppercase;color:#839eae;font-weight:900;letter-spacing:1px}.dv22-kpi{font-size:28px;font-weight:900;margin-top:7px;text-shadow:0 4px 12px #0007}
+  .dv22-green{color:#53e394}.dv22-yellow{color:#f4cf59}.dv22-red{color:#ff726b}.dv22-blue{color:#64b6ff}
+  .dv22-main{display:grid;grid-template-columns:minmax(0,1fr) 325px;gap:13px;margin-top:13px}
+  .dv22-map{height:525px;border-radius:16px;background:radial-gradient(circle at 50% 42%,#194355,#081b28 72%);position:relative;overflow:hidden;border:1px solid #3a596a;box-shadow:inset 0 0 60px #0008,0 20px 45px #0006}
+  .dv22-map-grid{position:absolute;inset:-20%;background-image:linear-gradient(#ffffff0a 1px,transparent 1px),linear-gradient(90deg,#ffffff0a 1px,transparent 1px);background-size:48px 48px;transform:rotate(-7deg) scale(1.15)}
+  .dv22-road{position:absolute;height:5px;background:linear-gradient(90deg,#146a49,#39ca7c,#146a49);border-radius:8px;box-shadow:0 0 16px #25c76f4d;transform-origin:left center}
+  .dv22-vehicle{position:absolute;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#299b58,#0a4a2c);border:2px solid #93ffc0;box-shadow:0 0 0 8px #25c76f15,0 0 30px #25c76f70,0 11px 20px #0008;font-size:22px}
+  .dv22-alert{border:1px solid #78434d;background:linear-gradient(145deg,#36202a,#20171e);border-radius:13px;padding:12px;margin-top:9px;font-size:12px;box-shadow:0 9px 22px #0004}
+  .dv22-alert.warn{border-color:#705f2f;background:linear-gradient(145deg,#312b1c,#211e16)}.dv22-alert small{display:block;color:#8fa5b5;margin-top:4px}
+  .dv22-bottom{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:13px;margin-top:13px}
+  .dv22-table{width:100%;border-collapse:collapse;font-size:12px}.dv22-table th,.dv22-table td{padding:10px 6px;border-bottom:1px solid #203b4c;text-align:left}.dv22-table th{color:#839eae;font-size:9px;text-transform:uppercase;letter-spacing:1px}
+  .dv22-pill{padding:5px 8px;border-radius:20px;background:#124f36;color:#76e5a3;font-weight:900;box-shadow:inset 0 1px #ffffff18}.dv22-empty{color:#829cab;padding:18px 0;text-align:center}
+  @media(max-width:1050px){.dv22-kpis{grid-template-columns:repeat(3,1fr)}.dv22-main{grid-template-columns:1fr}.dv22-bottom{grid-template-columns:1fr}}
+  @media(max-width:700px){.dv22-wrap{grid-template-columns:1fr}.dv22-side{display:flex;overflow:auto}.dv22-nav{min-width:74px}.dv22-kpis{grid-template-columns:repeat(2,1fr)}}
+`;
+  function addCss(){
+    if(document.getElementById("dv22Style"))return;
+    const s=document.createElement("style");s.id="dv22Style";s.textContent=css;document.head.appendChild(s);
+  }
+
+  function evidenceStats(){
+    const list=Array.isArray(window.evidenciasHoy)?window.evidenciasHoy:[];
+    let done=0,pending=0;
+    list.forEach(e=>{
+      const st=String(e.estado||e.Estado||"").toLowerCase();
+      if(st.includes("realizado")||st.includes("complet"))done++;
+      else pending++;
+    });
+    return {total:list.length,done,pending};
+  }
+
+  function render(){
+    const p=document.getElementById("dv22Admin");
+    if(!p)return;
+    const s=evidenceStats();
+    document.getElementById("dv22Done").textContent=s.done;
+    document.getElementById("dv22Pending").textContent=s.pending;
+    document.getElementById("dv22Evidence").textContent=s.total;
+    const active=(typeof recorridoActivo!=="undefined"&&recorridoActivo)?1:0;
+    document.getElementById("dv22Active").textContent=active;
+    document.getElementById("dv22Gps").textContent=
+      (typeof gpsActivo!=="undefined"&&gpsActivo)?"1":"—";
+    document.getElementById("dv22Last").textContent=new Date().toLocaleTimeString("es-AR");
+  }
+
+  function make(){
+    if(document.getElementById("dv22Admin"))return;
+    addCss();
+    const open=document.createElement("button");
+    open.id="dv22AdminOpen";open.textContent="👑 Administración";
+    document.body.appendChild(open);
+
+    const p=document.createElement("div");p.id="dv22Admin";
+    p.innerHTML=`
+      <div class="dv22-head">
+        <div class="dv22-brand"><span class="dv22-leaf">🌱</span>
+          <div><div class="dv22-title">DÍA VERDE</div><div class="dv22-sub">PANEL ADMINISTRADOR</div></div>
+        </div>
+        <div class="dv22-status"><span class="dv22-dot"></span>SISTEMA OPERATIVO
+          <button class="dv22-close" id="dv22Close">Cerrar</button></div>
+      </div>
+      <div class="dv22-wrap">
+        <aside class="dv22-side">
+          <button class="dv22-nav active">🗺️<span>MAPA</span></button>
+          <button class="dv22-nav">🚛<span>FLOTA</span></button>
+          <button class="dv22-nav">📍<span>RECLAMOS</span></button>
+          <button class="dv22-nav">📷<span>EVIDENCIAS</span></button>
+          <button class="dv22-nav">📊<span>DATOS</span></button>
+          <button class="dv22-nav">👥<span>USUARIOS</span></button>
+          <button class="dv22-nav">🏢<span>CGM</span></button>
+          <button class="dv22-nav">🚨<span>ALERTAS</span></button>
+          <button class="dv22-nav">⚙️<span>AJUSTES</span></button>
+        </aside>
+        <main class="dv22-content">
+          <section class="dv22-kpis">
+            <div class="dv22-card"><div class="dv22-kpi-label">Vehículos activos</div><div class="dv22-kpi dv22-blue" id="dv22Active">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">GPS conectados</div><div class="dv22-kpi dv22-green" id="dv22Gps">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Pendientes</div><div class="dv22-kpi dv22-red" id="dv22Pending">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Realizados hoy</div><div class="dv22-kpi dv22-green" id="dv22Done">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Evidencias</div><div class="dv22-kpi dv22-blue" id="dv22Evidence">—</div></div>
+            <div class="dv22-card"><div class="dv22-kpi-label">Última actualización</div><div class="dv22-kpi" id="dv22Last">—</div></div>
+          </section>
+
+          <section class="dv22-main">
+            <div class="dv22-card">
+              <div style="font-weight:900;margin-bottom:10px">🗺️ MAPA EN TIEMPO REAL</span><span style="font-size:10px;color:#53e394;font-weight:900;letter-spacing:1px">● LIVE</span></div>
+              <div class="dv22-map">
+                <div class="dv22-map-grid"></div>
+                <div class="dv22-road" style="left:8%;top:70%;width:75%;transform:rotate(-19deg)"></div>
+                <div class="dv22-road" style="left:20%;top:28%;width:68%;transform:rotate(13deg)"></div>
+                <div class="dv22-vehicle" style="left:25%;top:43%">🚛</div>
+                <div class="dv22-vehicle" style="left:57%;top:31%">🚛</div>
+                <div class="dv22-vehicle" style="left:70%;top:62%;background:#806b1c;border-color:#f4d45d">🚛</div>
+                <div class="dv22-vehicle" style="left:43%;top:67%;background:#8c2925;border-color:#ff766c">🚛</div>
+              </div>
+              <div style="margin-top:9px;color:#8fa5b5;font-size:11px">
+                🟢 En recorrido &nbsp; 🟡 Detenido &nbsp; 🔴 Sin GPS &nbsp; ⚪ Sin actividad
+              </div>
+            </div>
+            <div>
+              <div class="dv22-card">
+                <b>🚨<span>ALERTAS</span> ACTIVAS</b>
+                <div class="dv22-alert">🔴 GPS sin actualización<small>Revisar vehículo desconectado</small></div>
+                <div class="dv22-alert warn">🟡 Vehículo detenido<small>Requiere atención</small></div>
+              </div>
+              <div class="dv22-card" style="margin-top:12px">
+                <b>📍 RESUMEN DE RECLAMOS</b>
+                <div style="font-size:29px;font-weight:900;margin-top:8px" id="dv22Summary">—</div>
+                <small style="color:#8fa5b5">registros cargados actualmente</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="dv22-bottom">
+            <div class="dv22-card"><b>🚛 VEHÍCULOS EN RECORRIDO</b>
+              <table class="dv22-table"><thead><tr><th>Vehículo</th><th>Estado</th><th>GPS</th></tr></thead>
+              <tbody id="dv22Fleet"><tr><td colspan="3" class="dv22-empty">Esperando telemetría</td></tr></tbody></table>
+            </div>
+            <div class="dv22-card"><b>📊 ESTADO</b>
+              <div style="margin-top:14px">Realizados <strong id="dv22Done2">—</strong></div>
+              <div style="margin-top:8px">Pendientes <strong id="dv22Pending2">—</strong></div>
+              <div style="margin-top:8px">Evidencias <strong id="dv22Evidence2">—</strong></div>
+            </div>
+            <div class="dv22-card"><b>👥 ADMINISTRACIÓN</b>
+              <div style="margin-top:14px">Usuario: <strong>admin</strong></div>
+              <div style="margin-top:8px">Rol: <span class="dv22-pill">ADMIN</span></div>
+              <div style="margin-top:8px;color:#8fa5b5;font-size:11px">Control general del sistema</div>
+            </div>
+          </section>
+        </main>
+      </div>`;
+    document.body.appendChild(p);
+    open.onclick=()=>{p.style.display="block";render()};
+    document.getElementById("dv22Close").onclick=()=>p.style.display="none";
+  }
+
+  function update(){
+    const admin= dv22IsAdmin();
+    const existing=document.getElementById("dv22AdminOpen");
+    if(!admin){
+      if(existing){
+        existing.classList.remove("dv-admin-visible");
+        existing.style.setProperty("display","none","important");
+      }
+      const panel=document.getElementById("dv22Admin");
+      if(panel) panel.style.setProperty("display","none","important");
+      return;
+    }
+    make();
+    const button=document.getElementById("dv22AdminOpen");
+    if(button){
+      button.classList.add("dv-admin-visible");
+      button.style.setProperty("display","block","important");
+    }
+    render();
+    const s=evidenceStats();
+    const summary=document.getElementById("dv22Summary");
+    if(summary)summary.textContent=s.total;
+    ["dv22Done2","dv22Pending2","dv22Evidence2"].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      if(el)el.textContent=[s.done,s.pending,s.total][i];
+    });
+    const fleet=document.getElementById("dv22Fleet");
+    if(fleet){
+      const active=(typeof recorridoActivo!=="undefined"&&recorridoActivo);
+      fleet.innerHTML=active
+        ? `<tr><td>Vehículo actual</td><td><span class="dv22-pill">EN RECORRIDO</span></td><td>🟢</td></tr>`
+        : `<tr><td colspan="3" class="dv22-empty">Sin recorridos activos en este cliente</td></tr>`;
+    }
+  }
+
+  window.dv22RefreshAdmin=function(){ update(); };
+  function init(){
+    update();
+    setInterval(update,3000);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
+  else init();
+})();
+</script>
+
+
+(function(){
+  function dvActualizarAdminSeguro(){
+    const u = typeof dvUsuarioActual === "function" ? dvUsuarioActual() : null;
+    const esAdmin = !!u && String(u.usuario || "").trim().toLowerCase() === "admin";
+
+    if(typeof window.dv22RefreshAdmin === "function"){
+      window.dv22RefreshAdmin();
+      return;
+    }
+
+    // Si el panel todavía no cargó, reintentar después del orden de scripts.
+    setTimeout(function(){
+      if(typeof window.dv22RefreshAdmin === "function"){
+        window.dv22RefreshAdmin();
+      }
+    },120);
+  }
+
+  window.addEventListener("storage", function(e){
+    if(e.key === DV_USER_KEY || e.key === DV_SESSION_KEY) dvActualizarAdminSeguro();
+  });
+
+  // También cubre login/logout dentro de la misma pestaña.
+  const originalIniciar = window.dvIniciarSesion;
+  if(typeof originalIniciar === "function"){
+    window.dvIniciarSesion = function(){
+      const r = originalIniciar.apply(this, arguments);
+      setTimeout(dvActualizarAdminSeguro, 50);
+      setTimeout(dvActualizarAdminSeguro, 250);
+      return r;
+    };
+  }
+})();
+
 </body>
+
+<script id="dv29-admin-force">
+(function(){
+  function sync(){
+    try{
+      const u = typeof dvUsuarioActual === "function" ? dvUsuarioActual() : null;
+      const isAdmin = !!u && String(u.usuario||"").trim().toLowerCase()==="admin";
+      const btn = document.getElementById("dv22AdminOpen");
+      if(btn){
+        btn.style.setProperty("display", isAdmin ? "block" : "none", "important");
+        btn.style.setProperty("visibility", isAdmin ? "visible" : "hidden", "important");
+        btn.classList.toggle("dv-admin-visible", isAdmin);
+      }
+    }catch(e){}
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    setTimeout(sync,100);
+    setTimeout(sync,500);
+    setTimeout(sync,1500);
+  });
+})();
+</script>
+
 </html>
+
+<script>dv21StartSync();</script>
