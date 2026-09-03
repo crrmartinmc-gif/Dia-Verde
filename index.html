@@ -967,44 +967,89 @@ async function geocodificarDireccion(d){
     return null;
   }
 }
+let geocodingQueueKey = "";
+let geocodingRunning = false;
+let geocodingPending = [];
+let geocodingIndex = 0;
+
+function claveListaGeocoding(lista){
+  if(!Array.isArray(lista)) return "";
+  return lista.map(d => claveGeocoding(d)).join("||");
+}
+
 async function mostrarMarcadoresGeocodificados(lista){
-  limpiarMarcadoresReclamos();
   if(!Array.isArray(lista)||!lista.length) return;
-  const generacion=++geocodingGeneration;
+
+  const keyLista = claveListaGeocoding(lista);
+
+  // Una actualización de datos idéntica no debe borrar/reiniciar los pines.
+  if(geocodingRunning && keyLista === geocodingQueueKey) return;
+
+  geocodingQueueKey = keyLista;
+  geocodingGeneration++;
+  const generacion = geocodingGeneration;
+  geocodingPending = [];
+  geocodingIndex = 0;
+
   const capa=asegurarCapaReclamos();
   if(!capa) return;
-  const pendientes=[];
+
+  // Solo se limpia al iniciar una lista realmente nueva.
+  limpiarMarcadoresReclamos();
+
+  const cache=cargarCacheGeocoding();
+
   for(const d of lista){
     const pos=obtenerLatLngReclamo(d);
     if(pos){
       agregarMarcadorReclamo(d);
+      continue;
+    }
+
+    const key=claveGeocoding(d);
+    const cached=cache[key];
+
+    if(cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))){
+      agregarMarcadorReclamo({...d,lat:Number(cached.lat),lng:Number(cached.lng)});
     }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
-      if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
-      }else{
-        pendientes.push(d);
-      }
+      geocodingPending.push(d);
     }
   }
-  const limite=3;
-  let indice=0;
-  async function trabajador(){
-    while(indice<pendientes.length){
-      if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-      if(generacion!==geocodingGeneration) return;
+
+  if(!geocodingPending.length) return;
+
+  geocodingRunning = true;
+
+  try{
+    while(geocodingIndex < geocodingPending.length){
+      if(generacion !== geocodingGeneration) return;
+
+      const d=geocodingPending[geocodingIndex++];
+      let pos=null;
+
+      // Reintento para errores transitorios de red/servicio.
+      for(let intento=0; intento<2 && !pos; intento++){
+        pos=await geocodificarDireccion(d);
+        if(!pos && intento===0){
+          await new Promise(r=>setTimeout(r,1500));
+        }
+      }
+
+      if(generacion !== geocodingGeneration) return;
+
       if(pos){
         agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
       }
-      await new Promise(r=>setTimeout(r,350));
+
+      await new Promise(r=>setTimeout(r,1100));
+    }
+  }finally{
+    if(generacion === geocodingGeneration){
+      geocodingRunning=false;
+      geocodingPending=[];
+      geocodingIndex=0;
     }
   }
-  await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
-  );
 }
 function resetearRotacionMapa(){
   if(map && map._map){
