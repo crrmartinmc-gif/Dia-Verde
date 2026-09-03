@@ -771,7 +771,7 @@ map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiend
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV6";
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -891,30 +891,115 @@ function claveGeocoding(d){
   );
 }
 async function geocodificarDireccion(d){
+  // GEO V37: basado en el geocodificador funcional de V32.
+  // NO usa Google, NO usa Apps Script y NO modifica el mapa/pines.
+
   const directa=obtenerLatLngReclamo(d);
   if(directa) return directa;
+
   const cache=cargarCacheGeocoding();
   const key=claveGeocoding(d);
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+
+  if(cache[key] &&
+     Number.isFinite(Number(cache[key].lat)) &&
+     Number.isFinite(Number(cache[key].lng))){
     return [Number(cache[key].lat),Number(cache[key].lng)];
   }
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
-  try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
-    return [lat,lng];
-  }catch(error){
-    console.warn("Geocodificación:",q,error);
-    return null;
+
+  const calle=String(
+    d.calle || d.direccion || d.Direccion ||
+    d.domicilio || d.Domicilio || ""
+  ).trim();
+  const numero=String(d.numero || "").trim();
+  const localidad=String(d.localidad || selectedCgm || "").trim();
+
+  if(!calle && !numero) return null;
+
+  // EXACTAMENTE la idea que funcionaba en V32:
+  // dirección + localidad + Buenos Aires + Argentina.
+  const consultas=[];
+  const add=q=>{
+    q=String(q||"").replace(/\s+/g," ").trim();
+    if(q && !consultas.includes(q)) consultas.push(q);
+  };
+
+  const base=(calle+" "+numero).replace(/\s+/g," ").trim();
+
+  if(base && localidad){
+    add(`${base}, ${localidad}, Buenos Aires, Argentina`);
+    add(`${base}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
   }
+  if(base){
+    add(`${base}, Lomas de Zamora, Buenos Aires, Argentina`);
+    add(`${base}, Buenos Aires, Argentina`);
+  }
+
+  // Variantes de abreviaturas, sin alterar el dato original.
+  const calleVar=calle
+    .replace(/\bav\.?\b/gi,"Avenida")
+    .replace(/\bavda\.?\b/gi,"Avenida")
+    .replace(/\bgral\.?\b/gi,"General")
+    .replace(/\bcnel\.?\b/gi,"Coronel")
+    .replace(/\bpje\.?\b/gi,"Pasaje")
+    .replace(/\bdr\.?\b/gi,"Doctor")
+    .replace(/\bing\.?\b/gi,"Ingeniero")
+    .replace(/\s+/g," ").trim();
+
+  if(calleVar!==calle && numero){
+    if(localidad) add(`${calleVar} ${numero}, ${localidad}, Buenos Aires, Argentina`);
+    add(`${calleVar} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
+    add(`${calleVar} ${numero}, Buenos Aires, Argentina`);
+  }
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  async function buscar(q){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),8000);
+    try{
+      const url=
+        "https://nominatim.openstreetmap.org/search" +
+        "?format=jsonv2&limit=1&countrycodes=ar&q="+
+        encodeURIComponent(q);
+
+      const r=await fetch(url,{
+        signal:controller.signal,
+        cache:"no-store",
+        headers:{Accept:"application/json"}
+      });
+
+      if(!r.ok) return null;
+      const arr=await r.json();
+      if(!Array.isArray(arr)||!arr.length) return null;
+
+      const lat=Number(arr[0].lat);
+      const lng=Number(arr[0].lon);
+
+      if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+      if(Math.abs(lat)>90||Math.abs(lng)>180) return null;
+
+      return [lat,lng];
+    }catch(e){
+      console.warn("Geocodificación:",q,e);
+      return null;
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+
+  // Secuencial: evita saturar Nominatim y conserva la estabilidad de V32.
+  for(const q of consultas){
+    const pos=await buscar(q);
+    if(pos){
+      cache[key]={lat:pos[0],lng:pos[1]};
+      guardarCacheGeocoding(cache);
+      return pos;
+    }
+    await sleep(450);
+  }
+
+  console.warn("No se pudo geocodificar:",base,localidad);
+  return null;
 }
 async function mostrarMarcadoresGeocodificados(lista){
   limpiarMarcadoresReclamos();
