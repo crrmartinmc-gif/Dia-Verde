@@ -771,7 +771,7 @@ map.on("click",function(){if(recorridoActivo){mapaUsuarioMovio=true;mapaSiguiend
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV6";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV4";
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -890,156 +890,668 @@ function claveGeocoding(d){
     `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
   );
 }
-async function geocodificarDireccion(d){
-  // GEO V37: basado en el geocodificador funcional de V32.
-  // NO usa Google, NO usa Apps Script y NO modifica el mapa/pines.
+function dvDireccionBase(d){
+  const calle=String(
+    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
+  ).trim();
+  const numero=String(d.numero || "").trim();
+  return `${calle} ${numero}`.replace(/\s+/g," ").trim();
+}
 
+function dvCalleGeocoding(d){
+  let s=String(
+    d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""
+  ).trim();
+
+  const reemplazos=[
+    [/\bav\.?\b/gi,"Avenida"],
+    [/\bavda\.?\b/gi,"Avenida"],
+    [/\bgral\.?\b/gi,"General"],
+    [/\bcnel\.?\b/gi,"Coronel"],
+    [/\bcrnel\.?\b/gi,"Coronel"],
+    [/\bpje\.?\b/gi,"Pasaje"],
+    [/\bpas\.?\b/gi,"Pasaje"],
+    [/\bdr\.?\b/gi,"Doctor"],
+    [/\bing\.?\b/gi,"Ingeniero"],
+    [/\btte\.?\b/gi,"Teniente"],
+    [/\bcap\.?\b/gi,"Capitan"],
+    [/\bpres\.?\b/gi,"Presidente"]
+  ];
+
+  reemplazos.forEach(([rx,val])=>{ s=s.replace(rx,val); });
+  return s.replace(/\s+/g," ").trim();
+}
+
+function dvNumeroGeocoding(d){
+  return String(d.numero || "").trim().replace(/\s+/g," ");
+}
+
+function dvLocalidadCanonica(d){
+  const l=normalizar(d.localidad || selectedCgm || "");
+
+  if(l==="lomas" || l==="lomas de zamora") return "Lomas de Zamora";
+  if(l==="turdera") return "Turdera";
+  if(l==="banfield") return "Banfield";
+  if(l==="temperley") return "Temperley";
+  if(l==="llavallol") return "Llavallol";
+  if(l==="santa catalina") return "Santa Catalina";
+
+  return String(d.localidad || selectedCgm || "").trim();
+}
+
+function dvLocalidadesGeocoding(d){
+  const loc=dvLocalidadCanonica(d);
+
+  const aliases={
+    "Turdera":[
+      "Turdera, Lomas de Zamora, Buenos Aires, Argentina",
+      "Turdera, Buenos Aires, Argentina",
+      "Lomas de Zamora, Buenos Aires, Argentina"
+    ],
+    "Lomas de Zamora":[
+      "Lomas de Zamora, Buenos Aires, Argentina"
+    ],
+    "Banfield":[
+      "Banfield, Lomas de Zamora, Buenos Aires, Argentina",
+      "Banfield, Buenos Aires, Argentina"
+    ],
+    "Temperley":[
+      "Temperley, Lomas de Zamora, Buenos Aires, Argentina",
+      "Temperley, Buenos Aires, Argentina"
+    ],
+    "Llavallol":[
+      "Llavallol, Lomas de Zamora, Buenos Aires, Argentina",
+      "Llavallol, Buenos Aires, Argentina"
+    ],
+    "Santa Catalina":[
+      "Santa Catalina, Lomas de Zamora, Buenos Aires, Argentina",
+      "Santa Catalina, Buenos Aires, Argentina"
+    ]
+  };
+
+  return aliases[loc] || [
+    `${loc}, Lomas de Zamora, Buenos Aires, Argentina`,
+    `${loc}, Buenos Aires, Argentina`
+  ];
+}
+
+function dvBboxMapa(){
+  try{
+    if(
+      typeof activeLayer !== "undefined" &&
+      activeLayer &&
+      typeof activeLayer.getBounds === "function"
+    ){
+      const b=activeLayer.getBounds();
+
+      if(b && b.isValid()){
+        const sw=b.getSouthWest();
+        const ne=b.getNorthEast();
+
+        return {
+          west:sw.lng-.01,
+          south:sw.lat-.01,
+          east:ne.lng+.01,
+          north:ne.lat+.01
+        };
+      }
+    }
+  }catch(e){}
+
+  return null;
+}
+
+function dvConsultasGeocoding(d){
+  const calle=dvCalleGeocoding(d);
+  const numero=dvNumeroGeocoding(d);
+
+  if(!calle && !numero) return [];
+
+  const localidades=dvLocalidadesGeocoding(d);
+  const consultas=[];
+
+  // Primero la forma estructurada/normal de la dirección.
+  localidades.forEach(loc=>{
+    consultas.push({
+      texto:`${calle} ${numero}, ${loc}`.replace(/\s+/g," ").trim(),
+      calle,
+      numero,
+      localidad:loc
+    });
+  });
+
+  // Después una variante sin altura. Algunas calles aparecen en OSM
+  // sin housenumber/interpolación completa.
+  if(calle){
+    localidades.forEach(loc=>{
+      consultas.push({
+        texto:`${calle}, ${loc}`.replace(/\s+/g," ").trim(),
+        calle,
+        numero:"",
+        localidad:loc
+      });
+    });
+  }
+
+  return consultas;
+}
+
+function dvCacheValida(v){
+  return !!v &&
+    Number.isFinite(Number(v.lat)) &&
+    Number.isFinite(Number(v.lng)) &&
+    Math.abs(Number(v.lat))<=90 &&
+    Math.abs(Number(v.lng))<=180;
+}
+
+function dvPosValida(pos){
+  return Array.isArray(pos) &&
+    pos.length>=2 &&
+    Number.isFinite(Number(pos[0])) &&
+    Number.isFinite(Number(pos[1])) &&
+    Math.abs(Number(pos[0]))<=90 &&
+    Math.abs(Number(pos[1]))<=180;
+}
+
+function dvResultadoLocalidadValido(r,d){
+  if(!r) return false;
+
+  const address=r.address || {};
+  const display=normalizar(r.display_name || "");
+
+  if(!dvEsTurdera(d)) return true;
+
+  return (
+    normalizar(address.city || "").includes("lomas de zamora") ||
+    normalizar(address.town || "").includes("turdera") ||
+    normalizar(address.suburb || "").includes("turdera") ||
+    display.includes("turdera") ||
+    display.includes("lomas de zamora")
+  );
+}
+
+async function dvFetchJSON(url){
+  const controller=new AbortController();
+
+  const timer=setTimeout(
+    ()=>controller.abort(),
+    8000
+  );
+
+  try{
+    const response=await fetch(
+      url,
+      {
+        signal:controller.signal,
+        cache:"no-store",
+        headers:{
+          "Accept":"application/json"
+        }
+      }
+    );
+
+    if(!response.ok) return null;
+
+    return await response.json();
+  }catch(error){
+    console.warn("Geocodificador:",error);
+    return null;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+async function dvNominatimEstructurado(consulta,d){
+  const params=new URLSearchParams();
+
+  params.set("format","jsonv2");
+  params.set("limit","5");
+  params.set("countrycodes","ar");
+  params.set("addressdetails","1");
+
+  if(consulta.calle) params.set("street",consulta.calle);
+  if(consulta.numero) params.set("housenumber",consulta.numero);
+
+  // Para Lomas y localidades vecinas usamos el campo city.
+  const loc=dvLocalidadCanonica(d);
+
+  if(
+    loc==="Lomas de Zamora" ||
+    loc==="Banfield" ||
+    loc==="Temperley" ||
+    loc==="Llavallol" ||
+    loc==="Turdera" ||
+    loc==="Santa Catalina"
+  ){
+    params.set(
+      "city",
+      loc==="Santa Catalina"
+        ? "Lomas de Zamora"
+        : loc
+    );
+  }
+
+  params.set("state","Buenos Aires");
+  params.set("country","Argentina");
+
+  const resultados=await dvFetchJSON(
+    "https://nominatim.openstreetmap.org/search?"+params.toString()
+  );
+
+  if(!Array.isArray(resultados) || !resultados.length){
+    return null;
+  }
+
+  const bbox=dvBboxMapa();
+
+  const candidatos=resultados
+    .map(r=>{
+      const pos=[
+        Number(r.lat),
+        Number(r.lon)
+      ];
+
+      if(!dvPosValida(pos)) return null;
+
+      const dentro=!bbox || (
+        pos[0]>=bbox.south &&
+        pos[0]<=bbox.north &&
+        pos[1]>=bbox.west &&
+        pos[1]<=bbox.east
+      );
+
+      return {
+        raw:r,
+        pos,
+        dentro,
+        coincide:dvResultadoLocalidadValido(r,d),
+        importancia:Number(r.importance || 0)
+      };
+    })
+    .filter(Boolean);
+
+  const buenos=candidatos
+    .filter(x=>x.coincide)
+    .sort((a,b)=>{
+      if(a.dentro!==b.dentro) return a.dentro ? -1 : 1;
+      return b.importancia-a.importancia;
+    });
+
+  if(buenos.length){
+    return {
+      pos:buenos[0].pos,
+      proveedor:"Nominatim"
+    };
+  }
+
+  return null;
+}
+
+async function dvNominatimLibre(consulta,d){
+  const params=new URLSearchParams();
+
+  params.set("format","jsonv2");
+  params.set("limit","5");
+  params.set("countrycodes","ar");
+  params.set("addressdetails","1");
+  params.set("q",consulta.texto);
+
+  const bbox=dvBboxMapa();
+
+  if(bbox){
+    params.set(
+      "viewbox",
+      `${bbox.west},${bbox.north},${bbox.east},${bbox.south}`
+    );
+  }
+
+  const resultados=await dvFetchJSON(
+    "https://nominatim.openstreetmap.org/search?"+params.toString()
+  );
+
+  if(!Array.isArray(resultados) || !resultados.length){
+    return null;
+  }
+
+  const candidatos=resultados
+    .map(r=>{
+      const pos=[
+        Number(r.lat),
+        Number(r.lon)
+      ];
+
+      if(!dvPosValida(pos)) return null;
+
+      return {
+        raw:r,
+        pos,
+        coincide:dvResultadoLocalidadValido(r,d),
+        importancia:Number(r.importance || 0)
+      };
+    })
+    .filter(Boolean)
+    .filter(x=>x.coincide)
+    .sort((a,b)=>b.importancia-a.importancia);
+
+  if(candidatos.length){
+    return {
+      pos:candidatos[0].pos,
+      proveedor:"Nominatim"
+    };
+  }
+
+  return null;
+}
+
+async function dvPhoton(consulta,d){
+  const url=
+    "https://photon.komoot.io/api/" +
+    "?limit=5" +
+    "&lang=es" +
+    "&q=" +
+    encodeURIComponent(consulta.texto);
+
+  const resultado=await dvFetchJSON(url);
+
+  if(
+    !resultado ||
+    !Array.isArray(resultado.features)
+  ){
+    return null;
+  }
+
+  const candidatos=resultado.features
+    .map(feature=>{
+      const coords=
+        feature &&
+        feature.geometry &&
+        feature.geometry.coordinates;
+
+      if(!Array.isArray(coords) || coords.length<2){
+        return null;
+      }
+
+      const lng=Number(coords[0]);
+      const lat=Number(coords[1]);
+
+      if(!dvPosValida([lat,lng])) return null;
+
+      const props=feature.properties || {};
+      const display=normalizar(
+        [
+          props.name,
+          props.street,
+          props.city,
+          props.district,
+          props.state
+        ].filter(Boolean).join(", ")
+      );
+
+      const loc=normalizar(dvLocalidadCanonica(d));
+
+      let coincide=true;
+
+      if(dvEsTurdera(d)){
+        coincide=
+          display.includes("turdera") ||
+          display.includes("lomas de zamora");
+      }else if(loc==="lomas de zamora"){
+        coincide=
+          display.includes("lomas de zamora") ||
+          display.includes("lomas");
+      }
+
+      return {
+        pos:[lat,lng],
+        coincide
+      };
+    })
+    .filter(Boolean)
+    .filter(x=>x.coincide);
+
+  if(candidatos.length){
+    return {
+      pos:candidatos[0].pos,
+      proveedor:"Photon"
+    };
+  }
+
+  return null;
+}
+
+function dvGuardarGeo(d,pos,proveedor){
+  if(!dvPosValida(pos)) return;
+
+  const cache=cargarCacheGeocoding();
+  const key=claveGeocoding(d);
+
+  cache[key]={
+    lat:Number(pos[0]),
+    lng:Number(pos[1]),
+    proveedor:proveedor || "",
+    actualizado:new Date().toISOString()
+  };
+
+  guardarCacheGeocoding(cache);
+}
+
+async function geocodificarDireccion(d){
   const directa=obtenerLatLngReclamo(d);
+
   if(directa) return directa;
 
   const cache=cargarCacheGeocoding();
   const key=claveGeocoding(d);
 
-  if(cache[key] &&
-     Number.isFinite(Number(cache[key].lat)) &&
-     Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
+  if(dvCacheValida(cache[key])){
+    return [
+      Number(cache[key].lat),
+      Number(cache[key].lng)
+    ];
   }
 
-  const calle=String(
-    d.calle || d.direccion || d.Direccion ||
-    d.domicilio || d.Domicilio || ""
-  ).trim();
-  const numero=String(d.numero || "").trim();
-  const localidad=String(d.localidad || selectedCgm || "").trim();
+  const consultas=dvConsultasGeocoding(d);
 
-  if(!calle && !numero) return null;
+  if(!consultas.length) return null;
 
-  // EXACTAMENTE la idea que funcionaba en V32:
-  // dirección + localidad + Buenos Aires + Argentina.
-  const consultas=[];
-  const add=q=>{
-    q=String(q||"").replace(/\s+/g," ").trim();
-    if(q && !consultas.includes(q)) consultas.push(q);
-  };
+  /*
+   * 1) Intento estructurado:
+   * calle + altura + localidad.
+   * Es más fiable para direcciones argentinas que mandar todo
+   * como texto libre.
+   */
+  for(const consulta of consultas){
+    if(consulta.numero){
+      const resultado=
+        await dvNominatimEstructurado(
+          consulta,
+          d
+        );
 
-  const base=(calle+" "+numero).replace(/\s+/g," ").trim();
-
-  if(base && localidad){
-    add(`${base}, ${localidad}, Buenos Aires, Argentina`);
-    add(`${base}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
-  }
-  if(base){
-    add(`${base}, Lomas de Zamora, Buenos Aires, Argentina`);
-    add(`${base}, Buenos Aires, Argentina`);
-  }
-
-  // Variantes de abreviaturas, sin alterar el dato original.
-  const calleVar=calle
-    .replace(/\bav\.?\b/gi,"Avenida")
-    .replace(/\bavda\.?\b/gi,"Avenida")
-    .replace(/\bgral\.?\b/gi,"General")
-    .replace(/\bcnel\.?\b/gi,"Coronel")
-    .replace(/\bpje\.?\b/gi,"Pasaje")
-    .replace(/\bdr\.?\b/gi,"Doctor")
-    .replace(/\bing\.?\b/gi,"Ingeniero")
-    .replace(/\s+/g," ").trim();
-
-  if(calleVar!==calle && numero){
-    if(localidad) add(`${calleVar} ${numero}, ${localidad}, Buenos Aires, Argentina`);
-    add(`${calleVar} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
-    add(`${calleVar} ${numero}, Buenos Aires, Argentina`);
-  }
-
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
-  async function buscar(q){
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),8000);
-    try{
-      const url=
-        "https://nominatim.openstreetmap.org/search" +
-        "?format=jsonv2&limit=1&countrycodes=ar&q="+
-        encodeURIComponent(q);
-
-      const r=await fetch(url,{
-        signal:controller.signal,
-        cache:"no-store",
-        headers:{Accept:"application/json"}
-      });
-
-      if(!r.ok) return null;
-      const arr=await r.json();
-      if(!Array.isArray(arr)||!arr.length) return null;
-
-      const lat=Number(arr[0].lat);
-      const lng=Number(arr[0].lon);
-
-      if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-      if(Math.abs(lat)>90||Math.abs(lng)>180) return null;
-
-      return [lat,lng];
-    }catch(e){
-      console.warn("Geocodificación:",q,e);
-      return null;
-    }finally{
-      clearTimeout(timer);
+      if(resultado && resultado.pos){
+        dvGuardarGeo(
+          d,
+          resultado.pos,
+          resultado.proveedor
+        );
+        return resultado.pos;
+      }
     }
   }
 
-  // Secuencial: evita saturar Nominatim y conserva la estabilidad de V32.
-  for(const q of consultas){
-    const pos=await buscar(q);
-    if(pos){
-      cache[key]={lat:pos[0],lng:pos[1]};
-      guardarCacheGeocoding(cache);
-      return pos;
+  /*
+   * 2) Texto libre: sólo después del intento estructurado.
+   */
+  for(const consulta of consultas){
+    const resultado=
+      await dvNominatimLibre(
+        consulta,
+        d
+      );
+
+    if(resultado && resultado.pos){
+      dvGuardarGeo(
+        d,
+        resultado.pos,
+        resultado.proveedor
+      );
+      return resultado.pos;
     }
-    await sleep(450);
   }
 
-  console.warn("No se pudo geocodificar:",base,localidad);
+  /*
+   * 3) Segundo proveedor.
+   */
+  for(const consulta of consultas){
+    const resultado=
+      await dvPhoton(
+        consulta,
+        d
+      );
+
+    if(resultado && resultado.pos){
+      dvGuardarGeo(
+        d,
+        resultado.pos,
+        resultado.proveedor
+      );
+      return resultado.pos;
+    }
+  }
+
+  console.warn(
+    "No se pudo geolocalizar:",
+    dvDireccionBase(d),
+    dvLocalidadCanonica(d)
+  );
+
   return null;
 }
-async function mostrarMarcadoresGeocodificados(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)||!lista.length) return;
-  const generacion=++geocodingGeneration;
-  const capa=asegurarCapaReclamos();
-  if(!capa) return;
-  const pendientes=[];
-  for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
-      agregarMarcadorReclamo(d);
-    }else{
-      const cache=cargarCacheGeocoding();
-      const key=claveGeocoding(d);
-      if(cache[key]){
-        agregarMarcadorReclamo({...d,lat:Number(cache[key].lat),lng:Number(cache[key].lng)});
-      }else{
-        pendientes.push(d);
-      }
-    }
-  }
-  const limite=3;
-  let indice=0;
-  async function trabajador(){
-    while(indice<pendientes.length){
-      if(generacion!==geocodingGeneration) return;
-      const d=pendientes[indice++];
-      const pos=await geocodificarDireccion(d);
-      if(generacion!==geocodingGeneration) return;
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
-      }
-      await new Promise(r=>setTimeout(r,350));
-    }
-  }
-  await Promise.all(
-    Array.from({length:Math.min(limite,pendientes.length)},()=>trabajador())
-  );
+
+function dvFirmaReclamos(lista){
+  return (Array.isArray(lista)?lista:[])
+    .map(d=>
+      claveGeocoding(d) +
+      "|" +
+      String(d.lat || "") +
+      "|" +
+      String(d.lng || "")
+    )
+    .join("||");
 }
+
+let dvGeoListaActual=[];
+let dvGeoFirmaActual="";
+let dvGeoIndice=0;
+let dvGeoEjecutando=false;
+
+async function dvProcesarColaGeocoding(generacion){
+  if(dvGeoEjecutando) return;
+
+  dvGeoEjecutando=true;
+
+  try{
+    while(
+      dvGeoIndice<dvGeoListaActual.length
+    ){
+      if(generacion!==geocodingGeneration) return;
+
+      const d=
+        dvGeoListaActual[dvGeoIndice++];
+
+      try{
+        const pos=
+          await geocodificarDireccion(d);
+
+        if(
+          generacion!==geocodingGeneration
+        ) return;
+
+        if(pos){
+          agregarMarcadorReclamo({
+            ...d,
+            lat:Number(pos[0]),
+            lng:Number(pos[1])
+          });
+        }
+      }catch(error){
+        console.warn(
+          "Error ubicando reclamo:",
+          error
+        );
+      }
+
+      /*
+       * Nominatim es un servicio público y su política pide
+       * un uso muy conservador. Un único trabajador evita
+       * bloqueos/rate-limit y hace que la cola sea estable.
+       */
+      await new Promise(
+        resolve=>setTimeout(resolve,1100)
+      );
+    }
+  }finally{
+    if(generacion===geocodingGeneration){
+      dvGeoEjecutando=false;
+    }
+  }
+}
+
+async function mostrarMarcadoresGeocodificados(lista){
+  if(!Array.isArray(lista)) return;
+
+  const firma=dvFirmaReclamos(lista);
+
+  /*
+   * Si render() vuelve a ejecutarse por un cambio de estado,
+   * pero la lista de direcciones es exactamente la misma,
+   * NO borramos los pines ni reiniciamos la cola.
+   */
+  if(firma===dvGeoFirmaActual){
+    return;
+  }
+
+  dvGeoFirmaActual=firma;
+  geocodingGeneration++;
+
+  limpiarMarcadoresReclamos();
+
+  const generacion=geocodingGeneration;
+
+  dvGeoListaActual=[];
+  dvGeoIndice=0;
+
+  const cache=cargarCacheGeocoding();
+
+  for(const d of lista){
+    const directa=obtenerLatLngReclamo(d);
+
+    if(directa){
+      agregarMarcadorReclamo(d);
+      continue;
+    }
+
+    const key=claveGeocoding(d);
+
+    if(dvCacheValida(cache[key])){
+      agregarMarcadorReclamo({
+        ...d,
+        lat:Number(cache[key].lat),
+        lng:Number(cache[key].lng)
+      });
+      continue;
+    }
+
+    dvGeoListaActual.push(d);
+  }
+
+  /*
+   * La cola no bloquea el render ni la interfaz.
+   * Se inicia y los pines aparecen individualmente.
+   */
+  dvProcesarColaGeocoding(generacion);
+}
+
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
@@ -1872,8 +2384,7 @@ statusText.textContent =
 "Actualizado correctamente";
 actualizarHora();
 if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
+  refrescarEstadosMarcadoresReclamos();
 }
 refrescarEstadosMarcadoresReclamos();
 }
@@ -1889,8 +2400,7 @@ evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
+  refrescarEstadosMarcadoresReclamos();
 }
 }
 );
