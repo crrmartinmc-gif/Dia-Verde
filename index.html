@@ -1286,7 +1286,7 @@ map.on("moveend",function(){
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
-const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV5";
+const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV6";
 function asegurarCapaReclamos(){
   if(!map) return null;
   if(!reclamosMarkersLayer){
@@ -1484,8 +1484,13 @@ async function consultarNominatim(query){
 }
 
 async function geocodificarDireccion(d){
-  // V32 PRO: refuerzo exclusivo del geocodificador.
-  // Se conserva intacta la arquitectura de pines de V32.
+  /*
+   * GEO PRO V1
+   * Primero consulta nuestro Apps Script, que usa Google Geocoder
+   * en servidor. El mapa visual NO cambia: sigue siendo Leaflet.
+   * Si el servidor no puede resolverla, se conserva el fallback V32
+   * con Nominatim para no dejar el pin sin oportunidad de aparecer.
+   */
 
   const directa=obtenerLatLngReclamo(d);
   if(directa) return directa;
@@ -1502,158 +1507,103 @@ async function geocodificarDireccion(d){
   }
 
   const calle=String(
-    d.calle || d.direccion || d.Direccion ||
-    d.domicilio || d.Domicilio || ""
+    d.calle || d.direccion || d.Direccion || ""
   ).trim();
-
   const numero=String(d.numero || "").trim();
-
   const localidad=String(
     d.localidad || selectedCgm || ""
   ).trim();
 
   if(!calle && !numero) return null;
 
-  const calleNormalizada=calle
-    .replace(/\bav\.?\b/gi,"Avenida")
-    .replace(/\bavda\.?\b/gi,"Avenida")
-    .replace(/\bgral\.?\b/gi,"General")
-    .replace(/\bcnel\.?\b/gi,"Coronel")
-    .replace(/\bcrnel\.?\b/gi,"Coronel")
-    .replace(/\bpje\.?\b/gi,"Pasaje")
-    .replace(/\bpas\.?\b/gi,"Pasaje")
-    .replace(/\bdr\.?\b/gi,"Doctor")
-    .replace(/\bing\.?\b/gi,"Ingeniero")
-    .replace(/\btte\.?\b/gi,"Teniente")
-    .replace(/\bpres\.?\b/gi,"Presidente")
-    .replace(/\s+/g," ")
-    .trim();
-
-  const consultas=[];
-  const add=q=>{
-    q=String(q||"").replace(/\s+/g," ").trim();
-    if(q && !consultas.includes(q)) consultas.push(q);
+  const guardar=pos=>{
+    if(!pos) return null;
+    cache[key]={
+      lat:Number(pos[0]),
+      lng:Number(pos[1]),
+      actualizado:new Date().toISOString()
+    };
+    guardarCacheGeocoding(cache);
+    return [Number(pos[0]),Number(pos[1])];
   };
 
-  // Misma estrategia progresiva de V32, ampliada con variantes.
-  if(numero){
-    if(localidad){
-      add(`${calle} ${numero}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
-      add(`${calleNormalizada} ${numero}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
-      add(`${calle} ${numero}, ${localidad}, Buenos Aires, Argentina`);
-    }
+  /* ---------- 1) GOOGLE / APPS SCRIPT ---------- */
+  try{
+    const params=new URLSearchParams({
+      accion:"geocodificar",
+      calle:calle,
+      numero:numero,
+      localidad:localidad,
+      t:String(Date.now())
+    });
 
-    add(`${calle} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
-    add(`${calleNormalizada} ${numero}, Lomas de Zamora, Buenos Aires, Argentina`);
-    add(`${calle} ${numero}, Buenos Aires, Argentina`);
-  }
-
-  // Fallback para calles que OSM tiene sin altura.
-  if(calleNormalizada){
-    if(localidad){
-      add(`${calleNormalizada}, ${localidad}, Lomas de Zamora, Buenos Aires, Argentina`);
-    }
-    add(`${calleNormalizada}, Lomas de Zamora, Buenos Aires, Argentina`);
-  }
-
-  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
-  async function buscar(query){
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),8500);
-
-    try{
-      const url=
-        "https://nominatim.openstreetmap.org/search" +
-        "?format=jsonv2" +
-        "&limit=5" +
-        "&countrycodes=ar" +
-        "&addressdetails=1" +
-        "&q="+encodeURIComponent(query);
-
-      const response=await fetch(url,{
-        signal:controller.signal,
-        cache:"no-store",
-        headers:{"Accept":"application/json"}
-      });
-
-      if(!response.ok) return null;
-
-      const data=await response.json();
-      if(!Array.isArray(data) || !data.length) return null;
-
-      const loc=normalizar(localidad);
-      const candidatos=data.map(r=>{
-        const lat=Number(r.lat),lng=Number(r.lon);
-        if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-
-        const display=normalizar(r.display_name||"");
-        const a=r.address||{};
-
-        const coincideLocalidad=loc && (
-          normalizar(a.city||"").includes(loc) ||
-          normalizar(a.town||"").includes(loc) ||
-          normalizar(a.village||"").includes(loc) ||
-          normalizar(a.suburb||"").includes(loc) ||
-          display.includes(loc)
-        );
-
-        const esLomas=
-          display.includes("lomas de zamora") ||
-          normalizar(a.city||"").includes("lomas de zamora");
-
-        const tipo=String(r.type||"");
-        const esDireccion=[
-          "house","residential","building",
-          "street","road","path"
-        ].includes(tipo);
-
-        return {
-          pos:[lat,lng],
-          score:
-            (coincideLocalidad?1000:0)+
-            (esLomas?300:0)+
-            (esDireccion?100:0)+
-            Number(r.importance||0)
-        };
-      }).filter(Boolean);
-
-      if(!candidatos.length) return null;
-
-      candidatos.sort((a,b)=>b.score-a.score);
-      return candidatos[0].pos;
-    }catch(e){
-      console.warn("Geocodificación:",query,e);
-      return null;
-    }finally{
-      clearTimeout(timeout);
-    }
-  }
-
-  // Consultas secuenciales: evita rate-limit y no bloquea toda la aplicación.
-  for(const query of consultas){
-    for(let intento=1;intento<=2;intento++){
-      const pos=await buscar(query);
-
-      if(pos){
-        cache[key]={
-          lat:pos[0],
-          lng:pos[1],
-          actualizado:new Date().toISOString()
-        };
-        guardarCacheGeocoding(cache);
-        return pos;
+    const response=await fetch(
+      APPS_SCRIPT_URL+"?"+params.toString(),
+      {
+        method:"GET",
+        cache:"no-store"
       }
+    );
 
-      if(intento===1) await sleep(700);
+    if(response.ok){
+      const resultado=await response.json();
+
+      const lat=Number(resultado && resultado.lat);
+      const lng=Number(resultado && resultado.lng);
+
+      if(
+        resultado &&
+        resultado.encontrado===true &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        Math.abs(lat)<=90 &&
+        Math.abs(lng)<=180
+      ){
+        console.log(
+          "📍 Google Geocoder:",
+          calle,
+          numero,
+          localidad,
+          lat,
+          lng
+        );
+        return guardar([lat,lng]);
+      }
+    }
+  }catch(error){
+    console.warn(
+      "Google/App Script geocoder no disponible; uso fallback:",
+      error
+    );
+  }
+
+  /* ---------- 2) FALLBACK V32 / NOMINATIM ---------- */
+  const consultas=construirConsultasGeocoding(d);
+
+  for(const query of consultas){
+    await new Promise(resolve=>setTimeout(resolve,1100));
+
+    let pos=await consultarNominatim(query);
+
+    if(!pos){
+      await new Promise(resolve=>setTimeout(resolve,1800));
+      pos=await consultarNominatim(query);
     }
 
-    await sleep(700);
+    if(pos){
+      console.log(
+        "📍 Nominatim fallback:",
+        query,
+        pos
+      );
+      return guardar(pos);
+    }
   }
 
   console.warn(
-    "No se pudo geocodificar:",
-    `${calle} ${numero}`,
+    "❌ No se pudo ubicar reclamo:",
+    calle,
+    numero,
     localidad
   );
 
