@@ -427,6 +427,123 @@ let recorridoPuntos = [];
 let recorridoLayer = null;
 let recorridoMarker = null;
 let recorridoWatchId = null;
+let dvPanelGpsLastSentAt = 0;
+let dvPanelGpsLastPoint = null;
+const DV_PANEL_GPS_INTERVAL_MS = 10000;
+
+function dvPanelGpsUsuario(){
+  try{
+    const u = JSON.parse(
+      localStorage.getItem("diaVerdeUsuarioV1") || "null"
+    );
+    return u || {};
+  }catch(e){
+    return {};
+  }
+}
+
+function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
+  const ahora = Date.now();
+
+  if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
+    return;
+  }
+
+  const punto = {
+    lat:Number(lat),
+    lng:Number(lng),
+    precision:Number.isFinite(Number(precision))
+      ? Number(precision)
+      : null,
+    rumbo:Number.isFinite(Number(rumbo))
+      ? Number(rumbo)
+      : null,
+    timestamp:new Date().toISOString()
+  };
+
+  dvPanelGpsLastPoint = punto;
+
+  // Durante un recorrido publicamos como máximo un punto cada 10 segundos.
+  // Al finalizar, se puede forzar el envío del último punto.
+  if(
+    activo &&
+    (ahora - dvPanelGpsLastSentAt) < DV_PANEL_GPS_INTERVAL_MS
+  ){
+    return;
+  }
+
+  const usuario = dvPanelGpsUsuario();
+
+  const params = new URLSearchParams({
+    accion:"registrarGPS",
+    usuario:String(usuario.usuario || "sin_usuario"),
+    nombre:String(usuario.nombre || usuario.usuario || "Chofer"),
+    zona:String(recorridoZona || selectedZone || ""),
+    latitud:String(punto.lat),
+    longitud:String(punto.lng),
+    precision:punto.precision === null ? "" : String(punto.precision),
+    rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
+    timestamp:punto.timestamp,
+    activo:activo ? "1" : "0"
+  });
+
+  try{
+    fetch(
+      APPS_SCRIPT_URL + "?" + params.toString(),
+      {
+        method:"GET",
+        mode:"no-cors",
+        cache:"no-store",
+        keepalive:true
+      }
+    ).catch(error => {
+      console.warn("GPS Panel:",error);
+    });
+
+    dvPanelGpsLastSentAt = ahora;
+  }catch(error){
+    console.warn("GPS Panel:",error);
+  }
+}
+
+function dvPanelGpsEnviarUltimoPunto(){
+  if(!dvPanelGpsLastPoint) return;
+
+  const punto = dvPanelGpsLastPoint;
+  const usuario = dvPanelGpsUsuario();
+
+  const params = new URLSearchParams({
+    accion:"registrarGPS",
+    usuario:String(usuario.usuario || "sin_usuario"),
+    nombre:String(usuario.nombre || usuario.usuario || "Chofer"),
+    zona:String(recorridoZona || selectedZone || ""),
+    latitud:String(punto.lat),
+    longitud:String(punto.lng),
+    precision:punto.precision === null ? "" : String(punto.precision),
+    rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
+    timestamp:new Date().toISOString(),
+    activo:"0"
+  });
+
+  try{
+    fetch(
+      APPS_SCRIPT_URL + "?" + params.toString(),
+      {
+        method:"GET",
+        mode:"no-cors",
+        cache:"no-store",
+        keepalive:true
+      }
+    ).catch(error => {
+      console.warn("GPS Panel final:",error);
+    });
+
+    dvPanelGpsLastSentAt = Date.now();
+  }catch(error){
+    console.warn("GPS Panel final:",error);
+  }
+}
+
 let currentVisibleDirections = [];
 let evidenciasHoy = [];
 let evidenciaActual = null;
@@ -1423,11 +1540,17 @@ function registrarPuntoRecorrido(position){
     return;
   }
   mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
+  const rumboGps =
+    Number.isFinite(Number(c.heading))
+      ? Number(c.heading)
+      : null;
+
   const punto={
     lat:lat,
     lng:lng,
     hora:new Date().toISOString(),
-    precision:Number.isFinite(precision)?precision:null
+    precision:Number.isFinite(precision)?precision:null,
+    heading:rumboGps
   };
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
   if(ultimo){
@@ -1459,6 +1582,17 @@ function registrarPuntoRecorrido(position){
     }
   }
   recorridoPuntos.push(punto);
+
+  // Publicar al Panel solo los puntos aceptados por los filtros
+  // del recorrido. La función limita el envío a un punto cada 10 segundos.
+  registrarGPSPanel(
+    lat,
+    lng,
+    precision,
+    rumboGps,
+    true
+  );
+
   dibujarRecorrido();
   guardarRecorridoLocal();
   actualizarEstadoRecorrido(
@@ -1560,6 +1694,8 @@ function iniciarRecorrido(){
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
+  dvPanelGpsLastSentAt=0;
+  dvPanelGpsLastPoint=null;
   activarPantallaEncendida();
   try{
     if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
@@ -1599,6 +1735,10 @@ function finalizarRecorrido(){
   }
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
+
+  // Último punto: marca el recorrido como inactivo en el Panel.
+  dvPanelGpsEnviarUltimoPunto();
+
   recorridoActivo=false;
   try{
     if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
@@ -1648,6 +1788,8 @@ function recuperarRecorrido(){
     recorridoActivo=true;
     recorridoZona=estado.zona;
     recorridoInicio=estado.inicio;
+    dvPanelGpsLastSentAt=0;
+    dvPanelGpsLastPoint=null;
     recorridoPuntos=
       Array.isArray(estado.puntos)
       ?estado.puntos
@@ -1991,11 +2133,8 @@ resultado.error ||
 "Error en el histórico."
 );
 }
-// IMPORTANTE: no reemplazar el estado local por una respuesta
-// momentáneamente incompleta/desactualizada del servidor.
-// Fusionamos servidor + estado local para evitar que los realizados
-// vuelvan a "Pendiente" unos segundos después.
-dv20MergeEvidence(resultado.evidencias || []);
+evidenciasHoy =
+resultado.evidencias || [];
 statusText.textContent =
 "Actualizado correctamente";
 actualizarHora();
@@ -2013,11 +2152,11 @@ console.log(
 "El histórico no pudo consultarse:",
 error
 );
-// Si una consulta de histórico falla temporalmente, NO borrar
-// los estados que ya tenemos localmente.
+evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
+render();
 refrescarEstadosMarcadoresReclamos();
 }
 }
