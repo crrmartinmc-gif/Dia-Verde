@@ -430,6 +430,8 @@ let recorridoWatchId = null;
 let dvPanelGpsLastSentAt = 0;
 let dvPanelGpsLastPoint = null;
 const DV_PANEL_GPS_INTERVAL_MS = 10000;
+let dvPanelGpsSendCount = 0;
+let dvPanelGpsLastError = "";
 
 function dvPanelGpsUsuario(){
   try{
@@ -446,7 +448,8 @@ function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
   const ahora = Date.now();
 
   if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
-    return;
+    console.warn("GPS Panel: coordenadas inválidas",lat,lng);
+    return false;
   }
 
   const punto = {
@@ -464,12 +467,13 @@ function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
   dvPanelGpsLastPoint = punto;
 
   // Durante un recorrido publicamos como máximo un punto cada 10 segundos.
-  // Al finalizar, se puede forzar el envío del último punto.
+  // El primer punto siempre se envía porque el contador se reinicia al iniciar.
   if(
     activo &&
+    dvPanelGpsLastSentAt > 0 &&
     (ahora - dvPanelGpsLastSentAt) < DV_PANEL_GPS_INTERVAL_MS
   ){
-    return;
+    return false;
   }
 
   const usuario = dvPanelGpsUsuario();
@@ -484,30 +488,42 @@ function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
     precision:punto.precision === null ? "" : String(punto.precision),
     rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
     timestamp:punto.timestamp,
-    activo:activo ? "1" : "0"
+    activo:activo ? "1" : "0",
+    _ts:String(Date.now())
   });
 
-  try{
-    fetch(
-      APPS_SCRIPT_URL + "?" + params.toString(),
-      {
-        method:"GET",
-        mode:"no-cors",
-        cache:"no-store",
-        keepalive:true
-      }
-    ).catch(error => {
-      console.warn("GPS Panel:",error);
-    });
+  const url = APPS_SCRIPT_URL + "?" + params.toString();
 
+  try{
+    // Apps Script puede redirigir de script.google.com a
+    // script.googleusercontent.com. Un recurso de imagen GET permite
+    // seguir esa redirección sin depender de CORS y sin bloquear la app.
+    const beacon = new Image();
+    beacon.referrerPolicy = "no-referrer";
+    beacon.onload = function(){
+      console.log("GPS Panel enviado correctamente",punto);
+    };
+    beacon.onerror = function(){
+      // La respuesta JSON de Apps Script no es una imagen, por lo que
+      // onerror no significa necesariamente que la escritura haya fallado.
+      console.log("GPS Panel: solicitud enviada",punto);
+    };
+    beacon.src = url;
+
+    // Guardamos el momento de salida solamente después de crear la solicitud.
     dvPanelGpsLastSentAt = ahora;
+    dvPanelGpsSendCount++;
+    dvPanelGpsLastError = "";
+    return true;
   }catch(error){
-    console.warn("GPS Panel:",error);
+    dvPanelGpsLastError = String(error && error.message ? error.message : error);
+    console.error("GPS Panel: error al enviar",error);
+    return false;
   }
 }
 
 function dvPanelGpsEnviarUltimoPunto(){
-  if(!dvPanelGpsLastPoint) return;
+  if(!dvPanelGpsLastPoint) return false;
 
   const punto = dvPanelGpsLastPoint;
   const usuario = dvPanelGpsUsuario();
@@ -522,25 +538,30 @@ function dvPanelGpsEnviarUltimoPunto(){
     precision:punto.precision === null ? "" : String(punto.precision),
     rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
     timestamp:new Date().toISOString(),
-    activo:"0"
+    activo:"0",
+    _ts:String(Date.now())
   });
 
-  try{
-    fetch(
-      APPS_SCRIPT_URL + "?" + params.toString(),
-      {
-        method:"GET",
-        mode:"no-cors",
-        cache:"no-store",
-        keepalive:true
-      }
-    ).catch(error => {
-      console.warn("GPS Panel final:",error);
-    });
+  const url = APPS_SCRIPT_URL + "?" + params.toString();
 
+  try{
+    const beacon = new Image();
+    beacon.referrerPolicy = "no-referrer";
+    beacon.onload = function(){
+      console.log("GPS Panel final enviado",punto);
+    };
+    beacon.onerror = function(){
+      console.log("GPS Panel final: solicitud enviada",punto);
+    };
+    beacon.src = url;
     dvPanelGpsLastSentAt = Date.now();
+    dvPanelGpsSendCount++;
+    dvPanelGpsLastError = "";
+    return true;
   }catch(error){
-    console.warn("GPS Panel final:",error);
+    dvPanelGpsLastError = String(error && error.message ? error.message : error);
+    console.error("GPS Panel final: error al enviar",error);
+    return false;
   }
 }
 
@@ -1696,6 +1717,8 @@ function iniciarRecorrido(){
   recorridoPuntos=[];
   dvPanelGpsLastSentAt=0;
   dvPanelGpsLastPoint=null;
+  dvPanelGpsSendCount=0;
+  dvPanelGpsLastError="";
   activarPantallaEncendida();
   try{
     if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
