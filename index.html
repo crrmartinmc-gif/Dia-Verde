@@ -3156,33 +3156,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   };
 
-  // GPS propio de la AppWeb: mantiene disponible la última posición.
-  if(navigator.geolocation){
-    try{
-      navigator.geolocation.watchPosition(
-        function(position){
-          dvLastNativeLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            speed: position.coords.speed,
-            bearing: position.coords.heading
-          };
-        },
-        function(error){
-          console.warn("Geolocalización WebApp:", error);
-        },
-        {
-          enableHighAccuracy:true,
-          maximumAge:3000,
-          timeout:15000
-        }
-      );
-    }catch(e){
-      console.warn("No se pudo iniciar GPS WebApp:", e);
-    }
-  }
-
+  // En V2 no se inicia ningún watch GPS global de la V1.\n  // El único seguimiento GPS es el administrado por dv2IniciarGPS().\n
   function dvWatchMapInteraction(){
     const mapa = (typeof map !== "undefined") ? map : window.map;
     if(!mapa || typeof mapa.on !== "function") return false;
@@ -3346,7 +3320,8 @@ document.addEventListener("DOMContentLoaded", function(){
       dv2Ruta=x.ruta||null;
       dv2PuntosRuta=Array.isArray(x.puntos)?x.puntos:[];
       dv2Vehiculo=x.vehiculo||null;
-      dv2Viaje=x.viaje||null;
+      // Nunca reanudamos un viaje que ya figura como FINALIZADO.
+      dv2Viaje=(x.viaje && norm2(x.viaje.ESTADO)!=="FINALIZADO")?x.viaje:null;
       return !!dv2Usuario;
     }catch(e){return false;}
   }
@@ -3449,6 +3424,19 @@ document.addEventListener("DOMContentLoaded", function(){
       [dv2AsignacionesCache,dv2ServiciosCache,dv2RutasCache,dv2PuntosCache,dv2VehiculosCache]=await Promise.all([
         dv2Get("asignaciones"),dv2Get("servicios"),dv2Get("rutas"),dv2Get("puntosRuta"),dv2Get("vehiculos")
       ]);
+      // La fuente de verdad del viaje activo es VIAJES en el Backend Maestro.
+      // Esto evita depender únicamente del localStorage si la app se recarga.
+      try{
+        const viajes=await dv2Get("viajes");
+        const activos=(Array.isArray(viajes)?viajes:[]).filter(v=>
+          String(v.ID_CHOFER||"").trim()===String(dv2Usuario.ID_CHOFER||"").trim() &&
+          ["EN CURSO","ACTIVO","INICIADO"].indexOf(norm2(v.ESTADO))>=0
+        );
+        const porAsignacion=activos.find(v=>String(v.ID_ASIGNACION||"").trim()===String(dv2Asignacion?.ID_ASIGNACION||"").trim());
+        if(porAsignacion) dv2Viaje=porAsignacion;
+        else if(dv2Viaje && norm2(dv2Viaje.ESTADO)==='FINALIZADO') dv2Viaje=null;
+      }catch(e){console.warn("Viajes V2:",e);}
+
       const hoy=new Date().toLocaleDateString("en-CA",{timeZone:"America/Argentina/Buenos_Aires"});
       const candidatas=dv2AsignacionesCache.filter(a=>norm2(a.ID_CHOFER)===norm2(dv2Usuario.ID_CHOFER)&&norm2(a.ESTADO)==="ACTIVA");
       const ordenadas=candidatas.slice().sort((a,b)=>String(b.FECHA||"").localeCompare(String(a.FECHA||"")));
@@ -3456,6 +3444,7 @@ document.addEventListener("DOMContentLoaded", function(){
       if(!dv2Asignacion){
         dv2Servicio=null;dv2Ruta=null;dv2PuntosRuta=[];dv2Vehiculo=null;dv2Viaje=null;
         dv2RenderAssignment();
+        dv2ActualizarBotones();
         dv2SetStatus("🟡 <strong>Sin servicio asignado</strong><br>El administrador todavía no asignó un servicio activo para este chofer.");
         dv2GuardarEstado();
         return;
@@ -3466,6 +3455,7 @@ document.addEventListener("DOMContentLoaded", function(){
       dv2PuntosRuta=dv2Ruta?dv2PuntosCache.filter(p=>String(p.ID_RUTA)===String(dv2Ruta.ID_RUTA)&&norm2(p.ACTIVO)!=="NO").sort((a,b)=>Number(a.ORDEN||0)-Number(b.ORDEN||0)):[];
       dv2RenderAssignment();
       dv2RenderRouteOnMap();
+      dv2ActualizarBotones();
       dv2GuardarEstado();
       if(dv2Viaje) dv2ReactivarViaje();
       else dv2SetStatus("🟢 <strong>Servicio listo</strong><br>"+esc2(dv2Servicio?.NOMBRE_SERVICIO||dv2Servicio?.TIPO_SERVICIO||"Servicio")+"<br>🚛 "+esc2(dv2Vehiculo?.DOMINIO||"Vehículo")+" · Ruta: "+esc2(dv2Ruta?.NOMBRE_RUTA||"Sin ruta"));
@@ -3570,14 +3560,39 @@ document.addEventListener("DOMContentLoaded", function(){
     if($("cameraInput"))$("cameraInput").value="";
   }
 
+  let dv2GpsStarting=false;
   function dv2IniciarGPS(){
     if(!navigator.geolocation){throw new Error("Este dispositivo no permite GPS.");}
-    if(dv2GpsWatchId!==null)navigator.geolocation.clearWatch(dv2GpsWatchId);
-    dv2GpsWatchId=navigator.geolocation.watchPosition(dv2OnPosition,dv2OnGpsError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
-    navigator.geolocation.getCurrentPosition(dv2OnPosition,dv2OnGpsError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+    if(dv2GpsStarting)return true;
+    dv2GpsStarting=true;
+    try{
+      // V2 usa una sola fuente GPS: la Geolocation API del dispositivo.
+      // No mezclamos el watch de V1 ni el puente nativo para evitar callbacks recursivos.
+      if(dv2GpsWatchId!==null){
+        try{navigator.geolocation.clearWatch(dv2GpsWatchId);}catch(e){}
+        dv2GpsWatchId=null;
+      }
+      const opts={enableHighAccuracy:true,maximumAge:0,timeout:20000};
+      navigator.geolocation.getCurrentPosition(dv2OnPosition,dv2OnGpsError,opts);
+      dv2GpsWatchId=navigator.geolocation.watchPosition(dv2OnPosition,dv2OnGpsError,opts);
+      return true;
+    }finally{
+      dv2GpsStarting=false;
+    }
   }
 
-  function dv2StopGps(){if(dv2GpsWatchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(dv2GpsWatchId);dv2GpsWatchId=null;}}
+  function dv2StopGps(){
+    if(dv2GpsWatchId!==null&&navigator.geolocation){
+      try{navigator.geolocation.clearWatch(dv2GpsWatchId);}catch(e){}
+      dv2GpsWatchId=null;
+    }
+    try{
+      if(window.dv2GpsMarker && typeof map!=="undefined" && map){
+        map.removeLayer(window.dv2GpsMarker);
+      }
+    }catch(e){}
+    window.dv2GpsMarker=null;
+  }
 
   function dv2OnGpsError(e){dv2LastGpsError=e?.message||"GPS sin respuesta";dv2SetStatus("🔴 <strong>Viaje en curso</strong><br>⚠️ GPS: "+esc2(dv2LastGpsError),true);}
 
@@ -3587,7 +3602,20 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
     const precision=Number(c.accuracy),speed=Number(c.speed),heading=Number(c.heading);
     dv2LastPosition={lat,lng,precision,speed,heading};
-    try{if(typeof mostrarPosicionRecorrido==="function")mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(heading)?heading:null,false);}catch(e){}
+    try{
+      // V2 actualiza el mapa directamente; no pasa por el motor GPS visual de V1.
+      if(typeof map!=="undefined" && map){
+        if(!window.dv2GpsMarker){
+          window.dv2GpsMarker=L.marker([lat,lng],{zIndexOffset:1200}).addTo(map);
+        }else{
+          window.dv2GpsMarker.setLatLng([lat,lng]);
+        }
+        window.dv2GpsMarker.bindPopup("📍 <strong>Vehículo</strong><br>GPS V2 activo");
+        if(window.dv2SeguirMapa!==false){
+          try{map.panTo([lat,lng],{animate:true,duration:.35});}catch(e){}
+        }
+      }
+    }catch(e){console.warn("Marcador GPS V2:",e);}
     const now=Date.now();
     if(now-dv2GpsLastSent<DV2_GPS_INTERVAL)return;
     dv2GpsLastSent=now;
@@ -3610,7 +3638,6 @@ document.addEventListener("DOMContentLoaded", function(){
       dv2GuardarEstado();
       dv2GpsLastSent=0;dv2LastPosition=null;
       dv2SetStatus("🔴 <strong>Viaje en curso</strong><br>📍 Iniciando GPS y sincronización con Backend Maestro...",true);
-      try{if(window.AndroidGPS&&typeof AndroidGPS.startTracking==="function")AndroidGPS.startTracking();}catch(e){}
       try{if(typeof activarPantallaEncendida==="function")activarPantallaEncendida();}catch(e){}
       dv2IniciarGPS();
       dv2ActualizarBotones();
@@ -3635,9 +3662,11 @@ document.addEventListener("DOMContentLoaded", function(){
       dv2StopGps();
       try{if(window.AndroidGPS&&typeof AndroidGPS.stopTracking==="function")AndroidGPS.stopTracking();}catch(e){}
       try{if(typeof liberarPantallaEncendida==="function")liberarPantallaEncendida();}catch(e){}
-      dv2Viaje=finalizado||null;
+      const kmRecorrido=finalizado?.KM_RECORRIDO ?? (Number(km)-Number(dv2Viaje?.KM_INICIAL||0));
+      // El viaje ya quedó cerrado en Backend Maestro: se libera la variable local.
+      dv2Viaje=null;
       dv2GuardarEstado();
-      dv2SetStatus("✅ <strong>Viaje finalizado</strong><br>KM recorrido: "+esc2(finalizado?.KM_RECORRIDO??(Number(km)-Number(dv2Viaje?.KM_INICIAL||0)))+"<br>El servicio quedó registrado en el Backend Maestro.");
+      dv2SetStatus("✅ <strong>Viaje finalizado</strong><br>KM recorrido: "+esc2(kmRecorrido)+"<br>El servicio quedó registrado en el Backend Maestro.");
       dv2Toast("✅ Viaje finalizado");
       dv2ActualizarBotones();
     }catch(e){console.error(e);alert(e.message||"No se pudo finalizar el viaje.");}
@@ -3646,21 +3675,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function dv2ActualizarBotones(){
     const s=$("startRoute"),f=$("stopRoute");
-    if(s){s.disabled=!!dv2Viaje||dv2ViajeIniciando||!dv2Asignacion;}
-    if(f){f.disabled=!dv2Viaje||dv2ViajeFinalizando;}
+    const viajeActivo=!!dv2Viaje && ["EN CURSO","ACTIVO","INICIADO"].indexOf(norm2(dv2Viaje.ESTADO))>=0;
+    if(s){s.disabled=viajeActivo||dv2ViajeIniciando||!dv2Asignacion;}
+    if(f){f.disabled=!viajeActivo||dv2ViajeFinalizando;}
   }
 
   function dv2ReactivarViaje(){
     if(!dv2Viaje)return;
     dv2SetStatus("🔴 <strong>Viaje activo recuperado</strong><br>📍 Reanudando GPS...",true);
     dv2ActualizarBotones();
-    try{if(window.AndroidGPS&&typeof AndroidGPS.startTracking==="function")AndroidGPS.startTracking();}catch(e){}
     try{if(typeof activarPantallaEncendida==="function")activarPantallaEncendida();}catch(e){}
     try{dv2IniciarGPS();}catch(e){dv2SetStatus("⚠️ Viaje activo, pero no se pudo iniciar GPS.<br>"+esc2(e.message),true);}
   }
 
   function dv2NeutralizarV1(){
     // El código V1 queda preservado, pero deja de tener autoridad sobre datos/autenticación.
+    // En particular, V1 no puede volver a tocar el estado de los botones mientras
+    // el viaje V2 está activo.
+    window.actualizarBotonesRecorrido = function(){};
     window.cargarDatos = dv2CargarAsignacion;
     window.cargarEvidenciasHoy = function(){};
     window.procesarFilasSheets = function(){};
