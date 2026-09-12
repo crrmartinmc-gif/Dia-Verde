@@ -3401,6 +3401,13 @@ document.addEventListener("DOMContentLoaded", function(){
         updateButtons();
         iniciarGPS();
         setRouteStatus("🔴 <strong>Viaje en curso</strong><br>📍 Viaje activo recuperado · GPS iniciando...",true);
+      }else{
+        // Si el Backend no tiene un viaje activo, limpiar cualquier viaje
+        // viejo que haya quedado guardado en este navegador.
+        viaje=null;
+        lastPosition=null;
+        saveState();
+        updateButtons();
       }
     }catch(e){console.warn("Recuperar viaje",e);}
   }
@@ -3432,7 +3439,12 @@ document.addEventListener("DOMContentLoaded", function(){
   function updateButtons(){
     const s=$("startRoute"),f=$("stopRoute");
     const active=!!viaje && ["EN CURSO","ACTIVO","INICIADO"].includes(norm(viaje.ESTADO).toUpperCase());
-    if(s)s.disabled=active||viajeIniciando||!asignacion;
+
+    // Conservamos el comportamiento visual original: con una zona seleccionada,
+    // INICIAR RECORRIDO queda disponible. La asignación se valida al presionar.
+    if(s)s.disabled=!selectedZone||active||viajeIniciando;
+
+    // FINALIZAR solamente se habilita cuando existe un viaje realmente activo.
     if(f)f.disabled=!active||viajeFinalizando;
   }
   function setRouteStatus(html,active=false){
@@ -3494,7 +3506,17 @@ document.addEventListener("DOMContentLoaded", function(){
 
   async function startTrip(){
     if(viaje||viajeIniciando)return;
-    if(!asignacion||!servicio||!vehiculo){alert("No hay una asignación completa disponible.");return;}
+    if(!asignacion||!servicio||!vehiculo){
+      setRouteStatus(
+        "⚠️ <strong>No hay una asignación completa para iniciar el viaje.</strong><br>"+
+        "El CGM y las direcciones están cargados, pero el Backend Maestro todavía no entregó "+
+        "chofer + vehículo + servicio + asignación para este usuario.",
+        false
+      );
+      alert("No hay una asignación completa disponible para este chofer.");
+      updateButtons();
+      return;
+    }
     if(typeof selectedZone!=="undefined"&&!selectedZone){alert("Primero seleccioná una zona.");return;}
     const km=prompt("Kilometraje inicial del vehículo:");
     if(km===null)return;
