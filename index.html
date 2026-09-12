@@ -3273,5 +3273,398 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+<!-- DIA VERDE V2 FUSIONADA -->
+<script id="diaverde-v2-fusionada">
+/* ================================================================
+   DIA VERDE V2 FUSIONADA
+   - Conserva toda la interfaz y operativa original:
+     CGM, ZONA, direcciones, mapa, polígonos, estados pendiente/realizado,
+     buscador, evidencia, Google Maps, navegación y botón Centrar.
+   - Nuevo Backend Maestro para login, asignación, viaje, GPS y evidencia.
+   - GPS de operación: SOLO este módulo escribe GPS en Backend Maestro.
+   ================================================================ */
+(function(){
+  const BACKEND = "https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
+  const APP = "DIA_VERDE";
+  const SESSION_KEY = "diaVerdeSesionV2";
+  const USER_KEY = "diaVerdeUsuarioV2";
+  const STATE_KEY = "diaVerdeEstadoV2";
+  const EVIDENCE_PREFIX = "diaVerdeEvidenciaV2_";
+  const GPS_INTERVAL = 10000;
+
+  let usuario=null, asignacion=null, servicio=null, vehiculo=null, viaje=null;
+  let gpsWatchId=null, gpsStarting=false, gpsLastSent=0, lastPosition=null;
+  let viajeIniciando=false, viajeFinalizando=false;
+  let evidenciaV2Target=null, evidenciaV2Base64="";
+
+  const $=id=>document.getElementById(id);
+  const norm=v=>String(v??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const esc2=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+
+  async function get(accion){
+    const r=await fetch(BACKEND+"?accion="+encodeURIComponent(accion)+"&t="+Date.now(),{cache:"no-store"});
+    const text=await r.text();
+    let j; try{j=JSON.parse(text);}catch(e){throw new Error("Backend respondió algo que no es JSON.");}
+    if(!j.ok)throw new Error(j.error||"Error del Backend Maestro.");
+    return j.datos;
+  }
+  async function post(accion,datos){
+    const body=Object.assign({accion},datos||{});
+    body.datos=datos||{};
+    const r=await fetch(BACKEND,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+    const text=await r.text();
+    let j; try{j=JSON.parse(text);}catch(e){throw new Error("Backend respondió algo que no es JSON.");}
+    if(!j.ok)throw new Error(j.error||"Error del Backend Maestro.");
+    return j.resultado;
+  }
+
+  function saveState(){
+    try{localStorage.setItem(STATE_KEY,JSON.stringify({viaje,asignacion,servicio,vehiculo,lastPosition}));}catch(e){}
+  }
+  function loadState(){
+    try{return JSON.parse(localStorage.getItem(STATE_KEY)||"null");}catch(e){return null;}
+  }
+  function currentUser(){try{return JSON.parse(localStorage.getItem(USER_KEY)||"null");}catch(e){return null;}}
+
+  function showUser(){
+    const ov=$("dvLoginOverlay"),bar=$("dvUserBar"),name=$("dvUserName");
+    if(ov)ov.style.display="none";
+    if(bar)bar.style.display="flex";
+    if(name)name.textContent=usuario?.NOMBRE||usuario?.nombre||usuario?.USUARIO||usuario?.usuario||"Usuario";
+  }
+  function showLogin(){
+    const ov=$("dvLoginOverlay"),bar=$("dvUserBar");
+    if(ov)ov.style.display="flex";
+    if(bar)bar.style.display="none";
+  }
+
+  async function login(){
+    const u=($("dvLoginUser")?.value||"").trim(), p=$("dvLoginPass")?.value||"", err=$("dvLoginError");
+    if(!u||!p){if(err)err.textContent="Ingresá usuario y contraseña.";return;}
+    const btn=$("dvLoginBtn"); if(btn){btn.disabled=true;btn.textContent="INGRESANDO...";}
+    try{
+      const r=await post("login",{usuario:u,contrasena:p,aplicacion:APP});
+      usuario=r||{};
+      localStorage.setItem(SESSION_KEY,"1");
+      localStorage.setItem(USER_KEY,JSON.stringify(usuario));
+      if(err)err.textContent="";
+      showUser();
+      await cargarOperacion();
+      await cargarEvidenciasV2();
+      toast("✅ Sesión iniciada");
+    }catch(e){
+      console.error("Login V2",e);
+      if(err)err.textContent=e.message||"No se pudo iniciar sesión.";
+    }finally{if(btn){btn.disabled=false;btn.textContent="INGRESAR";}}
+  }
+  function logout(){
+    stopGPS();
+    localStorage.removeItem(SESSION_KEY);localStorage.removeItem(USER_KEY);localStorage.removeItem(STATE_KEY);
+    usuario=null;asignacion=null;servicio=null;vehiculo=null;viaje=null;
+    showLogin();
+  }
+
+  async function cargarOperacion(){
+    if(!usuario)return;
+    try{
+      const [asgs,servs,vehs]=await Promise.all([get("asignaciones"),get("servicios"),get("vehiculos")]);
+      const idChofer=String(usuario.ID_CHOFER||usuario.idChofer||"").trim();
+      const hoy=new Date();
+      const isoHoy=hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
+      const candidatas=(Array.isArray(asgs)?asgs:[]).filter(a=>String(a.ID_CHOFER||"").trim()===idChofer && norm(a.ESTADO)==="activa");
+      let a=candidatas.find(x=>String(x.FECHA||"").slice(0,10)===isoHoy)||candidatas[0]||null;
+      if(!a){
+        asignacion=null;servicio=null;vehiculo=null;renderAssigned();updateButtons();return;
+      }
+      asignacion=a;
+      servicio=(Array.isArray(servs)?servs:[]).find(s=>String(s.ID_SERVICIO)===String(a.ID_SERVICIO))||null;
+      vehiculo=(Array.isArray(vehs)?vehs:[]).find(v=>String(v.ID_VEHICULO)===String(a.ID_VEHICULO))||null;
+      renderAssigned();
+      updateButtons();
+      await recuperarViajeBackend();
+    }catch(e){
+      console.error("Asignación V2",e);
+      renderAssignedError(e.message);
+    }
+  }
+
+  async function recuperarViajeBackend(){
+    try{
+      const viajes=await get("viajes");
+      const idChofer=String(usuario?.ID_CHOFER||"").trim();
+      const activos=(Array.isArray(viajes)?viajes:[]).filter(v=>String(v.ID_CHOFER||"").trim()===idChofer && ["EN CURSO","ACTIVO","INICIADO"].includes(norm(v.ESTADO).toUpperCase()));
+      if(activos.length){
+        viaje=activos[activos.length-1];
+        lastPosition=null;
+        saveState();
+        renderAssigned();
+        updateButtons();
+        iniciarGPS();
+        setRouteStatus("🔴 <strong>Viaje en curso</strong><br>📍 Viaje activo recuperado · GPS iniciando...",true);
+      }
+    }catch(e){console.warn("Recuperar viaje",e);}
+  }
+
+  function renderAssigned(){
+    let box=$("dv2AssignedBox");
+    if(!box){
+      box=document.createElement("div");box.id="dv2AssignedBox";
+      box.className="info-box";
+      const side=document.querySelector(".sidebar");
+      const stats=side?.querySelector(".stats");
+      if(stats)side.insertBefore(box,stats);else side?.appendChild(box);
+    }
+    if(!asignacion||!servicio){
+      box.innerHTML="<strong>🚛 Servicio asignado</strong><br>Sin asignación activa para este chofer.";
+      return;
+    }
+    box.innerHTML="<strong>🚛 SERVICIO ASIGNADO</strong>"+
+      "<br>📋 "+esc2(servicio.NOMBRE_SERVICIO||servicio.TIPO_SERVICIO||"Servicio")+
+      "<br>🚗 "+esc2(vehiculo?.DOMINIO||vehiculo?.INTERNO||"Vehículo")+
+      "<br>🗺️ Ruta: "+esc2(servicio.ID_RUTA||"Asignada")+
+      "<br>🆔 Asignación: "+esc2(asignacion.ID_ASIGNACION||"");
+  }
+  function renderAssignedError(msg){
+    let box=$("dv2AssignedBox");if(!box)return;
+    box.innerHTML="<strong>⚠️ Backend Maestro</strong><br>"+esc2(msg);
+  }
+
+  function updateButtons(){
+    const s=$("startRoute"),f=$("stopRoute");
+    const active=!!viaje && ["EN CURSO","ACTIVO","INICIADO"].includes(norm(viaje.ESTADO).toUpperCase());
+    if(s)s.disabled=active||viajeIniciando||!asignacion;
+    if(f)f.disabled=!active||viajeFinalizando;
+  }
+  function setRouteStatus(html,active=false){
+    const el=$("routeStatus");if(!el)return;
+    el.innerHTML=html;el.classList.toggle("active",!!active);
+  }
+  function toast(t){try{if(typeof mostrarToast==="function")mostrarToast(t);else{const x=$("toast");if(x){x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),3500);}}}catch(e){}}
+
+  function mapVehicle(lat,lng,heading){
+    try{
+      if(!window.dv2VehicleMarker){
+        const icon=typeof crearIconoVehiculo==="function"?crearIconoVehiculo(heading):L.divIcon({html:"🚛",iconSize:[40,40],iconAnchor:[20,20]});
+        window.dv2VehicleMarker=L.marker([lat,lng],{icon,zIndexOffset:1500}).addTo(map);
+      }else{
+        window.dv2VehicleMarker.setLatLng([lat,lng]);
+        if(typeof crearIconoVehiculo==="function")window.dv2VehicleMarker.setIcon(crearIconoVehiculo(heading));
+      }
+      window.dv2VehicleMarker.bindPopup("📍 <strong>Vehículo</strong><br>GPS Día Verde V2 activo");
+    }catch(e){console.warn("Marcador GPS",e);}
+  }
+
+  async function onGPS(position){
+    if(!viaje)return;
+    const c=position.coords,lat=Number(c.latitude),lng=Number(c.longitude);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    const precision=Number(c.accuracy),speed=Number(c.speed),heading=Number(c.heading);
+    lastPosition={lat,lng,precision,speed,heading,hora:new Date().toISOString()};
+    mapVehicle(lat,lng,heading);
+    try{ if(map && typeof map.easeTo==="function") map.easeTo({center:[lng,lat],zoom:17,pitch:35,bearing:Number.isFinite(heading)?heading:0,offset:[0,120],duration:450,essential:true}); }catch(e){try{map.panTo([lat,lng],{animate:true,duration:.45});}catch(e2){}}
+    const now=Date.now();
+    if(now-gpsLastSent<GPS_INTERVAL)return;
+    gpsLastSent=now;
+    try{
+      const r=await post("registrarGPS",{idViaje:viaje.ID_VIAJE,idServicio:viaje.ID_SERVICIO,idVehiculo:viaje.ID_VEHICULO,idChofer:viaje.ID_CHOFER,latitud:lat,longitud:lng,velocidad:Number.isFinite(speed)?speed:"",precision:Number.isFinite(precision)?precision:"",evento:"RECORRIDO"});
+      setRouteStatus("🔴 <strong>Viaje en curso</strong><br>📍 GPS activo · <strong>GPS registrado</strong> · Backend Maestro conectado<br>🌐 "+lat.toFixed(6)+" · "+lng.toFixed(6)+"<br>🆔 "+esc2(r?.ID_GPS||"GPS OK"),true);
+    }catch(e){
+      console.error("registrarGPS",e);
+      setRouteStatus("🔴 <strong>Viaje en curso</strong><br>📍 GPS local activo<br>❌ <strong>No se pudo registrar GPS:</strong> "+esc2(e.message),true);
+    }
+  }
+  function onGPSError(e){
+    setRouteStatus("🔴 <strong>Viaje en curso</strong><br>⚠️ GPS: "+esc2(e?.message||"Sin respuesta")+"<br>El viaje continúa activo.",true);
+  }
+  function iniciarGPS(){
+    if(!navigator.geolocation){setRouteStatus("❌ Este dispositivo no permite GPS.",true);return false;}
+    if(gpsStarting||gpsWatchId!==null)return true;
+    gpsStarting=true;
+    try{
+      gpsLastSent=0;
+      navigator.geolocation.getCurrentPosition(onGPS,onGPSError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+      gpsWatchId=navigator.geolocation.watchPosition(onGPS,onGPSError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+      return true;
+    }finally{gpsStarting=false;}
+  }
+  function stopGPS(){
+    if(gpsWatchId!==null){try{navigator.geolocation.clearWatch(gpsWatchId);}catch(e){}gpsWatchId=null;}
+    try{if(window.dv2VehicleMarker){map.removeLayer(window.dv2VehicleMarker);window.dv2VehicleMarker=null;}}catch(e){}
+  }
+
+  async function startTrip(){
+    if(viaje||viajeIniciando)return;
+    if(!asignacion||!servicio||!vehiculo){alert("No hay una asignación completa disponible.");return;}
+    if(typeof selectedZone!=="undefined"&&!selectedZone){alert("Primero seleccioná una zona.");return;}
+    const km=prompt("Kilometraje inicial del vehículo:");
+    if(km===null)return;
+    if(!Number.isFinite(Number(km))){alert("Ingresá un kilometraje válido.");return;}
+    viajeIniciando=true;updateButtons();
+    try{
+      viaje=await post("iniciarViaje",{idServicio:servicio.ID_SERVICIO,idAsignacion:asignacion.ID_ASIGNACION,idVehiculo:vehiculo.ID_VEHICULO,idChofer:usuario.ID_CHOFER,kmInicial:Number(km),origen:APP});
+      saveState();
+      setRouteStatus("🔴 <strong>Viaje en curso</strong><br>📍 Iniciando GPS y sincronización con Backend Maestro...",true);
+      try{if(typeof activarPantallaEncendida==="function")activarPantallaEncendida();}catch(e){}
+      if(!iniciarGPS())throw new Error("No se pudo iniciar el GPS del dispositivo.");
+      updateButtons();toast("🚛 Viaje iniciado en Backend Maestro");
+    }catch(e){console.error("Iniciar viaje",e);viaje=null;saveState();alert(e.message||"No se pudo iniciar el viaje.");}
+    finally{viajeIniciando=false;updateButtons();}
+  }
+
+  async function finishTrip(){
+    if(!viaje||viajeFinalizando)return;
+    const km=prompt("Kilometraje final del vehículo:");
+    if(km===null)return;
+    if(!Number.isFinite(Number(km))){alert("Ingresá un kilometraje válido.");return;}
+    if(Number(km)<Number(viaje.KM_INICIAL)){alert("El kilometraje final no puede ser menor al inicial.");return;}
+    if(!confirm("¿Finalizar el recorrido y cerrar el servicio?"))return;
+    viajeFinalizando=true;updateButtons();
+    try{
+      if(lastPosition){
+        try{await post("registrarGPS",{idViaje:viaje.ID_VIAJE,idServicio:viaje.ID_SERVICIO,idVehiculo:viaje.ID_VEHICULO,idChofer:viaje.ID_CHOFER,latitud:lastPosition.lat,longitud:lastPosition.lng,velocidad:Number.isFinite(lastPosition.speed)?lastPosition.speed:"",precision:Number.isFinite(lastPosition.precision)?lastPosition.precision:"",evento:"FIN_RECORRIDO"});}catch(e){console.warn("GPS final",e);}
+      }
+      const r=await post("finalizarViaje",{idViaje:viaje.ID_VIAJE,kmFinal:Number(km),origen:APP});
+      stopGPS();
+      try{if(typeof liberarPantallaEncendida==="function")liberarPantallaEncendida();}catch(e){}
+      const kmRec=r?.KM_RECORRIDO ?? (Number(km)-Number(viaje.KM_INICIAL||0));
+      viaje=null;saveState();
+      setRouteStatus("✅ <strong>Recorrido finalizado</strong><br>KM recorrido: "+esc2(kmRec)+"<br>El viaje quedó cerrado en el Backend Maestro.",false);
+      toast("✅ Recorrido finalizado");
+      updateButtons();
+      await cargarOperacion();
+    }catch(e){console.error("Finalizar viaje",e);alert(e.message||"No se pudo finalizar el viaje.");}
+    finally{viajeFinalizando=false;updateButtons();}
+  }
+
+  function evidenceLocalKey(id){return EVIDENCE_PREFIX+String(id||"");}
+  async function cargarEvidenciasV2(){
+    try{
+      const rows=await get("evidencias");
+      const out=[];
+      const today=new Date();today.setHours(0,0,0,0);
+      (Array.isArray(rows)?rows:[]).forEach(r=>{
+        const dt=new Date(r.FECHA_HORA||"");
+        if(Number.isNaN(dt.getTime())||dt>=today){
+          let meta={};try{meta=JSON.parse(r.OBSERVACIONES||"{}");}catch(e){}
+          out.push({
+            idEvidencia:r.ID_EVIDENCIA,fechaHora:r.FECHA_HORA,zona:meta.zona||"",direccion:meta.direccion||"",
+            foto:meta.foto||"",latitud:meta.latitud||"",longitud:meta.longitud||"",backend:r
+          });
+        }
+      });
+      // Prioridad al estado local de esta instalación para conservar la foto y el estado visual.
+      try{
+        const localKeys=Object.keys(localStorage).filter(k=>k.startsWith(EVIDENCE_PREFIX));
+        localKeys.forEach(k=>{try{const x=JSON.parse(localStorage.getItem(k)||"null");if(x)out.push(x);}catch(e){}});
+      }catch(e){}
+      const mapE=new Map();out.forEach(e=>{const k=norm((e.zona||"")+"|"+(e.direccion||""));if(k)mapE.set(k,e);});
+      evidenciasHoy=[...mapE.values()];
+      try{if(typeof render==="function"&&selectedZone)render();}catch(e){}
+    }catch(e){console.warn("Evidencias V2",e);}
+  }
+
+  function isDone(item){
+    const dir=norm(`${item.calle||""} ${item.numero||""}`);
+    const zona=norm(typeof selectedZone!=="undefined"?selectedZone:"");
+    return (Array.isArray(evidenciasHoy)?evidenciasHoy:[]).some(e=>norm(`${e.direccion||""}`)===dir && (!e.zona||norm(e.zona)===zona));
+  }
+  function openEvidence(item){
+    evidenciaV2Target=item;evidenciaV2Base64="";
+    const addr=$("evidenceAddress");if(addr)addr.textContent=`${item.calle||""} ${item.numero||""} — ${selectedZone||""}`;
+    const img=$("evidencePreview");if(img){img.src="";img.style.display="none";}
+    const box=$("gpsBox");if(box)box.innerHTML="📷 Sacá la fotografía. La ubicación GPS se obtiene automáticamente.";
+    const send=$("sendEvidence"),take=$("takeEvidence");if(send){send.disabled=true;send.style.display="block";}if(take)take.style.display="block";
+    $("evidenceBackdrop")?.classList.add("show");
+  }
+  function closeEvidence(){
+    $("evidenceBackdrop")?.classList.remove("show");evidenciaV2Target=null;evidenciaV2Base64="";
+    if($("cameraInput"))$("cameraInput").value="";
+  }
+  function viewEvidence(item){
+    const dir=norm(`${item.calle||""} ${item.numero||""}`),zona=norm(selectedZone||"");
+    const e=(Array.isArray(evidenciasHoy)?evidenciasHoy:[]).find(x=>norm(x.direccion||"")===dir&&(!x.zona||norm(x.zona)===zona));
+    if(!e){alert("No se encontró la evidencia registrada para hoy.");return;}
+    evidenciaV2Target=item;
+    const img=$("evidencePreview");
+    const local=e.idEvidencia?localStorage.getItem(evidenceLocalKey(e.idEvidencia)):"";
+    let photo="";try{const z=JSON.parse(local||"null");photo=z?.foto||"";}catch(x){}
+    photo=photo||e.foto||"";
+    if(img&&photo){img.src=photo;img.style.display="block";}else if(img){img.style.display="none";}
+    const addr=$("evidenceAddress");if(addr)addr.textContent=`${item.calle||""} ${item.numero||""} — ${selectedZone||""}`;
+    const box=$("gpsBox");if(box)box.innerHTML="✅ Evidencia registrada hoy."+(e.latitud&&e.longitud?`<br>📍 Lat: ${esc2(e.latitud)}<br>Lng: ${esc2(e.longitud)}`:"");
+    const send=$("sendEvidence"),take=$("takeEvidence");if(send)send.style.display="none";if(take)take.style.display="none";
+    $("evidenceBackdrop")?.classList.add("show");
+  }
+  async function prepareEvidence(file){
+    if(!file)return;
+    try{
+      const base=await comprimirImagen(file);
+      evidenciaV2Base64=base;
+      const img=$("evidencePreview");if(img){img.src=base;img.style.display="block";}
+      const box=$("gpsBox");if(box)box.innerHTML="📷 Fotografía lista. Obteniendo ubicación GPS...";
+      navigator.geolocation.getCurrentPosition(async pos=>{
+        evidenciaV2Target.__lat=pos.coords.latitude;evidenciaV2Target.__lng=pos.coords.longitude;
+        if(box)box.innerHTML=`📷 Fotografía lista.<br>📍 GPS: ${pos.coords.latitude.toFixed(6)} · ${pos.coords.longitude.toFixed(6)}`;
+        if($("sendEvidence"))$("sendEvidence").disabled=false;
+      },()=>{if(box)box.innerHTML="📷 Fotografía lista.<br>⚠️ No se pudo obtener GPS de la evidencia.";if($("sendEvidence"))$("sendEvidence").disabled=false;},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+    }catch(e){alert(e.message||"No se pudo procesar la fotografía.");}
+  }
+  async function sendEvidence(){
+    if(!evidenciaV2Target||!evidenciaV2Base64)return;
+    const btn=$("sendEvidence");if(btn){btn.disabled=true;btn.textContent="Enviando...";}
+    try{
+      const now=new Date();
+      const meta={zona:selectedZone||"",direccion:`${evidenciaV2Target.calle||""} ${evidenciaV2Target.numero||""}`,latitud:evidenciaV2Target.__lat||"",longitud:evidenciaV2Target.__lng||""};
+      const r=await post("registrarEvidencia",{origen:APP,tipoEvidencia:"FOTOGRAFIA_SERVICIO",idServicio:viaje?.ID_SERVICIO||servicio?.ID_SERVICIO||"",idAsignacion:viaje?.ID_ASIGNACION||asignacion?.ID_ASIGNACION||"",idViaje:viaje?.ID_VIAJE||"",idVehiculo:viaje?.ID_VEHICULO||vehiculo?.ID_VEHICULO||"",idChofer:viaje?.ID_CHOFER||usuario?.ID_CHOFER||"",nombreArchivo:`DIA_VERDE_${now.getTime()}.jpg`,observaciones:JSON.stringify(meta)});
+      try{localStorage.setItem(evidenceLocalKey(r.ID_EVIDENCIA),JSON.stringify({idEvidencia:r.ID_EVIDENCIA,zona:meta.zona,direccion:meta.direccion,latitud:meta.latitud,longitud:meta.longitud,foto:evidenciaV2Base64,fechaHora:now.toISOString()}));}catch(e){}
+      await cargarEvidenciasV2();
+      closeEvidence();
+      try{render();}catch(e){}
+      toast("📷 Evidencia registrada · punto realizado 🟢");
+    }catch(e){console.error("Evidencia",e);alert(e.message||"No se pudo registrar la evidencia.");}
+    finally{if(btn){btn.disabled=false;btn.textContent="✓ Registrar";}}
+  }
+
+  // Reemplaza los handlers de los controles compartidos sin tocar la lógica visual original.
+  function bindControls(){
+    const replace=(id,fn)=>{const old=$(id);if(!old)return null;const n=old.cloneNode(true);old.replaceWith(n);n.addEventListener("click",fn);return n;};
+    replace("dvLoginBtn",login);
+    replace("dvLogout",logout);
+    replace("startRoute",startTrip);
+    replace("stopRoute",finishTrip);
+    replace("takeEvidence",()=>$("cameraInput")?.click());
+    replace("sendEvidence",sendEvidence);
+    replace("cancelEvidence",closeEvidence);
+    const cam=$("cameraInput");if(cam){const n=cam.cloneNode(true);cam.replaceWith(n);n.addEventListener("change",()=>{if(n.files?.[0])prepareEvidence(n.files[0]);});}
+    const backdrop=$("evidenceBackdrop");if(backdrop)backdrop.onclick=e=>{if(e.target===backdrop)closeEvidence();};
+    // El refresco conserva las direcciones originales y además actualiza asignación/evidencias.
+    const ref=$("refresh");if(ref){const n=ref.cloneNode(true);ref.replaceWith(n);n.addEventListener("click",async()=>{try{if(typeof cargarDatos==="function")cargarDatos();}catch(e){}await cargarOperacion();await cargarEvidenciasV2();});}
+    // El buscador, CGM y zona quedan bajo control de la V1 porque forman parte de la funcionalidad original.
+    // Solo impedimos cambiar de zona durante un viaje.
+    if(typeof zone!=="undefined"&&zone){zone.addEventListener("change",()=>{if(viaje&&zone.value!==selectedZone){zone.value=selectedZone;alert("Finalizá el recorrido actual antes de cambiar de zona.");}});}
+  }
+
+  // Sobrescribe las funciones de evidencia que usa render() mediante onclick inline.
+  window.abrirEvidencia=openEvidence;
+  window.verEvidencia=viewEvidence;
+  window.cargarEvidenciasHoy=cargarEvidenciasV2;
+  window.estaRealizadaHoy=isDone;
+
+  async function init(){
+    bindControls();
+    const ses=localStorage.getItem(SESSION_KEY),u=currentUser();
+    if(ses==="1"&&u){
+      usuario=u;showUser();
+      await cargarOperacion();
+      await cargarEvidenciasV2();
+    }else showLogin();
+    updateButtons();
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+
+  window.DIA_VERDE_V2={iniciarViaje:startTrip,finalizarViaje:finishTrip,cargarOperacion,cargarEvidencias:cargarEvidenciasV2};
+})();
+</script>
+
 </body>
 </html>
