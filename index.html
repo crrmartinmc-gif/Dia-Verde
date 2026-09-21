@@ -1283,6 +1283,64 @@ document.getElementById(
 }
 );
 }
+const ROUTE_HISTORY_BASE_KEY = "diaVerdeHistorialRecorridosV1";
+function getRouteHistoryKey(){
+  try{
+    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
+    const id = u && u.usuario ? u.usuario : "sin_usuario";
+    return ROUTE_HISTORY_BASE_KEY + "_" + id;
+  }catch(e){
+    return ROUTE_HISTORY_BASE_KEY + "_sin_usuario";
+  }
+}
+function fechaRecorridoISO(estado){
+  try{
+    return estado && estado.inicio
+      ? new Date(estado.inicio).toISOString().slice(0,10)
+      : new Date().toISOString().slice(0,10);
+  }catch(e){
+    return new Date().toISOString().slice(0,10);
+  }
+}
+function leerHistorialRecorridos(){
+  try{
+    const raw=localStorage.getItem(getRouteHistoryKey());
+    const lista=raw?JSON.parse(raw):[];
+    return Array.isArray(lista)?lista:[];
+  }catch(e){
+    console.error("Leer historial de recorridos:",e);
+    return [];
+  }
+}
+function guardarHistorialRecorridos(lista){
+  try{
+    // Conservamos los últimos 100 recorridos para evitar superar la cuota de localStorage.
+    const historial=Array.isArray(lista)?lista.slice(-100):[];
+    localStorage.setItem(getRouteHistoryKey(),JSON.stringify(historial));
+  }catch(error){
+    console.error("Guardar historial de recorridos:",error);
+  }
+}
+function archivarRecorridoLocal(estado, motivo="finalizado"){
+  if(!estado || !estado.zona || !Array.isArray(estado.puntos)) return;
+  try{
+    const historial=leerHistorialRecorridos();
+    const copia={
+      id:"rec-"+Date.now()+"-"+Math.random().toString(36).slice(2),
+      activo:false,
+      zona:estado.zona,
+      inicio:estado.inicio || null,
+      fin:estado.fin || new Date().toISOString(),
+      fecha:fechaRecorridoISO(estado),
+      motivo:motivo,
+      puntos:estado.puntos
+    };
+    historial.push(copia);
+    guardarHistorialRecorridos(historial);
+  }catch(error){
+    console.error("Archivar recorrido:",error);
+  }
+}
 function guardarRecorridoLocal(){
   try{
     localStorage.setItem(
@@ -1291,7 +1349,8 @@ function guardarRecorridoLocal(){
         activo:recorridoActivo,
         zona:recorridoZona,
         inicio:recorridoInicio,
-        puntos:recorridoPuntos
+        puntos:recorridoPuntos,
+        actualizado:new Date().toISOString()
       })
     );
   }catch(error){
@@ -1605,6 +1664,10 @@ function registrarPuntoRecorrido(position){
   }
   recorridoPuntos.push(punto);
 
+  // Persistencia inmediata: si la app se cierra accidentalmente,
+  // el último punto aceptado queda guardado antes de continuar.
+  guardarRecorridoLocal();
+
   // Publicar al Panel solo los puntos aceptados por los filtros
   // del recorrido. La función limita el envío a un punto cada 10 segundos.
   registrarGPSPanel(
@@ -1616,7 +1679,6 @@ function registrarPuntoRecorrido(position){
   );
 
   dibujarRecorrido();
-  guardarRecorridoLocal();
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
     "📍 GPS activo · Puntos registrados: "+
@@ -1759,6 +1821,13 @@ function finalizarRecorrido(){
   }
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
+  const recorridoTerminado={
+    activo:false,
+    zona:recorridoZona,
+    inicio:recorridoInicio,
+    fin:new Date().toISOString(),
+    puntos:recorridoPuntos.slice()
+  };
 
   // Último punto: marca el recorrido como inactivo en el Panel.
   dvPanelGpsEnviarUltimoPunto();
@@ -1776,7 +1845,9 @@ function finalizarRecorrido(){
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
   }
-  guardarRecorridoLocal();
+  // Al finalizar pasa al historial y deja de ocupar la clave del recorrido actual.
+  archivarRecorridoLocal(recorridoTerminado,"finalizado");
+  borrarRecorridoLocal();
   actualizarBotonesRecorrido();
   actualizarEstadoRecorrido(
     "✅ <strong>Recorrido finalizado</strong><br>"+
@@ -1802,10 +1873,20 @@ function recuperarRecorrido(){
       ?new Date(estado.inicio)
       :null;
     const ahora=new Date();
-    if(
-      !inicio||
-      inicio.toDateString()!==ahora.toDateString()
-    ){
+    if(!inicio){
+      borrarRecorridoLocal();
+      return;
+    }
+    // Si el recorrido quedó abierto y la app se volvió a abrir otro día,
+    // NO se concatena con el nuevo día: se archiva y se empieza limpio.
+    if(inicio.toDateString()!==ahora.toDateString()){
+      archivarRecorridoLocal({
+        activo:false,
+        zona:estado.zona,
+        inicio:estado.inicio,
+        fin:ahora.toISOString(),
+        puntos:Array.isArray(estado.puntos)?estado.puntos:[]
+      },"cambio_de_dia");
       borrarRecorridoLocal();
       return;
     }
