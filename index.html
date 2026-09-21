@@ -3451,5 +3451,281 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+<!-- DV24 REFORZADO START -->
+<script>
+/*
+ * DIA VERDE V25 - PROTECCION DE ESTADO / BACK / SEGUNDO PLANO
+ * Este bloque NO reemplaza las funciones existentes.
+ * Solo refuerza persistencia y recuperación.
+ */
+(function(){
+
+  const DV25_SELECTION_KEY = "diaVerdeSeleccionV25";
+  const DV25_UI_KEY = "diaVerdeUIStateV25";
+  const DV25_SAVE_DEBOUNCE = 250;
+  let dv25SaveTimer = null;
+  let dv25Restoring = false;
+
+  function dv25SafeSet(key,value){
+    try{
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    }catch(e){
+      console.warn("DV25 localStorage:",e);
+      return false;
+    }
+  }
+
+  function dv25SafeGet(key){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){
+      console.warn("DV25 localStorage lectura:",e);
+      return null;
+    }
+  }
+
+  function dv25GuardarEstado(){
+    try{
+      const estado = {
+        cgm: typeof selectedCgm !== "undefined" ? String(selectedCgm || "") : "",
+        zona: typeof selectedZone !== "undefined" ? String(selectedZone || "") : "",
+        recorridoActivo: typeof recorridoActivo !== "undefined" ? !!recorridoActivo : false,
+        recorridoZona: typeof recorridoZona !== "undefined" ? String(recorridoZona || "") : "",
+        recorridoInicio: typeof recorridoInicio !== "undefined" ? String(recorridoInicio || "") : "",
+        puntos: Array.isArray(recorridoPuntos) ? recorridoPuntos.slice() : [],
+        timestamp: Date.now()
+      };
+
+      dv25SafeSet(DV25_SELECTION_KEY,{
+        cgm:estado.cgm,
+        zona:estado.zona,
+        timestamp:estado.timestamp
+      });
+
+      dv25SafeSet(DV25_UI_KEY,estado);
+
+      /*
+       * Usamos también la función original del sistema si existe.
+       * No la reemplazamos.
+       */
+      if(typeof guardarRecorridoLocal === "function"){
+        try{ guardarRecorridoLocal(); }catch(e){}
+      }
+
+      return true;
+    }catch(e){
+      console.warn("DV25 guardar estado:",e);
+      return false;
+    }
+  }
+
+  function dv25GuardarEstadoDebounced(){
+    clearTimeout(dv25SaveTimer);
+    dv25SaveTimer = setTimeout(dv25GuardarEstado,DV25_SAVE_DEBOUNCE);
+  }
+
+  function dv25RestaurarSeleccion(){
+    if(dv25Restoring) return;
+    dv25Restoring = true;
+
+    try{
+      const saved = dv25SafeGet(DV25_SELECTION_KEY);
+      if(!saved) return;
+
+      const cgmValue = String(saved.cgm || "");
+      const zoneValue = String(saved.zona || "");
+
+      if(typeof cgm !== "undefined" && cgm && cgmValue){
+        /*
+         * Esperamos a que las opciones ya hayan sido cargadas.
+         */
+        const existeCGM = Array.from(cgm.options || [])
+          .some(o => String(o.value) === cgmValue);
+
+        if(existeCGM){
+          cgm.value = cgmValue;
+          cgm.dispatchEvent(new Event("change",{bubbles:true}));
+        }
+      }
+
+      /*
+       * La zona puede cargarse de forma asíncrona después del CGM.
+       * Hacemos varios intentos cortos, sin tocar datos si no existe.
+       */
+      if(zoneValue){
+        let intentos = 0;
+        const restaurarZona = ()=>{
+          intentos++;
+
+          if(typeof zone !== "undefined" && zone){
+            const existeZona = Array.from(zone.options || [])
+              .some(o => String(o.value) === zoneValue);
+
+            if(existeZona){
+              zone.value = zoneValue;
+              zone.dispatchEvent(new Event("change",{bubbles:true}));
+              return;
+            }
+          }
+
+          if(intentos < 20){
+            setTimeout(restaurarZona,250);
+          }
+        };
+
+        setTimeout(restaurarZona,150);
+      }
+
+    }catch(e){
+      console.warn("DV25 restaurar selección:",e);
+    }finally{
+      setTimeout(()=>{ dv25Restoring=false; },1000);
+    }
+  }
+
+  /*
+   * Guardado continuo ante cambios de selección.
+   */
+  document.addEventListener("change",function(ev){
+    if(ev.target === cgm || ev.target === zone){
+      dv25GuardarEstadoDebounced();
+    }
+  },true);
+
+  /*
+   * Guardado ante pérdida de foco/segundo plano.
+   * visibilitychange es más confiable que unload en Android.
+   */
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState === "hidden"){
+      dv25GuardarEstado();
+    }else if(document.visibilityState === "visible"){
+      setTimeout(()=>{
+        dv25RestaurarSeleccion();
+
+        /*
+         * Si ya existía una función de recuperación del recorrido,
+         * la ejecutamos solamente si el sistema todavía no tiene
+         * un recorrido activo.
+         */
+        try{
+          if(
+            typeof recuperarRecorrido === "function" &&
+            !recorridoActivo
+          ){
+            recuperarRecorrido();
+          }
+        }catch(e){
+          console.warn("DV25 recuperar recorrido:",e);
+        }
+      },150);
+    }
+  },true);
+
+  /*
+   * Guardado antes de salir de la página.
+   * No intentamos detener el GPS ni finalizar el recorrido.
+   */
+  window.addEventListener("pagehide",function(){
+    dv25GuardarEstado();
+  },true);
+
+  window.addEventListener("beforeunload",function(){
+    dv25GuardarEstado();
+  },true);
+
+  /*
+   * Si el WebView manda una señal personalizada, también guardamos.
+   */
+  window.addEventListener("dv-app-background",function(){
+    dv25GuardarEstado();
+  },true);
+
+  window.addEventListener("dv-app-resume",function(){
+    setTimeout(dv25RestaurarSeleccion,150);
+  },true);
+
+  /*
+   * Interceptamos navegación hacia atrás del navegador/WebView.
+   * El primer BACK queda absorbido en una entrada de historial
+   * artificial; esto evita que el documento sea destruido.
+   *
+   * IMPORTANTE: no usamos location.href, no recargamos y no borramos
+   * ningún dato.
+   */
+  function dv25PrepararBack(){
+    try{
+      if(!history.state || !history.state.__dv25){
+        history.pushState(
+          {__dv25:true},
+          document.title,
+          window.location.href
+        );
+      }
+    }catch(e){
+      console.warn("DV25 history:",e);
+    }
+  }
+
+  window.addEventListener("popstate",function(){
+    dv25GuardarEstado();
+
+    /*
+     * Si el APK expone un puente nativo, le pedimos minimizar.
+     * Si no existe, simplemente reconstruimos la entrada de historial.
+     */
+    try{
+      if(
+        window.AndroidGPS &&
+        typeof window.AndroidGPS.minimizeApp === "function"
+      ){
+        window.AndroidGPS.minimizeApp();
+      }
+    }catch(e){
+      console.warn("DV25 AndroidGPS:",e);
+    }
+
+    setTimeout(dv25PrepararBack,50);
+  },true);
+
+  /*
+   * Reinyecta la protección periódicamente por si otra parte de la
+   * aplicación usa history.replaceState.
+   */
+  setTimeout(dv25PrepararBack,300);
+  setInterval(dv25PrepararBack,5000);
+
+  /*
+   * Recuperación inicial.
+   */
+  window.addEventListener("load",function(){
+    setTimeout(dv25RestaurarSeleccion,700);
+  });
+
+  /*
+   * Guardado periódico liviano. No manda nada al servidor.
+   * Solo mantiene una copia local.
+   */
+  setInterval(function(){
+    if(
+      typeof recorridoActivo !== "undefined" &&
+      recorridoActivo
+    ){
+      dv25GuardarEstado();
+    }
+  },5000);
+
+  window.DV25 = {
+    save:dv25GuardarEstado,
+    restore:dv25RestaurarSeleccion
+  };
+
+})();
+</script>
+<!-- DV24 REFORZADO END -->
+
 </body>
 </html>
