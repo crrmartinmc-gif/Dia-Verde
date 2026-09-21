@@ -411,6 +411,92 @@ let zonasGeo = [];
 let selectedCgm = "";
 let selectedZone = "";
 let activeLayer = null;
+
+// ===== PERSISTENCIA DE SELECCION CGM/ZONA =====
+const DV_SELECTION_KEY = "diaVerdeSeleccionV1";
+function guardarSeleccion(){
+  try{
+    localStorage.setItem(DV_SELECTION_KEY, JSON.stringify({
+      cgm:String(selectedCgm || cgm?.value || ""),
+      zona:String(selectedZone || zone?.value || ""),
+      actualizado:new Date().toISOString()
+    }));
+  }catch(e){
+    console.warn("Guardar selección CGM/Zona:",e);
+  }
+}
+function leerSeleccionGuardada(){
+  try{
+    const raw=localStorage.getItem(DV_SELECTION_KEY);
+    const v=raw?JSON.parse(raw):null;
+    return v && typeof v === "object" ? v : null;
+  }catch(e){
+    return null;
+  }
+}
+function restaurarSeleccionGuardada(){
+  try{
+    const guardada=leerSeleccionGuardada();
+    if(!guardada || !guardada.cgm) return false;
+    const cgms=[...cgm.options].map(o=>o.value);
+    if(!cgms.includes(guardada.cgm)) return false;
+
+    selectedCgm=guardada.cgm;
+    cgm.value=guardada.cgm;
+    actualizarZonasPorCGM();
+
+    if(guardada.zona){
+      const zonas=[...zone.options].map(o=>o.value);
+      if(zonas.includes(guardada.zona)){
+        selectedZone=guardada.zona;
+        zone.value=guardada.zona;
+      }
+    }
+    return true;
+  }catch(e){
+    console.warn("Restaurar selección CGM/Zona:",e);
+    return false;
+  }
+}
+
+// ===== PROTECCION DEL BOTON ATRAS EN ANDROID =====
+// Evita que un toque accidental en Atrás destruya la WebApp/WebView.
+// Si el APK expone minimizeApp(), se solicita minimizar la Activity.
+// En WebView sin ese puente se mantiene la página mediante history.
+function dvInstalarProteccionBotonAtras(){
+  try{
+    const esAndroid=/Android/i.test(navigator.userAgent || "");
+    if(!esAndroid) return;
+
+    const estado="diaVerdeBackGuard";
+    if(!history.state || history.state.dvGuard !== estado){
+      history.pushState({dvGuard:estado},"",location.href);
+    }
+
+    window.addEventListener("popstate",function(){
+      // Guardar todo antes de devolver el estado al historial.
+      try{ if(typeof guardarRecorridoLocal === "function") guardarRecorridoLocal(); }catch(e){}
+      try{ if(typeof guardarSeleccion === "function") guardarSeleccion(); }catch(e){}
+
+      // Si la app nativa tiene un método para minimizar, lo usamos.
+      try{
+        if(window.AndroidGPS && typeof AndroidGPS.minimizeApp === "function"){
+          AndroidGPS.minimizeApp();
+          history.pushState({dvGuard:estado},"",location.href);
+          return;
+        }
+      }catch(e){
+        console.warn("No se pudo minimizar la app nativa:",e);
+      }
+
+      // Fallback: impedir que el WebView cierre/navegue fuera de la aplicación.
+      history.pushState({dvGuard:estado},"",location.href);
+    },false);
+  }catch(e){
+    console.warn("Protección botón Atrás:",e);
+  }
+}
+
 const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
 function getRouteStorageKey(){
   try{
@@ -1777,6 +1863,7 @@ function iniciarRecorrido(){
   mapaUsuarioMovio=false;
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
+  guardarSeleccion();
   recorridoPuntos=[];
   dvPanelGpsLastSentAt=0;
   dvPanelGpsLastPoint=null;
@@ -1877,19 +1964,6 @@ function recuperarRecorrido(){
       borrarRecorridoLocal();
       return;
     }
-    // Si el recorrido quedó abierto y la app se volvió a abrir otro día,
-    // NO se concatena con el nuevo día: se archiva y se empieza limpio.
-    if(inicio.toDateString()!==ahora.toDateString()){
-      archivarRecorridoLocal({
-        activo:false,
-        zona:estado.zona,
-        inicio:estado.inicio,
-        fin:ahora.toISOString(),
-        puntos:Array.isArray(estado.puntos)?estado.puntos:[]
-      },"cambio_de_dia");
-      borrarRecorridoLocal();
-      return;
-    }
     recorridoActivo=true;
     recorridoZona=estado.zona;
     recorridoInicio=estado.inicio;
@@ -1960,6 +2034,7 @@ agregar(row,14,15,16,"Santa Catalina");
 });
 cargarCGMs();
 actualizarZonasPorCGM();
+restaurarSeleccionGuardada();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
@@ -2976,6 +3051,7 @@ selectedCgm =
 cgm.value;
 selectedZone =
 "";
+  guardarSeleccion();
 search.value =
 "";
 actualizarZonasPorCGM();
@@ -2997,6 +3073,7 @@ zone.addEventListener(
     recorridoMarker=null;
   }
   render();
+  guardarSeleccion();
   actualizarBotonesRecorrido();
 }
 );
@@ -3021,12 +3098,22 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
-if(!document.hidden){
-if(recorridoActivo) activarPantallaEncendida();
-cargarEvidenciasHoy();
+if(document.hidden){
+  try{ guardarSeleccion(); }catch(e){}
+  try{ guardarRecorridoLocal(); }catch(e){}
+}else{
+  // Al volver de segundo plano restauramos el estado visual sin pedir
+  // nuevamente CGM/Zona al chofer.
+  try{ restaurarSeleccionGuardada(); }catch(e){}
+  if(recorridoActivo) activarPantallaEncendida();
+  cargarEvidenciasHoy();
+  try{ render(); }catch(e){}
 }
 }
 );
+
+// Instalar la protección del botón Atrás cuando el DOM ya está disponible.
+dvInstalarProteccionBotonAtras();
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
@@ -3081,6 +3168,8 @@ function dvIniciarSesion(){
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
   try {
+    if(typeof restaurarSeleccionGuardada === "function") restaurarSeleccionGuardada();
+    if(typeof render === "function") render();
     if(typeof recuperarRecorrido === "function") recuperarRecorrido();
   } catch(e) {
     console.error("Recuperación de recorrido:", e);
@@ -3101,6 +3190,13 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
+    try {
+      if(typeof restaurarSeleccionGuardada === "function") restaurarSeleccionGuardada();
+      if(typeof render === "function") render();
+      if(typeof recuperarRecorrido === "function") recuperarRecorrido();
+    } catch(e) {
+      console.error("Restauración de estado:",e);
+    }
   }else{
     dvMostrarLogin();
   }
