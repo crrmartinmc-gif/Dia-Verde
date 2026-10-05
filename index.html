@@ -406,97 +406,6 @@ const GID =
 "1911460821";
 const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
-
-// =========================================================
-// SINCRONIZACIÓN DE PINES DESDE PANEL DE CONTROL — V4
-// Fuente de verdad: Backend Maestro del Panel.
-// Día Verde copia las coordenadas que fueron corregidas/movidas en el Panel.
-// =========================================================
-const DV_PANEL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
-const DV_PANEL_COORD_ACTION = "correccionesReclamosDiaVerde";
-let dvPanelCorrecciones = [];
-let dvPanelCorreccionesCargadas = false;
-
-function dvPanelNorm(v){
-  return String(v ?? "").trim().toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[º°]/g, "").replace(/[.,;:#\-_/]+/g, " ")
-    .replace(/\s+/g, " ").trim();
-}
-function dvPanelDireccionPartes(v){
-  const t=dvPanelNorm(v);
-  const m=t.match(/^(.*?)(?:\s|^)(\d+[a-z]?)$/i);
-  return m ? {calle:m[1].trim(),numero:m[2].trim()} : {calle:t,numero:""};
-}
-function dvPanelDireccionDeCorreccion(c){
-  return String(c?.direccion ?? c?.Direccion ?? c?.domicilio ?? c?.Domicilio ?? "").trim();
-}
-function dvPanelBuscarCorreccion(d){
-  if(!dvPanelCorreccionesCargadas || !d) return null;
-  const loc=dvPanelNorm(d.localidad);
-  const zona=dvPanelNorm(d.zona);
-  const calle=dvPanelNorm(d.calle);
-  const numero=dvPanelNorm(d.numero);
-
-  // 1) Dirección + localidad + zona.
-  for(const c of dvPanelCorrecciones){
-    const cl=dvPanelNorm(c.localidad ?? c.Localidad);
-    const cz=dvPanelNorm(c.zona ?? c.Zona);
-    const partes=dvPanelDireccionPartes(dvPanelDireccionDeCorreccion(c));
-    const cc=dvPanelNorm(c.calle ?? c.Calle) || partes.calle;
-    const cn=dvPanelNorm(c.numero ?? c.Numero ?? c.nro ?? c.Nro) || partes.numero;
-    if(loc && cl && loc!==cl) continue;
-    if(cz && zona && cz!==zona) continue;
-    if(cc && calle && cc===calle && cn && numero && cn===numero) return c;
-  }
-
-  // 2) Localidad + calle + número, sin exigir zona.
-  for(const c of dvPanelCorrecciones){
-    const cl=dvPanelNorm(c.localidad ?? c.Localidad);
-    const partes=dvPanelDireccionPartes(dvPanelDireccionDeCorreccion(c));
-    const cc=dvPanelNorm(c.calle ?? c.Calle) || partes.calle;
-    const cn=dvPanelNorm(c.numero ?? c.Numero ?? c.nro ?? c.Nro) || partes.numero;
-    if(loc && cl && loc!==cl) continue;
-    if(cc===calle && cn===numero && calle && numero) return c;
-  }
-
-  return null;
-}
-async function dvPanelCargarCorrecciones(){
-  try{
-    const url=DV_PANEL_BACKEND_URL+"?accion="+encodeURIComponent(DV_PANEL_COORD_ACTION)+"&t="+Date.now();
-    const r=await fetch(url,{cache:"no-store"});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const j=await r.json();
-    const arr=j?.datos?.correcciones;
-    if(!Array.isArray(arr)) throw new Error("Backend sin lista de correcciones");
-    dvPanelCorrecciones=arr.filter(c=>Number.isFinite(Number(c?.latitud))&&Number.isFinite(Number(c?.longitud)));
-    dvPanelCorreccionesCargadas=true;
-
-    let aplicadas=0;
-    data=data.map(d=>{
-      const c=dvPanelBuscarCorreccion(d);
-      if(c){
-        aplicadas++;
-        return {...d,lat:Number(c.latitud),lng:Number(c.longitud),_dvPanelPin:true};
-      }
-      return d;
-    });
-
-    console.info("Día Verde V4 · correcciones Panel cargadas:",dvPanelCorrecciones.length);
-    console.info("Día Verde V4 · PINES COPIADOS DEL PANEL:",aplicadas,"de",data.length);
-
-    // Si el usuario ya está viendo el mapa, redibujamos usando las nuevas
-    // coordenadas. obtenerLatLngReclamo() las toma antes que la geocodificación.
-    if(typeof render === "function") render();
-    return aplicadas;
-  }catch(e){
-    dvPanelCorreccionesCargadas=false;
-    console.warn("Día Verde V4 · no se pudieron cargar las coordenadas del Panel",e);
-    return 0;
-  }
-}
-
 let data = [];
 let zonasGeo = [];
 let selectedCgm = "";
@@ -2129,9 +2038,6 @@ restaurarSeleccionGuardada();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
-// Importante: se ejecuta después de construir `data`, porque las correcciones
-// del Panel se cruzan con calle/número/localidad/zona del reclamo.
-dvPanelCargarCorrecciones();
 }
 function cargarDatos(){
 statusText.textContent="Cargando direcciones...";
