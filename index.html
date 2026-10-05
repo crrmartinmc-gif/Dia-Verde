@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Direcciones DIA VERDE</title>
 <link
-  
 rel="stylesheet"
 href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
@@ -411,92 +410,6 @@ let zonasGeo = [];
 let selectedCgm = "";
 let selectedZone = "";
 let activeLayer = null;
-
-// ===== PERSISTENCIA DE SELECCION CGM/ZONA =====
-const DV_SELECTION_KEY = "diaVerdeSeleccionV1";
-function guardarSeleccion(){
-  try{
-    localStorage.setItem(DV_SELECTION_KEY, JSON.stringify({
-      cgm:String(selectedCgm || cgm?.value || ""),
-      zona:String(selectedZone || zone?.value || ""),
-      actualizado:new Date().toISOString()
-    }));
-  }catch(e){
-    console.warn("Guardar selección CGM/Zona:",e);
-  }
-}
-function leerSeleccionGuardada(){
-  try{
-    const raw=localStorage.getItem(DV_SELECTION_KEY);
-    const v=raw?JSON.parse(raw):null;
-    return v && typeof v === "object" ? v : null;
-  }catch(e){
-    return null;
-  }
-}
-function restaurarSeleccionGuardada(){
-  try{
-    const guardada=leerSeleccionGuardada();
-    if(!guardada || !guardada.cgm) return false;
-    const cgms=[...cgm.options].map(o=>o.value);
-    if(!cgms.includes(guardada.cgm)) return false;
-
-    selectedCgm=guardada.cgm;
-    cgm.value=guardada.cgm;
-    actualizarZonasPorCGM();
-
-    if(guardada.zona){
-      const zonas=[...zone.options].map(o=>o.value);
-      if(zonas.includes(guardada.zona)){
-        selectedZone=guardada.zona;
-        zone.value=guardada.zona;
-      }
-    }
-    return true;
-  }catch(e){
-    console.warn("Restaurar selección CGM/Zona:",e);
-    return false;
-  }
-}
-
-// ===== PROTECCION DEL BOTON ATRAS EN ANDROID =====
-// Evita que un toque accidental en Atrás destruya la WebApp/WebView.
-// Si el APK expone minimizeApp(), se solicita minimizar la Activity.
-// En WebView sin ese puente se mantiene la página mediante history.
-function dvInstalarProteccionBotonAtras(){
-  try{
-    const esAndroid=/Android/i.test(navigator.userAgent || "");
-    if(!esAndroid) return;
-
-    const estado="diaVerdeBackGuard";
-    if(!history.state || history.state.dvGuard !== estado){
-      history.pushState({dvGuard:estado},"",location.href);
-    }
-
-    window.addEventListener("popstate",function(){
-      // Guardar todo antes de devolver el estado al historial.
-      try{ if(typeof guardarRecorridoLocal === "function") guardarRecorridoLocal(); }catch(e){}
-      try{ if(typeof guardarSeleccion === "function") guardarSeleccion(); }catch(e){}
-
-      // Si la app nativa tiene un método para minimizar, lo usamos.
-      try{
-        if(window.AndroidGPS && typeof AndroidGPS.minimizeApp === "function"){
-          AndroidGPS.minimizeApp();
-          history.pushState({dvGuard:estado},"",location.href);
-          return;
-        }
-      }catch(e){
-        console.warn("No se pudo minimizar la app nativa:",e);
-      }
-
-      // Fallback: impedir que el WebView cierre/navegue fuera de la aplicación.
-      history.pushState({dvGuard:estado},"",location.href);
-    },false);
-  }catch(e){
-    console.warn("Protección botón Atrás:",e);
-  }
-}
-
 const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
 function getRouteStorageKey(){
   try{
@@ -1086,12 +999,17 @@ function iconoReclamoMedioAmbiente(estado){
 }
 function popupReclamoMedioAmbiente(d){
   const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
-  const realizado = typeof estaRealizadaHoy === "function" ? estaRealizadaHoy(d) : false;
+  const realizado = typeof estaRealizadaHoy === "function"
+    ? estaRealizadaHoy(d)
+    : false;
   const estado = realizado ? "Realizado" : "Pendiente";
-  const adminButton = dvEsAdmin() ? '<button type="button" style="margin-top:8px;width:100%;border:0;border-radius:8px;padding:8px 10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer" onclick="event.stopPropagation();dvIniciarCorreccionPin(this.dataset.clave)" data-clave="'+escaparHTML(dvClavePin(d))+'">📍 Corregir ubicación</button>' : "";
   return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+    '<div class="estado">'+(realizado ? '🟢 ' : '⚪ ')+escaparHTML(estado)+'</div>'+
-    adminButton+
+    '<div class="titulo">♻️ Vecino Reciclador</div>'+
+    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
+    '<div class="estado">'+
+      (realizado ? '🟢 ' : '⚪ ')+
+      escaparHTML(estado)+
+    '</div>'+
     '</div>';
 }
 function obtenerLatLngReclamo(d){
@@ -1364,64 +1282,6 @@ document.getElementById(
 }
 );
 }
-const ROUTE_HISTORY_BASE_KEY = "diaVerdeHistorialRecorridosV1";
-function getRouteHistoryKey(){
-  try{
-    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
-    const id = u && u.usuario ? u.usuario : "sin_usuario";
-    return ROUTE_HISTORY_BASE_KEY + "_" + id;
-  }catch(e){
-    return ROUTE_HISTORY_BASE_KEY + "_sin_usuario";
-  }
-}
-function fechaRecorridoISO(estado){
-  try{
-    return estado && estado.inicio
-      ? new Date(estado.inicio).toISOString().slice(0,10)
-      : new Date().toISOString().slice(0,10);
-  }catch(e){
-    return new Date().toISOString().slice(0,10);
-  }
-}
-function leerHistorialRecorridos(){
-  try{
-    const raw=localStorage.getItem(getRouteHistoryKey());
-    const lista=raw?JSON.parse(raw):[];
-    return Array.isArray(lista)?lista:[];
-  }catch(e){
-    console.error("Leer historial de recorridos:",e);
-    return [];
-  }
-}
-function guardarHistorialRecorridos(lista){
-  try{
-    // Conservamos los últimos 100 recorridos para evitar superar la cuota de localStorage.
-    const historial=Array.isArray(lista)?lista.slice(-100):[];
-    localStorage.setItem(getRouteHistoryKey(),JSON.stringify(historial));
-  }catch(error){
-    console.error("Guardar historial de recorridos:",error);
-  }
-}
-function archivarRecorridoLocal(estado, motivo="finalizado"){
-  if(!estado || !estado.zona || !Array.isArray(estado.puntos)) return;
-  try{
-    const historial=leerHistorialRecorridos();
-    const copia={
-      id:"rec-"+Date.now()+"-"+Math.random().toString(36).slice(2),
-      activo:false,
-      zona:estado.zona,
-      inicio:estado.inicio || null,
-      fin:estado.fin || new Date().toISOString(),
-      fecha:fechaRecorridoISO(estado),
-      motivo:motivo,
-      puntos:estado.puntos
-    };
-    historial.push(copia);
-    guardarHistorialRecorridos(historial);
-  }catch(error){
-    console.error("Archivar recorrido:",error);
-  }
-}
 function guardarRecorridoLocal(){
   try{
     localStorage.setItem(
@@ -1430,8 +1290,7 @@ function guardarRecorridoLocal(){
         activo:recorridoActivo,
         zona:recorridoZona,
         inicio:recorridoInicio,
-        puntos:recorridoPuntos,
-        actualizado:new Date().toISOString()
+        puntos:recorridoPuntos
       })
     );
   }catch(error){
@@ -1745,10 +1604,6 @@ function registrarPuntoRecorrido(position){
   }
   recorridoPuntos.push(punto);
 
-  // Persistencia inmediata: si la app se cierra accidentalmente,
-  // el último punto aceptado queda guardado antes de continuar.
-  guardarRecorridoLocal();
-
   // Publicar al Panel solo los puntos aceptados por los filtros
   // del recorrido. La función limita el envío a un punto cada 10 segundos.
   registrarGPSPanel(
@@ -1760,6 +1615,7 @@ function registrarPuntoRecorrido(position){
   );
 
   dibujarRecorrido();
+  guardarRecorridoLocal();
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
     "📍 GPS activo · Puntos registrados: "+
@@ -1858,7 +1714,6 @@ function iniciarRecorrido(){
   mapaUsuarioMovio=false;
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
-  guardarSeleccion();
   recorridoPuntos=[];
   dvPanelGpsLastSentAt=0;
   dvPanelGpsLastPoint=null;
@@ -1903,13 +1758,6 @@ function finalizarRecorrido(){
   }
   const cantidad=recorridoPuntos.length;
   const zonaFinal=recorridoZona;
-  const recorridoTerminado={
-    activo:false,
-    zona:recorridoZona,
-    inicio:recorridoInicio,
-    fin:new Date().toISOString(),
-    puntos:recorridoPuntos.slice()
-  };
 
   // Último punto: marca el recorrido como inactivo en el Panel.
   dvPanelGpsEnviarUltimoPunto();
@@ -1927,9 +1775,7 @@ function finalizarRecorrido(){
     map.removeLayer(recorridoMarker);
     recorridoMarker=null;
   }
-  // Al finalizar pasa al historial y deja de ocupar la clave del recorrido actual.
-  archivarRecorridoLocal(recorridoTerminado,"finalizado");
-  borrarRecorridoLocal();
+  guardarRecorridoLocal();
   actualizarBotonesRecorrido();
   actualizarEstadoRecorrido(
     "✅ <strong>Recorrido finalizado</strong><br>"+
@@ -1955,7 +1801,10 @@ function recuperarRecorrido(){
       ?new Date(estado.inicio)
       :null;
     const ahora=new Date();
-    if(!inicio){
+    if(
+      !inicio||
+      inicio.toDateString()!==ahora.toDateString()
+    ){
       borrarRecorridoLocal();
       return;
     }
@@ -2029,11 +1878,9 @@ agregar(row,14,15,16,"Santa Catalina");
 });
 cargarCGMs();
 actualizarZonasPorCGM();
-restaurarSeleccionGuardada();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
-dvCargarCorreccionesPanel();
 }
 function cargarDatos(){
 statusText.textContent="Cargando direcciones...";
@@ -3047,7 +2894,6 @@ selectedCgm =
 cgm.value;
 selectedZone =
 "";
-  guardarSeleccion();
 search.value =
 "";
 actualizarZonasPorCGM();
@@ -3069,7 +2915,6 @@ zone.addEventListener(
     recorridoMarker=null;
   }
   render();
-  guardarSeleccion();
   actualizarBotonesRecorrido();
 }
 );
@@ -3094,33 +2939,22 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
-if(document.hidden){
-  try{ guardarSeleccion(); }catch(e){}
-  try{ guardarRecorridoLocal(); }catch(e){}
-}else{
-  // Al volver de segundo plano restauramos el estado visual sin pedir
-  // nuevamente CGM/Zona al chofer.
-  try{ restaurarSeleccionGuardada(); }catch(e){}
-  if(recorridoActivo) activarPantallaEncendida();
-  cargarEvidenciasHoy();
-  try{ render(); }catch(e){}
+if(!document.hidden){
+if(recorridoActivo) activarPantallaEncendida();
+cargarEvidenciasHoy();
 }
 }
 );
-
-// Instalar la protección del botón Atrás cuando el DOM ya está disponible.
-dvInstalarProteccionBotonAtras();
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
-  { usuario:"Ale",       password:"boca",          nombre:"Alejandro Chaparro" },
-  { usuario:"Peque",     password:"banfield09",    nombre:"Martin Carro", rol:"ADMIN" },
-  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazquez" },
+  { usuario:"Ale",       password:"boca",          nombre:"Ale" },
+  { usuario:"Peque",     password:"banfield09",    nombre:"Dia Verde" },
+  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
   { usuario:"Luigi",     password:"boca", nombre:"Luis Del Hojo" },
-  { usuario:"Javi",     password:"racing", nombre:"Javier Carnevale" },
+  { usuario:"Javi",     password:"racing", nombre:"Pablo Vazquez" },
   { usuario:"Fede",     password:"banfield", nombre:"Federico Montero" },
-  { usuario:"Horacio",     password:"sanlorenzo", nombre:"Horacio Fontana" },
-  { usuario:"Joseluis",     password:"river", nombre:"Jose Luis Cordero" },
+  { usuario:"Horacio",     password:"independiente", nombre:"Horacio Fontana" },
   { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
   { usuario:"Francocrr", password:"boca",          nombre:"Franco Carrasco" },
   { usuario:"chofer",    password:"comodin",       nombre:"Comodin" },
@@ -3128,62 +2962,6 @@ const DV_USUARIOS = [
 ];
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
-const DV_PANEL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
-const DV_CORRECCIONES_ACCION = "correccionesReclamosDiaVerde";
-let dvCorreccionesPanel = {};
-let dvCorreccionPinActivo = null;
-function dvEsAdmin(){ const u=dvUsuarioActual(); return !!(u && (u.rol === "ADMIN" || String(u.usuario||"").toLowerCase()==="peque")); }
-function dvClavePin(d){
-  if(!d)return "";
-  const id=d.id??d.ID??d.idReclamo??d.IdReclamo??d.codigo??d.Codigo??"";
-  if(String(id).trim())return "ID|"+normalizar(id);
-  return [d.localidad,d.zona,d.calle,d.numero].map(normalizar).join("|");
-}
-function dvDireccionPin(d){ return `${d?.calle||d?.direccion||d?.Direccion||d?.domicilio||d?.Domicilio||""} ${d?.numero||""}`.trim(); }
-async function dvCargarCorreccionesPanel(){
-  try{
-    const r=await fetch(DV_PANEL_BACKEND_URL+"?accion="+encodeURIComponent(DV_CORRECCIONES_ACCION)+"&t="+Date.now(),{cache:"no-store"});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const j=await r.json(),arr=j?.datos?.correcciones;
-    if(!Array.isArray(arr))throw new Error("El Backend no devolvió correcciones");
-    dvCorreccionesPanel={};
-    arr.forEach(c=>{const k=String(c?.clave||"").trim(),lat=Number(c?.latitud),lng=Number(c?.longitud);if(k&&Number.isFinite(lat)&&Number.isFinite(lng))dvCorreccionesPanel[k]={lat,lng};});
-    if(Array.isArray(data)&&data.length){
-      data=data.map(d=>{const c=dvCorreccionesPanel[dvClavePin(d)];return c?{...d,lat:c.lat,lng:c.lng,_dvCorreccionPanel:true}:d;});
-      mostrarMarcadoresGeocodificados(data);
-    }
-    console.info("Día Verde · correcciones del Panel cargadas:",Object.keys(dvCorreccionesPanel).length);
-  }catch(e){console.warn("Día Verde · no se pudieron cargar las correcciones del Panel:",e);}
-}
-async function dvGuardarCorreccionPin(d,lat,lng){
-  const clave=dvClavePin(d); if(!clave)throw new Error("No se pudo identificar el reclamo");
-  const u=dvUsuarioActual()||{};
-  const payload={accion:"guardarCorreccionReclamo",clave,latitud:Number(lat),longitud:Number(lng),direccion:dvDireccionPin(d),localidad:d?.localidad||"",zona:d?.zona||"",usuario:String(u.usuario||"Peque")};
-  const r=await fetch(DV_PANEL_BACKEND_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-  const j=await r.json(); if(!j?.ok)throw new Error(j?.error||"Backend rechazó la corrección");
-  dvCorreccionesPanel[clave]={lat:Number(lat),lng:Number(lng)};
-}
-function dvIniciarCorreccionPin(clave){
-  if(!dvEsAdmin())return;
-  const d=(Array.isArray(data)?data:[]).find(x=>dvClavePin(x)===String(clave)); if(!d)return;
-  dvCorreccionPinActivo={clave:String(clave),reclamo:d};
-  const st=document.getElementById("statusText"); if(st)st.textContent="📍 CORRECCIÓN ACTIVA · Hacé clic en la ubicación correcta";
-  if(!map||!map._map)return;
-  map._map.getCanvas().style.cursor="crosshair";
-  map._map.once("click",async e=>{
-    if(!dvCorreccionPinActivo||dvCorreccionPinActivo.clave!==String(clave))return;
-    const objetivo=dvCorreccionPinActivo.reclamo; dvCorreccionPinActivo=null; map._map.getCanvas().style.cursor="";
-    const lat=Number(e.lngLat.lat),lng=Number(e.lngLat.lng); if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-    try{
-      if(st)st.textContent="⏳ Guardando nueva ubicación...";
-      await dvGuardarCorreccionPin(objetivo,lat,lng);
-      data=data.map(x=>dvClavePin(x)===String(clave)?{...x,lat,lng,_dvCorreccionPanel:true}:x);
-      mostrarMarcadoresGeocodificados(data);
-      if(st)st.textContent="✓ Ubicación corregida y guardada";
-    }catch(err){console.error("Corrección de pin:",err);if(st)st.textContent="⚠ No se pudo guardar la ubicación";}
-  });
-}
-
 function dvUsuarioActual(){
   try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
   catch(e){ return null; }
@@ -3216,14 +2994,11 @@ function dvIniciarSesion(){
   localStorage.setItem(DV_SESSION_KEY, "1");
   localStorage.setItem(DV_USER_KEY, JSON.stringify({
     usuario: encontrado.usuario,
-    nombre: encontrado.nombre,
-    rol: encontrado.rol || "CHOFER"
+    nombre: encontrado.nombre
   }));
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
   try {
-    if(typeof restaurarSeleccionGuardada === "function") restaurarSeleccionGuardada();
-    if(typeof render === "function") render();
     if(typeof recuperarRecorrido === "function") recuperarRecorrido();
   } catch(e) {
     console.error("Recuperación de recorrido:", e);
@@ -3244,13 +3019,6 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
-    try {
-      if(typeof restaurarSeleccionGuardada === "function") restaurarSeleccionGuardada();
-      if(typeof render === "function") render();
-      if(typeof recuperarRecorrido === "function") recuperarRecorrido();
-    } catch(e) {
-      console.error("Restauración de estado:",e);
-    }
   }else{
     dvMostrarLogin();
   }
@@ -3504,282 +3272,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
-
-
-<!-- DV24 REFORZADO START -->
-<script>
-/*
- * DIA VERDE V25 - PROTECCION DE ESTADO / BACK / SEGUNDO PLANO
- * Este bloque NO reemplaza las funciones existentes.
- * Solo refuerza persistencia y recuperación.
- */
-(function(){
-
-  const DV25_SELECTION_KEY = "diaVerdeSeleccionV25";
-  const DV25_UI_KEY = "diaVerdeUIStateV25";
-  const DV25_SAVE_DEBOUNCE = 250;
-  let dv25SaveTimer = null;
-  let dv25Restoring = false;
-
-  function dv25SafeSet(key,value){
-    try{
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    }catch(e){
-      console.warn("DV25 localStorage:",e);
-      return false;
-    }
-  }
-
-  function dv25SafeGet(key){
-    try{
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){
-      console.warn("DV25 localStorage lectura:",e);
-      return null;
-    }
-  }
-
-  function dv25GuardarEstado(){
-    try{
-      const estado = {
-        cgm: typeof selectedCgm !== "undefined" ? String(selectedCgm || "") : "",
-        zona: typeof selectedZone !== "undefined" ? String(selectedZone || "") : "",
-        recorridoActivo: typeof recorridoActivo !== "undefined" ? !!recorridoActivo : false,
-        recorridoZona: typeof recorridoZona !== "undefined" ? String(recorridoZona || "") : "",
-        recorridoInicio: typeof recorridoInicio !== "undefined" ? String(recorridoInicio || "") : "",
-        puntos: Array.isArray(recorridoPuntos) ? recorridoPuntos.slice() : [],
-        timestamp: Date.now()
-      };
-
-      dv25SafeSet(DV25_SELECTION_KEY,{
-        cgm:estado.cgm,
-        zona:estado.zona,
-        timestamp:estado.timestamp
-      });
-
-      dv25SafeSet(DV25_UI_KEY,estado);
-
-      /*
-       * Usamos también la función original del sistema si existe.
-       * No la reemplazamos.
-       */
-      if(typeof guardarRecorridoLocal === "function"){
-        try{ guardarRecorridoLocal(); }catch(e){}
-      }
-
-      return true;
-    }catch(e){
-      console.warn("DV25 guardar estado:",e);
-      return false;
-    }
-  }
-
-  function dv25GuardarEstadoDebounced(){
-    clearTimeout(dv25SaveTimer);
-    dv25SaveTimer = setTimeout(dv25GuardarEstado,DV25_SAVE_DEBOUNCE);
-  }
-
-  function dv25RestaurarSeleccion(){
-    if(dv25Restoring) return;
-    dv25Restoring = true;
-
-    try{
-      const saved = dv25SafeGet(DV25_SELECTION_KEY);
-      if(!saved) return;
-
-      const cgmValue = String(saved.cgm || "");
-      const zoneValue = String(saved.zona || "");
-
-      if(typeof cgm !== "undefined" && cgm && cgmValue){
-        /*
-         * Esperamos a que las opciones ya hayan sido cargadas.
-         */
-        const existeCGM = Array.from(cgm.options || [])
-          .some(o => String(o.value) === cgmValue);
-
-        if(existeCGM){
-          cgm.value = cgmValue;
-          cgm.dispatchEvent(new Event("change",{bubbles:true}));
-        }
-      }
-
-      /*
-       * La zona puede cargarse de forma asíncrona después del CGM.
-       * Hacemos varios intentos cortos, sin tocar datos si no existe.
-       */
-      if(zoneValue){
-        let intentos = 0;
-        const restaurarZona = ()=>{
-          intentos++;
-
-          if(typeof zone !== "undefined" && zone){
-            const existeZona = Array.from(zone.options || [])
-              .some(o => String(o.value) === zoneValue);
-
-            if(existeZona){
-              zone.value = zoneValue;
-              zone.dispatchEvent(new Event("change",{bubbles:true}));
-              return;
-            }
-          }
-
-          if(intentos < 20){
-            setTimeout(restaurarZona,250);
-          }
-        };
-
-        setTimeout(restaurarZona,150);
-      }
-
-    }catch(e){
-      console.warn("DV25 restaurar selección:",e);
-    }finally{
-      setTimeout(()=>{ dv25Restoring=false; },1000);
-    }
-  }
-
-  /*
-   * Guardado continuo ante cambios de selección.
-   */
-  document.addEventListener("change",function(ev){
-    if(ev.target === cgm || ev.target === zone){
-      dv25GuardarEstadoDebounced();
-    }
-  },true);
-
-  /*
-   * Guardado ante pérdida de foco/segundo plano.
-   * visibilitychange es más confiable que unload en Android.
-   */
-  document.addEventListener("visibilitychange",function(){
-    if(document.visibilityState === "hidden"){
-      dv25GuardarEstado();
-    }else if(document.visibilityState === "visible"){
-      setTimeout(()=>{
-        dv25RestaurarSeleccion();
-
-        /*
-         * Si ya existía una función de recuperación del recorrido,
-         * la ejecutamos solamente si el sistema todavía no tiene
-         * un recorrido activo.
-         */
-        try{
-          if(
-            typeof recuperarRecorrido === "function" &&
-            !recorridoActivo
-          ){
-            recuperarRecorrido();
-          }
-        }catch(e){
-          console.warn("DV25 recuperar recorrido:",e);
-        }
-      },150);
-    }
-  },true);
-
-  /*
-   * Guardado antes de salir de la página.
-   * No intentamos detener el GPS ni finalizar el recorrido.
-   */
-  window.addEventListener("pagehide",function(){
-    dv25GuardarEstado();
-  },true);
-
-  window.addEventListener("beforeunload",function(){
-    dv25GuardarEstado();
-  },true);
-
-  /*
-   * Si el WebView manda una señal personalizada, también guardamos.
-   */
-  window.addEventListener("dv-app-background",function(){
-    dv25GuardarEstado();
-  },true);
-
-  window.addEventListener("dv-app-resume",function(){
-    setTimeout(dv25RestaurarSeleccion,150);
-  },true);
-
-  /*
-   * Interceptamos navegación hacia atrás del navegador/WebView.
-   * El primer BACK queda absorbido en una entrada de historial
-   * artificial; esto evita que el documento sea destruido.
-   *
-   * IMPORTANTE: no usamos location.href, no recargamos y no borramos
-   * ningún dato.
-   */
-  function dv25PrepararBack(){
-    try{
-      if(!history.state || !history.state.__dv25){
-        history.pushState(
-          {__dv25:true},
-          document.title,
-          window.location.href
-        );
-      }
-    }catch(e){
-      console.warn("DV25 history:",e);
-    }
-  }
-
-  window.addEventListener("popstate",function(){
-    dv25GuardarEstado();
-
-    /*
-     * Si el APK expone un puente nativo, le pedimos minimizar.
-     * Si no existe, simplemente reconstruimos la entrada de historial.
-     */
-    try{
-      if(
-        window.AndroidGPS &&
-        typeof window.AndroidGPS.minimizeApp === "function"
-      ){
-        window.AndroidGPS.minimizeApp();
-      }
-    }catch(e){
-      console.warn("DV25 AndroidGPS:",e);
-    }
-
-    setTimeout(dv25PrepararBack,50);
-  },true);
-
-  /*
-   * Reinyecta la protección periódicamente por si otra parte de la
-   * aplicación usa history.replaceState.
-   */
-  setTimeout(dv25PrepararBack,300);
-  setInterval(dv25PrepararBack,5000);
-
-  /*
-   * Recuperación inicial.
-   */
-  window.addEventListener("load",function(){
-    setTimeout(dv25RestaurarSeleccion,700);
-  });
-
-  /*
-   * Guardado periódico liviano. No manda nada al servidor.
-   * Solo mantiene una copia local.
-   */
-  setInterval(function(){
-    if(
-      typeof recorridoActivo !== "undefined" &&
-      recorridoActivo
-    ){
-      dv25GuardarEstado();
-    }
-  },5000);
-
-  window.DV25 = {
-    save:dv25GuardarEstado,
-    restore:dv25RestaurarSeleccion
-  };
-
-})();
-</script>
-<!-- DV24 REFORZADO END -->
 
 </body>
 </html>
