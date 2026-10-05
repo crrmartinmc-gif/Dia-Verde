@@ -1262,6 +1262,64 @@ function mostrarMarcadoresReclamos(lista){
   if(!Array.isArray(lista)) return;
   lista.forEach(d => agregarMarcadorReclamo(d));
 }
+function cargarCacheGeocoding(){
+  try{
+    return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
+  }catch(e){
+    return {};
+  }
+}
+function guardarCacheGeocoding(cache){
+  try{
+    localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
+  }catch(e){}
+}
+function claveGeocoding(d){
+  return normalizar(
+    `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
+  );
+}
+async function geocodificarDireccion(d){
+  // Una corrección del Panel es definitiva para Día Verde.
+  if(d && d._dvCorreccionPanel){
+    return obtenerLatLngReclamo(d);
+  }
+
+  const directa=obtenerLatLngReclamo(d);
+  if(directa) return directa;
+  const cache=cargarCacheGeocoding();
+  const key=claveGeocoding(d);
+  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+    return [Number(cache[key].lat),Number(cache[key].lng)];
+  }
+  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
+  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
+  try{
+    const response=await fetch(url,{headers:{"Accept":"application/json"}});
+    if(!response.ok) return null;
+    const resultados=await response.json();
+    if(!resultados.length) return null;
+    const lat=Number(resultados[0].lat);
+    const lng=Number(resultados[0].lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+    cache[key]={lat,lng};
+    guardarCacheGeocoding(cache);
+    return [lat,lng];
+  }catch(error){
+    console.warn("Geocodificación:",q,error);
+    return null;
+  }
+}
+let geocodingQueueKey = "";
+let geocodingRunning = false;
+let geocodingPending = [];
+let geocodingIndex = 0;
+
+function claveListaGeocoding(lista){
+  if(!Array.isArray(lista)) return "";
+  return lista.map(d => claveGeocoding(d)).join("||");
+}
+
 /*
 =========================================================
 REPRESENTACIÓN DE RECLAMOS — LÓGICA COPIADA DEL PANEL
@@ -1342,47 +1400,102 @@ async function mostrarMarcadoresGeocodificados(lista){
   if(!Array.isArray(lista)) return;
 
   const seleccion=dvObtenerReclamosRepresentables(lista);
+  const filtrados=seleccion.filtrados;
   const visibles=seleccion.visibles;
 
-  // =========================================================
-  // REGLA DEFINITIVA DE DÍA VERDE
-  // =========================================================
-  // Día Verde NO geocodifica reclamos.
-  // NO consulta Nominatim para decidir dónde colocar un pin.
-  // NO utiliza GPS para decidir dónde colocar un reclamo.
-  //
-  // La ubicación válida proviene únicamente de:
-  //   1) corrección guardada por el Panel de Control / Backend;
-  //   2) coordenadas ya entregadas por el Backend.
-  //
-  // Si un reclamo no tiene coordenadas válidas, simplemente no se
-  // representa en el mapa hasta que exista una ubicación válida.
-  // =========================================================
+  // La clave incluye solamente los reclamos que realmente pertenecen
+  // al CGM/zona seleccionados.
+  const keyLista=filtrados.map(d=>claveGeocoding(d)).join("||");
 
+  if(geocodingRunning && keyLista===geocodingQueueKey) return;
+
+  geocodingQueueKey=keyLista;
   geocodingGeneration++;
+  const generacion=geocodingGeneration;
+  geocodingPending=[];
+  geocodingIndex=0;
 
   const capa=asegurarCapaReclamos();
   if(!capa) return;
 
+  // El mapa siempre se reconstruye con el conjunto correspondiente
+  // al CGM/zona actuales, igual que el Panel.
   limpiarMarcadoresReclamos();
 
-  // Los únicos reclamos que llegan acá son los que:
-  //   - pertenecen al CGM/zona seleccionados;
-  //   - tienen una coordenada válida.
+  const cache=cargarCacheGeocoding();
+
+  // Primero dibujamos inmediatamente todo lo que ya tiene coordenadas.
   for(const d of visibles){
     agregarMarcadorReclamo(d);
   }
 
-  console.info("DÍA VERDE — REPRESENTACIÓN DEFINITIVA:",{
-    cgm:selectedCgm || "TODOS",
-    zona:selectedZone || "TODAS",
-    reclamosFiltrados:seleccion.filtrados.length,
-    pinesConCoordenadas:visibles.length,
-    sinCoordenadas:seleccion.filtrados.length-visibles.length,
-    geocodificacion:"DESACTIVADA",
-    gpsParaReclamos:"NO UTILIZADO",
-    fuentePrioritaria:"PANEL / BACKEND"
+  // Después solamente intentamos geocodificar reclamos de ESTA zona
+  // que todavía no tienen ubicación.
+  for(const d of filtrados){
+    if(dvReclamoLatLngRepresentacion(d)) continue;
+
+    const key=claveGeocoding(d);
+    const cached=cache[key];
+
+    if(cached &&
+       Number.isFinite(Number(cached.lat)) &&
+       Number.isFinite(Number(cached.lng))){
+      agregarMarcadorReclamo({
+        ...d,
+        lat:Number(cached.lat),
+        lng:Number(cached.lng)
+      });
+    }else{
+      geocodingPending.push(d);
+    }
+  }
+
+  console.info("DÍA VERDE — PINES DIBUJADOS:",{
+    cgm:selectedCgm,
+    zona:selectedZone,
+    pinesIniciales:visibles.length,
+    pendientesGeocodificacion:geocodingPending.length
   });
+
+  if(!geocodingPending.length) return;
+
+  geocodingRunning=true;
+
+  try{
+    while(geocodingIndex<geocodingPending.length){
+      if(generacion!==geocodingGeneration) return;
+
+      const d=geocodingPending[geocodingIndex++];
+      let pos=null;
+
+      for(let intento=0; intento<2 && !pos; intento++){
+        pos=await geocodificarDireccion(d);
+        if(!pos && intento===0){
+          await new Promise(r=>setTimeout(r,1500));
+        }
+      }
+
+      if(generacion!==geocodingGeneration) return;
+
+      // Antes de dibujar, verificamos nuevamente que siga perteneciendo
+      // al CGM/zona actualmente seleccionados.
+      if(pos && dvReclamoVisibleRepresentacion(d)){
+        agregarMarcadorReclamo({
+          ...d,
+          lat:pos[0],
+          lng:pos[1]
+        });
+      }
+
+      await new Promise(r=>setTimeout(r,1100));
+    }
+  }finally{
+    if(generacion===geocodingGeneration){
+      geocodingRunning=false;
+      geocodingPending=[];
+      geocodingIndex=0;
+    }
+  }
 }
 
 function resetearRotacionMapa(){
