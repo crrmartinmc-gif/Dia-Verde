@@ -408,175 +408,176 @@ const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
 
 // =========================================================
-// CORRECCIONES DE PINES DEL PANEL DE CONTROL
-// Las coordenadas movidas manualmente en el Panel de Control
-// se leen desde Backend Maestro y tienen prioridad sobre
-// las coordenadas de la dirección y sobre Nominatim.
+// SINCRONIZACIÓN DE PINES DESDE EL PANEL DE CONTROL
 // =========================================================
+// Día Verde NO calcula nuevamente la posición de un reclamo que ya fue
+// corregido en el Panel. Primero copia la coordenada guardada por el Panel
+// en Backend Maestro y recién después utiliza las coordenadas originales /
+// geocodificación como respaldo.
 const DV_PANEL_BACKEND_URL =
 "https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
 const DV_RECLAMOS_COORD_BACKEND_ACCION = "correccionesReclamosDiaVerde";
+const DV_RECLAMOS_BACKEND_ACCION = "reclamosDiaVerde";
 let dvCorreccionesRemotas = {};
 let dvCorreccionesRemotasCargadas = false;
+let dvCorreccionesPorDireccion = {};
 
-function dvClaveCorreccionReclamo(d){
+function dvNormCoord(v){
+  try{return normalizar(v);}catch(e){return String(v??"").toLowerCase().trim();}
+}
+
+function dvCoordDireccion(d){
   if(!d) return "";
-  const id = d.id ?? d.ID ?? d.idReclamo ?? d.IdReclamo ?? d.codigo ?? d.Codigo ?? d.nro ?? d.Nro ?? "";
-  if(String(id).trim()) return "ID|" + normalizar(id);
-  return [d.localidad,d.zona,d.calle,d.numero].map(normalizar).join("|");
+  const calle=d.calle ?? d.Calle ?? d.direccion ?? d.Direccion ?? d.domicilio ?? d.Domicilio ?? d.nombreCalle ?? d.NOMBRE_CALLE ?? "";
+  const numero=d.numero ?? d.Numero ?? d.nro ?? d.Nro ?? d.altura ?? d.Altura ?? "";
+  return `${calle} ${numero}`.replace(/\s+/g," ").trim();
 }
 
-function dvClaveCorreccionDireccion(d){
-  if(!d) return "";
-  return [d.localidad,d.calle,d.numero].map(normalizar).join("|");
-}
-
-function dvNormalizarClavePin(v){
-  return normalizar(String(v ?? "").trim());
-}
-
-function dvDireccionCorreccionRobusta(c){
-  if(!c) return "";
-  const directa = c.direccion ?? c.Direccion ?? c.domicilio ?? c.Domicilio ?? "";
-  if(String(directa).trim()) return String(directa).trim();
-  const calle = c.calle ?? c.Calle ?? c.nombreCalle ?? c.NOMBRE_CALLE ?? "";
-  const numero = c.numero ?? c.Numero ?? c.Nro ?? c.nro ?? "";
-  return `${calle} ${numero}`.trim();
+function dvCoordPartesDireccion(v){
+  const texto=dvNormCoord(v).replace(/[.,;:#\-_/]+/g," ").replace(/\s+/g," ").trim();
+  if(!texto) return {texto:"",calle:"",numero:""};
+  const m=texto.match(/^(.*?)(?:\s+)(\d+[a-z]?)$/i);
+  if(m) return {texto,calle:m[1].trim(),numero:m[2].trim()};
+  return {texto,calle:texto,numero:""};
 }
 
 function dvClaveCorreccionReclamo(d){
   if(!d) return "";
-  const id = d.id ?? d.ID ?? d.idReclamo ?? d.IdReclamo ?? d.codigo ?? d.Codigo ?? d.nro ?? d.Nro ?? "";
-  if(String(id).trim()) return "ID|" + dvNormalizarClavePin(id);
-  return [d.localidad,d.zona,d.calle,d.numero].map(dvNormalizarClavePin).join("|");
+  const id=d.id ?? d.ID ?? d.idReclamo ?? d.IdReclamo ?? d.ID_RECLAMO ?? d.codigo ?? d.Codigo ?? d.nro ?? d.Nro ?? "";
+  if(String(id).trim()) return "ID|"+dvNormCoord(id);
+  return [d.localidad,d.zona,d.calle,d.numero].map(dvNormCoord).join("|");
 }
 
-function dvClaveCorreccionDireccion(d){
-  if(!d) return "";
-  return [d.localidad,d.calle,d.numero].map(dvNormalizarClavePin).join("|");
-}
+function dvRegistrarIndiceCorreccion(c,lat,lng){
+  if(!c || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-function dvCoincideCorreccionPorDireccion(d,c){
-  if(!d || !c) return false;
+  const registro={lat,lng,fecha:c.fecha||c.Fecha||"",usuario:c.usuario||c.Usuario||"PANEL"};
+  const claves=[];
 
-  const dirReclamo = dvNormalizarClavePin(
-    `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`
-  );
-  const dirCorreccion = dvNormalizarClavePin(dvDireccionCorreccionRobusta(c));
+  const clave=String(c.clave ?? c.CLAVE ?? "").trim();
+  if(clave) claves.push("clave:"+dvNormCoord(clave));
 
-  if(!dirReclamo || !dirCorreccion) return false;
+  const localidad=c.localidad ?? c.LOCALIDAD ?? c.cgm ?? c.CGM ?? "";
+  const zona=c.zona ?? c.ZONA ?? "";
+  const calle=c.calle ?? c.Calle ?? c.nombreCalle ?? c.NOMBRE_CALLE ?? "";
+  const numero=c.numero ?? c.Numero ?? c.nro ?? c.Nro ?? c.altura ?? c.Altura ?? "";
+  const direccion=c.direccion ?? c.Direccion ?? c.domicilio ?? c.Domicilio ?? "";
 
-  const localidadReclamo = dvNormalizarClavePin(d.localidad);
-  const localidadCorreccion = dvNormalizarClavePin(c.localidad ?? c.Localidad ?? "");
-  const zonaReclamo = dvNormalizarClavePin(d.zona);
-  const zonaCorreccion = dvNormalizarClavePin(c.zona ?? c.Zona ?? "");
-
-  // La dirección es la coincidencia principal. Si Backend tiene localidad/zona,
-  // también las usamos para evitar asociar dos calles iguales de distintos sectores.
-  const mismaDireccion = dirReclamo === dirCorreccion;
-  if(!mismaDireccion) return false;
-
-  if(localidadReclamo && localidadCorreccion && localidadReclamo !== localidadCorreccion){
-    return false;
+  if(localidad && calle && numero){
+    claves.push("lzn:"+[localidad,zona,calle,numero].map(dvNormCoord).join("|"));
+    claves.push("ln:"+[localidad,calle,numero].map(dvNormCoord).join("|"));
   }
 
-  if(zonaReclamo && zonaCorreccion && zonaReclamo !== zonaCorreccion){
-    return false;
+  if(localidad && direccion){
+    const partes=dvCoordPartesDireccion(direccion);
+    claves.push("ld:"+[localidad,partes.calle,partes.numero].map(dvNormCoord).join("|"));
+    claves.push("ldtxt:"+dvNormCoord(localidad)+"|"+dvNormCoord(direccion));
   }
 
-  return true;
-}
+  if(calle && numero){
+    claves.push("cn:"+[calle,numero].map(dvNormCoord).join("|"));
+  }
 
-function dvCargarCorreccionesRemotas(){
-  return fetch(
-    DV_PANEL_BACKEND_URL +
-    "?accion=" + encodeURIComponent(DV_RECLAMOS_COORD_BACKEND_ACCION) +
-    "&t=" + Date.now(),
-    {cache:"no-store"}
-  )
-  .then(response=>{
-    if(!response.ok) throw new Error("Backend correcciones HTTP " + response.status);
-    return response.json();
-  })
-  .then(resultado=>{
-    const arr = resultado?.datos?.correcciones;
-    const mapa = {};
-
-    if(Array.isArray(arr)){
-      arr.forEach(c=>{
-        const clave = String(c?.clave || "").trim();
-        const lat = Number(c?.latitud);
-        const lng = Number(c?.longitud);
-        if(!clave || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-        // Conservamos también los datos descriptivos enviados por el Panel.
-        // Esto permite encontrar la corrección aunque el Panel haya guardado
-        // la clave como ID y Día Verde no tenga ese ID en su Google Sheet.
-        mapa[dvNormalizarClavePin(clave)] = {
-          clave,
-          lat,
-          lng,
-          fecha:c?.fecha || "",
-          usuario:c?.usuario || "",
-          direccion:dvDireccionCorreccionRobusta(c),
-          localidad:c?.localidad ?? c?.Localidad ?? "",
-          zona:c?.zona ?? c?.Zona ?? ""
-        };
-      });
-    }
-
-    dvCorreccionesRemotas = mapa;
-    dvCorreccionesRemotasCargadas = true;
-
-    console.info("Día Verde: correcciones de pines cargadas", Object.keys(mapa).length);
-
-    // Si ya se mostraron los reclamos, reconstruimos solamente sus marcadores
-    // para aplicar las coordenadas corregidas, sin tocar zonas, GPS ni filtros.
-    if(typeof mostrarMarcadoresGeocodificados === "function" && Array.isArray(data) && data.length){
-      geocodingGeneration++;
-      geocodingRunning = false;
-      mostrarMarcadoresGeocodificados(data);
-    }
-    return mapa;
-  })
-  .catch(error=>{
-    dvCorreccionesRemotasCargadas = false;
-    console.warn("Día Verde: no se pudieron cargar las correcciones del Panel de Control",error);
-    return {};
-  });
+  claves.forEach(k=>{ if(k && !dvCorreccionesPorDireccion[k]) dvCorreccionesPorDireccion[k]=registro; });
 }
 
 function dvObtenerCorreccionReclamo(d){
   if(!dvCorreccionesRemotasCargadas || !d) return null;
 
-  // 1) Coincidencia exacta por la misma clave que utiliza el Panel.
-  const clave = dvClaveCorreccionReclamo(d);
-  const directa = dvCorreccionesRemotas[dvNormalizarClavePin(clave)];
+  const directa=dvCorreccionesRemotas[dvNormCoord(dvClaveCorreccionReclamo(d))];
   if(directa) return directa;
 
-  // 2) Coincidencia por dirección + localidad + zona.
-  //    Es la ruta importante cuando el Panel guardó la corrección usando ID
-  //    y Día Verde recibió el mismo reclamo desde una hoja que no contiene ID.
-  const encontrado = Object.values(dvCorreccionesRemotas).find(c=>
-    dvCoincideCorreccionPorDireccion(d,c)
-  );
-  if(encontrado) return encontrado;
+  const localidad=d?.localidad ?? d?.LOCALIDAD ?? d?.cgm ?? d?.CGM ?? "";
+  const zona=d?.zona ?? d?.ZONA ?? "";
+  const calle=d?.calle ?? d?.Calle ?? d?.nombreCalle ?? d?.NOMBRE_CALLE ?? "";
+  const numero=d?.numero ?? d?.Numero ?? d?.nro ?? d?.Nro ?? "";
 
-  // 3) Último respaldo: coincidencia por localidad + calle + número,
-  //    incluso si la zona viene vacía en alguno de los dos lados.
-  const dirReclamo = dvNormalizarClavePin(
-    `${d.localidad || ""}|${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""}|${d.numero || ""}`
-  );
-  if(!dirReclamo) return null;
+  const candidatos=[
+    "lzn:"+[localidad,zona,calle,numero].map(dvNormCoord).join("|"),
+    "ln:"+[localidad,calle,numero].map(dvNormCoord).join("|"),
+    "cn:"+[calle,numero].map(dvNormCoord).join("|")
+  ];
 
-  const encontradoRespaldo = Object.values(dvCorreccionesRemotas).find(c=>{
-    const dirCorreccion = dvNormalizarClavePin(
-      `${c.localidad || ""}|${dvDireccionCorreccionRobusta(c)}|${c.numero || ""}`
-    );
-    return dirCorreccion === dirReclamo;
+  const direccion=dvCoordDireccion(d);
+  if(localidad && direccion){
+    const partes=dvCoordPartesDireccion(direccion);
+    candidatos.push("ld:"+[localidad,partes.calle,partes.numero].map(dvNormCoord).join("|"));
+    candidatos.push("ldtxt:"+dvNormCoord(localidad)+"|"+dvNormCoord(direccion));
+  }
+
+  for(const k of candidatos){
+    if(dvCorreccionesPorDireccion[k]) return dvCorreccionesPorDireccion[k];
+  }
+  return null;
+}
+
+function dvAplicarCorreccionesPanelAPuntos(){
+  if(!Array.isArray(data) || !dvCorreccionesRemotasCargadas) return 0;
+  let aplicadas=0;
+
+  data=data.map(d=>{
+    const c=dvObtenerCorreccionReclamo(d);
+    if(c && Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lng))){
+      aplicadas++;
+      return {...d,lat:Number(c.lat),lng:Number(c.lng),_dvCoordenadaPanel:true};
+    }
+    return d;
   });
 
-  return encontradoRespaldo || null;
+  console.info("Día Verde · coordenadas copiadas desde Panel:",aplicadas,"de",data.length);
+  return aplicadas;
+}
+
+async function dvCargarCorreccionesRemotas(){
+  try{
+    const url=DV_PANEL_BACKEND_URL+
+      "?accion="+encodeURIComponent(DV_RECLAMOS_COORD_BACKEND_ACCION)+
+      "&t="+Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    if(!response.ok) throw new Error("HTTP "+response.status);
+
+    const resultado=await response.json();
+    const arr=resultado?.datos?.correcciones;
+    if(!Array.isArray(arr)) throw new Error("El Backend no devolvió una lista de correcciones");
+
+    dvCorreccionesRemotas={};
+    dvCorreccionesPorDireccion={};
+
+    arr.forEach(c=>{
+      const clave=String(c?.clave ?? "").trim();
+      const lat=Number(c?.latitud);
+      const lng=Number(c?.longitud);
+      if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+      const registro={lat,lng,fecha:c?.fecha||"",usuario:c?.usuario||"PANEL"};
+      if(clave) dvCorreccionesRemotas[dvNormCoord(clave)]=registro;
+      dvRegistrarIndiceCorreccion(c,lat,lng);
+    });
+
+    dvCorreccionesRemotasCargadas=true;
+    const cantidad=Object.keys(dvCorreccionesRemotas).length;
+    console.info("Día Verde · correcciones del Panel cargadas:",cantidad);
+
+    // ESTE ES EL PUNTO CLAVE:
+    // copiamos las coordenadas directamente a los registros que usa Día Verde.
+    const aplicadas=dvAplicarCorreccionesPanelAPuntos();
+
+    // Redibujamos únicamente los reclamos. No tocamos GPS, zonas ni recorrido.
+    if(typeof mostrarMarcadoresGeocodificados === "function" && Array.isArray(data) && data.length){
+      geocodingGeneration++;
+      geocodingRunning=false;
+      mostrarMarcadoresGeocodificados(data);
+    }
+    if(typeof render === "function" && selectedZone){
+      render();
+    }
+
+    return {cantidad,aplicadas};
+  }catch(error){
+    dvCorreccionesRemotasCargadas=false;
+    console.warn("Día Verde · no se pudieron copiar las coordenadas del Panel",error);
+    return {cantidad:0,aplicadas:0,error};
+  }
 }
 
 let data = [];
@@ -2222,8 +2223,8 @@ actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
 
-// Cargar en paralelo las correcciones de pines hechas desde el Panel de Control.
-// No bloquea la carga de Google Sheets ni la funcionalidad existente.
+// Después de cargar Google Sheets, copiar las coordenadas exactas guardadas en el Panel.
+// Esto NO bloquea la carga de la aplicación y solo actualiza la capa de reclamos.
 dvCargarCorreccionesRemotas();
 }
 function cargarDatos(){
