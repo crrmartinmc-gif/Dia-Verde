@@ -1321,57 +1321,154 @@ function claveListaGeocoding(lista){
   return lista.map(d => claveGeocoding(d)).join("||");
 }
 
+/*
+=========================================================
+REPRESENTACIÓN DE RECLAMOS — LÓGICA COPIADA DEL PANEL
+SIN LA CAPA/LÓGICA DE GPS
+=========================================================
+
+Regla visual:
+1. CGM seleccionado debe coincidir con LOCALIDAD.
+2. Zona seleccionada debe coincidir con ZONA.
+3. La coordenada corregida por Panel tiene prioridad.
+4. Luego se acepta lat/lng directo del Backend.
+5. Luego se usa cache de geocodificación.
+6. Solo los reclamos que pasan filtro + tienen ubicación
+   se representan en el mapa.
+7. El estado/color sigue siendo el de Día Verde:
+   Realizado / Pendiente.
+*/
+
+function dvReclamoLatLngRepresentacion(d){
+  // 1) Corrección hecha desde el Panel = máxima prioridad.
+  if(d && d._dvCorreccionPanel){
+    const lat=Number(d.lat);
+    const lng=Number(d.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng) &&
+       Math.abs(lat)<=90 && Math.abs(lng)<=180){
+      return [lat,lng];
+    }
+  }
+
+  // 2) Coordenadas entregadas por Backend.
+  return obtenerLatLngReclamo(d);
+}
+
+function dvReclamoVisibleRepresentacion(d){
+  if(!d) return false;
+
+  // MISMA REGLA DEL PANEL:
+  // primero CGM/localidad y después zona.
+  return coincideZona(d, selectedZone);
+}
+
+function dvObtenerReclamosRepresentables(lista){
+  const todos=Array.isArray(lista)?lista:[];
+
+  const porCgmZona=todos.filter(d=>dvReclamoVisibleRepresentacion(d));
+
+  // Igual que el Panel: un reclamo sin coordenadas no se dibuja.
+  const conUbicacion=porCgmZona.filter(d=>!!dvReclamoLatLngRepresentacion(d));
+
+  const firma=[
+    selectedCgm || "",
+    selectedZone || "",
+    todos.length,
+    porCgmZona.length,
+    conUbicacion.length
+  ].join("|");
+
+  if(window.dvUltimaFirmaRepresentacionReclamos!==firma){
+    window.dvUltimaFirmaRepresentacionReclamos=firma;
+    console.info("DÍA VERDE — REPRESENTACIÓN COMO PANEL:",{
+      cgm:selectedCgm || "TODOS",
+      zona:selectedZone || "TODAS",
+      total:todos.length,
+      porCGMZona:porCgmZona.length,
+      conUbicacion:conUbicacion.length,
+      sinUbicacion:porCgmZona.length-conUbicacion.length,
+      gps:"NO UTILIZADO PARA REPRESENTAR RECLAMOS"
+    });
+  }
+
+  return {
+    filtrados:porCgmZona,
+    visibles:conUbicacion
+  };
+}
+
 async function mostrarMarcadoresGeocodificados(lista){
-  if(!Array.isArray(lista)||!lista.length) return;
+  if(!Array.isArray(lista)) return;
 
-  const keyLista = claveListaGeocoding(lista);
+  const seleccion=dvObtenerReclamosRepresentables(lista);
+  const filtrados=seleccion.filtrados;
+  const visibles=seleccion.visibles;
 
-  // Una actualización de datos idéntica no debe borrar/reiniciar los pines.
-  if(geocodingRunning && keyLista === geocodingQueueKey) return;
+  // La clave incluye solamente los reclamos que realmente pertenecen
+  // al CGM/zona seleccionados.
+  const keyLista=filtrados.map(d=>claveGeocoding(d)).join("||");
 
-  geocodingQueueKey = keyLista;
+  if(geocodingRunning && keyLista===geocodingQueueKey) return;
+
+  geocodingQueueKey=keyLista;
   geocodingGeneration++;
-  const generacion = geocodingGeneration;
-  geocodingPending = [];
-  geocodingIndex = 0;
+  const generacion=geocodingGeneration;
+  geocodingPending=[];
+  geocodingIndex=0;
 
   const capa=asegurarCapaReclamos();
   if(!capa) return;
 
-  // Solo se limpia al iniciar una lista realmente nueva.
+  // El mapa siempre se reconstruye con el conjunto correspondiente
+  // al CGM/zona actuales, igual que el Panel.
   limpiarMarcadoresReclamos();
 
   const cache=cargarCacheGeocoding();
 
-  for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
-      agregarMarcadorReclamo(d);
-      continue;
-    }
+  // Primero dibujamos inmediatamente todo lo que ya tiene coordenadas.
+  for(const d of visibles){
+    agregarMarcadorReclamo(d);
+  }
+
+  // Después solamente intentamos geocodificar reclamos de ESTA zona
+  // que todavía no tienen ubicación.
+  for(const d of filtrados){
+    if(dvReclamoLatLngRepresentacion(d)) continue;
 
     const key=claveGeocoding(d);
     const cached=cache[key];
 
-    if(cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))){
-      agregarMarcadorReclamo({...d,lat:Number(cached.lat),lng:Number(cached.lng)});
+    if(cached &&
+       Number.isFinite(Number(cached.lat)) &&
+       Number.isFinite(Number(cached.lng))){
+      agregarMarcadorReclamo({
+        ...d,
+        lat:Number(cached.lat),
+        lng:Number(cached.lng)
+      });
     }else{
       geocodingPending.push(d);
     }
   }
 
+  console.info("DÍA VERDE — PINES DIBUJADOS:",{
+    cgm:selectedCgm,
+    zona:selectedZone,
+    pinesIniciales:visibles.length,
+    pendientesGeocodificacion:geocodingPending.length
+  });
+
   if(!geocodingPending.length) return;
 
-  geocodingRunning = true;
+  geocodingRunning=true;
 
   try{
-    while(geocodingIndex < geocodingPending.length){
-      if(generacion !== geocodingGeneration) return;
+    while(geocodingIndex<geocodingPending.length){
+      if(generacion!==geocodingGeneration) return;
 
       const d=geocodingPending[geocodingIndex++];
       let pos=null;
 
-      // Reintento para errores transitorios de red/servicio.
       for(let intento=0; intento<2 && !pos; intento++){
         pos=await geocodificarDireccion(d);
         if(!pos && intento===0){
@@ -1379,22 +1476,29 @@ async function mostrarMarcadoresGeocodificados(lista){
         }
       }
 
-      if(generacion !== geocodingGeneration) return;
+      if(generacion!==geocodingGeneration) return;
 
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+      // Antes de dibujar, verificamos nuevamente que siga perteneciendo
+      // al CGM/zona actualmente seleccionados.
+      if(pos && dvReclamoVisibleRepresentacion(d)){
+        agregarMarcadorReclamo({
+          ...d,
+          lat:pos[0],
+          lng:pos[1]
+        });
       }
 
       await new Promise(r=>setTimeout(r,1100));
     }
   }finally{
-    if(generacion === geocodingGeneration){
+    if(generacion===geocodingGeneration){
       geocodingRunning=false;
       geocodingPending=[];
       geocodingIndex=0;
     }
   }
 }
+
 function resetearRotacionMapa(){
   if(map && map._map){
     map._map.easeTo({bearing:0,pitch:0,duration:350});
