@@ -431,6 +431,62 @@ function dvClaveCorreccionDireccion(d){
   return [d.localidad,d.calle,d.numero].map(normalizar).join("|");
 }
 
+function dvNormalizarClavePin(v){
+  return normalizar(String(v ?? "").trim());
+}
+
+function dvDireccionCorreccionRobusta(c){
+  if(!c) return "";
+  const directa = c.direccion ?? c.Direccion ?? c.domicilio ?? c.Domicilio ?? "";
+  if(String(directa).trim()) return String(directa).trim();
+  const calle = c.calle ?? c.Calle ?? c.nombreCalle ?? c.NOMBRE_CALLE ?? "";
+  const numero = c.numero ?? c.Numero ?? c.Nro ?? c.nro ?? "";
+  return `${calle} ${numero}`.trim();
+}
+
+function dvClaveCorreccionReclamo(d){
+  if(!d) return "";
+  const id = d.id ?? d.ID ?? d.idReclamo ?? d.IdReclamo ?? d.codigo ?? d.Codigo ?? d.nro ?? d.Nro ?? "";
+  if(String(id).trim()) return "ID|" + dvNormalizarClavePin(id);
+  return [d.localidad,d.zona,d.calle,d.numero].map(dvNormalizarClavePin).join("|");
+}
+
+function dvClaveCorreccionDireccion(d){
+  if(!d) return "";
+  return [d.localidad,d.calle,d.numero].map(dvNormalizarClavePin).join("|");
+}
+
+function dvCoincideCorreccionPorDireccion(d,c){
+  if(!d || !c) return false;
+
+  const dirReclamo = dvNormalizarClavePin(
+    `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`
+  );
+  const dirCorreccion = dvNormalizarClavePin(dvDireccionCorreccionRobusta(c));
+
+  if(!dirReclamo || !dirCorreccion) return false;
+
+  const localidadReclamo = dvNormalizarClavePin(d.localidad);
+  const localidadCorreccion = dvNormalizarClavePin(c.localidad ?? c.Localidad ?? "");
+  const zonaReclamo = dvNormalizarClavePin(d.zona);
+  const zonaCorreccion = dvNormalizarClavePin(c.zona ?? c.Zona ?? "");
+
+  // La dirección es la coincidencia principal. Si Backend tiene localidad/zona,
+  // también las usamos para evitar asociar dos calles iguales de distintos sectores.
+  const mismaDireccion = dirReclamo === dirCorreccion;
+  if(!mismaDireccion) return false;
+
+  if(localidadReclamo && localidadCorreccion && localidadReclamo !== localidadCorreccion){
+    return false;
+  }
+
+  if(zonaReclamo && zonaCorreccion && zonaReclamo !== zonaCorreccion){
+    return false;
+  }
+
+  return true;
+}
+
 function dvCargarCorreccionesRemotas(){
   return fetch(
     DV_PANEL_BACKEND_URL +
@@ -445,20 +501,30 @@ function dvCargarCorreccionesRemotas(){
   .then(resultado=>{
     const arr = resultado?.datos?.correcciones;
     const mapa = {};
+
     if(Array.isArray(arr)){
       arr.forEach(c=>{
         const clave = String(c?.clave || "").trim();
         const lat = Number(c?.latitud);
         const lng = Number(c?.longitud);
         if(!clave || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-        mapa[normalizar(clave)] = {
+
+        // Conservamos también los datos descriptivos enviados por el Panel.
+        // Esto permite encontrar la corrección aunque el Panel haya guardado
+        // la clave como ID y Día Verde no tenga ese ID en su Google Sheet.
+        mapa[dvNormalizarClavePin(clave)] = {
+          clave,
           lat,
           lng,
           fecha:c?.fecha || "",
-          usuario:c?.usuario || ""
+          usuario:c?.usuario || "",
+          direccion:dvDireccionCorreccionRobusta(c),
+          localidad:c?.localidad ?? c?.Localidad ?? "",
+          zona:c?.zona ?? c?.Zona ?? ""
         };
       });
     }
+
     dvCorreccionesRemotas = mapa;
     dvCorreccionesRemotasCargadas = true;
 
@@ -483,22 +549,34 @@ function dvCargarCorreccionesRemotas(){
 function dvObtenerCorreccionReclamo(d){
   if(!dvCorreccionesRemotasCargadas || !d) return null;
 
+  // 1) Coincidencia exacta por la misma clave que utiliza el Panel.
   const clave = dvClaveCorreccionReclamo(d);
-  const directa = dvCorreccionesRemotas[normalizar(clave)];
+  const directa = dvCorreccionesRemotas[dvNormalizarClavePin(clave)];
   if(directa) return directa;
 
-  // Respaldo para registros que no traen ID: coincide por localidad + calle + número.
-  const claveDireccion = dvClaveCorreccionDireccion(d);
-  if(!claveDireccion) return null;
+  // 2) Coincidencia por dirección + localidad + zona.
+  //    Es la ruta importante cuando el Panel guardó la corrección usando ID
+  //    y Día Verde recibió el mismo reclamo desde una hoja que no contiene ID.
+  const encontrado = Object.values(dvCorreccionesRemotas).find(c=>
+    dvCoincideCorreccionPorDireccion(d,c)
+  );
+  if(encontrado) return encontrado;
 
-  const encontrado = Object.entries(dvCorreccionesRemotas).find(([k])=>{
-    const partes = k.split("|");
-    if(partes.length !== 4) return false;
-    return normalizar(partes[0]) === normalizar(d?.localidad) &&
-           normalizar(partes[2]) === normalizar(d?.calle) &&
-           normalizar(partes[3]) === normalizar(d?.numero);
+  // 3) Último respaldo: coincidencia por localidad + calle + número,
+  //    incluso si la zona viene vacía en alguno de los dos lados.
+  const dirReclamo = dvNormalizarClavePin(
+    `${d.localidad || ""}|${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""}|${d.numero || ""}`
+  );
+  if(!dirReclamo) return null;
+
+  const encontradoRespaldo = Object.values(dvCorreccionesRemotas).find(c=>{
+    const dirCorreccion = dvNormalizarClavePin(
+      `${c.localidad || ""}|${dvDireccionCorreccionRobusta(c)}|${c.numero || ""}`
+    );
+    return dirCorreccion === dirReclamo;
   });
-  return encontrado ? encontrado[1] : null;
+
+  return encontradoRespaldo || null;
 }
 
 let data = [];
