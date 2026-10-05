@@ -2170,12 +2170,10 @@ refrescarEstadosMarcadoresReclamos();
 )
 .catch(
 error => {
-console.error(error);
-console.log(
-"El histórico no pudo consultarse:",
+console.warn(
+"No se pudo actualizar el histórico. Se conservan las evidencias actuales.",
 error
 );
-evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
