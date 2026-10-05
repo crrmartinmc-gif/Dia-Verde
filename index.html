@@ -406,6 +406,101 @@ const GID =
 "1911460821";
 const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
+
+// =========================================================
+// CORRECCIONES DE PINES DEL PANEL DE CONTROL
+// Las coordenadas movidas manualmente en el Panel de Control
+// se leen desde Backend Maestro y tienen prioridad sobre
+// las coordenadas de la dirección y sobre Nominatim.
+// =========================================================
+const DV_PANEL_BACKEND_URL =
+"https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
+const DV_RECLAMOS_COORD_BACKEND_ACCION = "correccionesReclamosDiaVerde";
+let dvCorreccionesRemotas = {};
+let dvCorreccionesRemotasCargadas = false;
+
+function dvClaveCorreccionReclamo(d){
+  if(!d) return "";
+  const id = d.id ?? d.ID ?? d.idReclamo ?? d.IdReclamo ?? d.codigo ?? d.Codigo ?? d.nro ?? d.Nro ?? "";
+  if(String(id).trim()) return "ID|" + normalizar(id);
+  return [d.localidad,d.zona,d.calle,d.numero].map(normalizar).join("|");
+}
+
+function dvClaveCorreccionDireccion(d){
+  if(!d) return "";
+  return [d.localidad,d.calle,d.numero].map(normalizar).join("|");
+}
+
+function dvCargarCorreccionesRemotas(){
+  return fetch(
+    DV_PANEL_BACKEND_URL +
+    "?accion=" + encodeURIComponent(DV_RECLAMOS_COORD_BACKEND_ACCION) +
+    "&t=" + Date.now(),
+    {cache:"no-store"}
+  )
+  .then(response=>{
+    if(!response.ok) throw new Error("Backend correcciones HTTP " + response.status);
+    return response.json();
+  })
+  .then(resultado=>{
+    const arr = resultado?.datos?.correcciones;
+    const mapa = {};
+    if(Array.isArray(arr)){
+      arr.forEach(c=>{
+        const clave = String(c?.clave || "").trim();
+        const lat = Number(c?.latitud);
+        const lng = Number(c?.longitud);
+        if(!clave || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        mapa[normalizar(clave)] = {
+          lat,
+          lng,
+          fecha:c?.fecha || "",
+          usuario:c?.usuario || ""
+        };
+      });
+    }
+    dvCorreccionesRemotas = mapa;
+    dvCorreccionesRemotasCargadas = true;
+
+    console.info("Día Verde: correcciones de pines cargadas", Object.keys(mapa).length);
+
+    // Si ya se mostraron los reclamos, reconstruimos solamente sus marcadores
+    // para aplicar las coordenadas corregidas, sin tocar zonas, GPS ni filtros.
+    if(typeof mostrarMarcadoresGeocodificados === "function" && Array.isArray(data) && data.length){
+      geocodingGeneration++;
+      geocodingRunning = false;
+      mostrarMarcadoresGeocodificados(data);
+    }
+    return mapa;
+  })
+  .catch(error=>{
+    dvCorreccionesRemotasCargadas = false;
+    console.warn("Día Verde: no se pudieron cargar las correcciones del Panel de Control",error);
+    return {};
+  });
+}
+
+function dvObtenerCorreccionReclamo(d){
+  if(!dvCorreccionesRemotasCargadas || !d) return null;
+
+  const clave = dvClaveCorreccionReclamo(d);
+  const directa = dvCorreccionesRemotas[normalizar(clave)];
+  if(directa) return directa;
+
+  // Respaldo para registros que no traen ID: coincide por localidad + calle + número.
+  const claveDireccion = dvClaveCorreccionDireccion(d);
+  if(!claveDireccion) return null;
+
+  const encontrado = Object.entries(dvCorreccionesRemotas).find(([k])=>{
+    const partes = k.split("|");
+    if(partes.length !== 4) return false;
+    return normalizar(partes[0]) === normalizar(d?.localidad) &&
+           normalizar(partes[2]) === normalizar(d?.calle) &&
+           normalizar(partes[3]) === normalizar(d?.numero);
+  });
+  return encontrado ? encontrado[1] : null;
+}
+
 let data = [];
 let zonasGeo = [];
 let selectedCgm = "";
@@ -1100,6 +1195,16 @@ function popupReclamoMedioAmbiente(d){
     '</div>';
 }
 function obtenerLatLngReclamo(d){
+  // PRIORIDAD 1: corrección manual del Panel de Control / Backend Maestro.
+  // Nunca se reemplaza una posición corregida por geocodificación automática.
+  const correccion = typeof dvObtenerCorreccionReclamo === "function"
+    ? dvObtenerCorreccionReclamo(d)
+    : null;
+  if(correccion && Number.isFinite(Number(correccion.lat)) && Number.isFinite(Number(correccion.lng))){
+    return [Number(correccion.lat),Number(correccion.lng)];
+  }
+
+  // PRIORIDAD 2: coordenadas que ya vengan en el registro original.
   const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
   const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
   if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
@@ -2038,6 +2143,10 @@ restaurarSeleccionGuardada();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
+
+// Cargar en paralelo las correcciones de pines hechas desde el Panel de Control.
+// No bloquea la carga de Google Sheets ni la funcionalidad existente.
+dvCargarCorreccionesRemotas();
 }
 function cargarDatos(){
 statusText.textContent="Cargando direcciones...";
