@@ -1086,17 +1086,12 @@ function iconoReclamoMedioAmbiente(estado){
 }
 function popupReclamoMedioAmbiente(d){
   const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
+  const realizado = typeof estaRealizadaHoy === "function" ? estaRealizadaHoy(d) : false;
   const estado = realizado ? "Realizado" : "Pendiente";
+  const adminButton = dvEsAdmin() ? '<button type="button" style="margin-top:8px;width:100%;border:0;border-radius:8px;padding:8px 10px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer" onclick="event.stopPropagation();dvIniciarCorreccionPin(this.dataset.clave)" data-clave="'+escaparHTML(dvClavePin(d))+'">📍 Corregir ubicación</button>' : "";
   return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
-      (realizado ? '🟢 ' : '⚪ ')+
-      escaparHTML(estado)+
-    '</div>'+
+    '<div class="titulo">♻️ Vecino Reciclador</div>'+    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+    '<div class="estado">'+(realizado ? '🟢 ' : '⚪ ')+escaparHTML(estado)+'</div>'+
+    adminButton+
     '</div>';
 }
 function obtenerLatLngReclamo(d){
@@ -2038,6 +2033,7 @@ restaurarSeleccionGuardada();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
+dvCargarCorreccionesPanel();
 }
 function cargarDatos(){
 statusText.textContent="Cargando direcciones...";
@@ -3118,7 +3114,7 @@ dvInstalarProteccionBotonAtras();
 <script id="diaverde-auth">
 const DV_USUARIOS = [
   { usuario:"Ale",       password:"boca",          nombre:"Alejandro Chaparro" },
-  { usuario:"Peque",     password:"banfield09",    nombre:"Martin Carro" },
+  { usuario:"Peque",     password:"banfield09",    nombre:"Martin Carro", rol:"ADMIN" },
   { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazquez" },
   { usuario:"Luigi",     password:"boca", nombre:"Luis Del Hojo" },
   { usuario:"Javi",     password:"racing", nombre:"Javier Carnevale" },
@@ -3132,6 +3128,62 @@ const DV_USUARIOS = [
 ];
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
+const DV_PANEL_BACKEND_URL = "https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
+const DV_CORRECCIONES_ACCION = "correccionesReclamosDiaVerde";
+let dvCorreccionesPanel = {};
+let dvCorreccionPinActivo = null;
+function dvEsAdmin(){ const u=dvUsuarioActual(); return !!(u && (u.rol === "ADMIN" || String(u.usuario||"").toLowerCase()==="peque")); }
+function dvClavePin(d){
+  if(!d)return "";
+  const id=d.id??d.ID??d.idReclamo??d.IdReclamo??d.codigo??d.Codigo??"";
+  if(String(id).trim())return "ID|"+normalizar(id);
+  return [d.localidad,d.zona,d.calle,d.numero].map(normalizar).join("|");
+}
+function dvDireccionPin(d){ return `${d?.calle||d?.direccion||d?.Direccion||d?.domicilio||d?.Domicilio||""} ${d?.numero||""}`.trim(); }
+async function dvCargarCorreccionesPanel(){
+  try{
+    const r=await fetch(DV_PANEL_BACKEND_URL+"?accion="+encodeURIComponent(DV_CORRECCIONES_ACCION)+"&t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json(),arr=j?.datos?.correcciones;
+    if(!Array.isArray(arr))throw new Error("El Backend no devolvió correcciones");
+    dvCorreccionesPanel={};
+    arr.forEach(c=>{const k=String(c?.clave||"").trim(),lat=Number(c?.latitud),lng=Number(c?.longitud);if(k&&Number.isFinite(lat)&&Number.isFinite(lng))dvCorreccionesPanel[k]={lat,lng};});
+    if(Array.isArray(data)&&data.length){
+      data=data.map(d=>{const c=dvCorreccionesPanel[dvClavePin(d)];return c?{...d,lat:c.lat,lng:c.lng,_dvCorreccionPanel:true}:d;});
+      mostrarMarcadoresGeocodificados(data);
+    }
+    console.info("Día Verde · correcciones del Panel cargadas:",Object.keys(dvCorreccionesPanel).length);
+  }catch(e){console.warn("Día Verde · no se pudieron cargar las correcciones del Panel:",e);}
+}
+async function dvGuardarCorreccionPin(d,lat,lng){
+  const clave=dvClavePin(d); if(!clave)throw new Error("No se pudo identificar el reclamo");
+  const u=dvUsuarioActual()||{};
+  const payload={accion:"guardarCorreccionReclamo",clave,latitud:Number(lat),longitud:Number(lng),direccion:dvDireccionPin(d),localidad:d?.localidad||"",zona:d?.zona||"",usuario:String(u.usuario||"Peque")};
+  const r=await fetch(DV_PANEL_BACKEND_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+  const j=await r.json(); if(!j?.ok)throw new Error(j?.error||"Backend rechazó la corrección");
+  dvCorreccionesPanel[clave]={lat:Number(lat),lng:Number(lng)};
+}
+function dvIniciarCorreccionPin(clave){
+  if(!dvEsAdmin())return;
+  const d=(Array.isArray(data)?data:[]).find(x=>dvClavePin(x)===String(clave)); if(!d)return;
+  dvCorreccionPinActivo={clave:String(clave),reclamo:d};
+  const st=document.getElementById("statusText"); if(st)st.textContent="📍 CORRECCIÓN ACTIVA · Hacé clic en la ubicación correcta";
+  if(!map||!map._map)return;
+  map._map.getCanvas().style.cursor="crosshair";
+  map._map.once("click",async e=>{
+    if(!dvCorreccionPinActivo||dvCorreccionPinActivo.clave!==String(clave))return;
+    const objetivo=dvCorreccionPinActivo.reclamo; dvCorreccionPinActivo=null; map._map.getCanvas().style.cursor="";
+    const lat=Number(e.lngLat.lat),lng=Number(e.lngLat.lng); if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    try{
+      if(st)st.textContent="⏳ Guardando nueva ubicación...";
+      await dvGuardarCorreccionPin(objetivo,lat,lng);
+      data=data.map(x=>dvClavePin(x)===String(clave)?{...x,lat,lng,_dvCorreccionPanel:true}:x);
+      mostrarMarcadoresGeocodificados(data);
+      if(st)st.textContent="✓ Ubicación corregida y guardada";
+    }catch(err){console.error("Corrección de pin:",err);if(st)st.textContent="⚠ No se pudo guardar la ubicación";}
+  });
+}
+
 function dvUsuarioActual(){
   try { return JSON.parse(localStorage.getItem(DV_USER_KEY) || "null"); }
   catch(e){ return null; }
@@ -3164,7 +3216,8 @@ function dvIniciarSesion(){
   localStorage.setItem(DV_SESSION_KEY, "1");
   localStorage.setItem(DV_USER_KEY, JSON.stringify({
     usuario: encontrado.usuario,
-    nombre: encontrado.nombre
+    nombre: encontrado.nombre,
+    rol: encontrado.rol || "CHOFER"
   }));
   if(error) error.textContent = "";
   dvMostrarAplicacion(encontrado);
