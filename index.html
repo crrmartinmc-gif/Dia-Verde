@@ -405,6 +405,17 @@ const GID =
 "1911460821";
 const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyLa6dr_bfxG8UKJoTbA69q6nShN8r4fmdy862KzqW7fqxrCyKy-D5q7zA02BjPtzdvYw/exec";
+
+// ============================================================
+// COORDENADAS DE RECLAMOS — FUENTE OFICIAL: PANEL DE CONTROL
+// Panel de Control -> Backend Maestro -> Día Verde
+// Día Verde solamente consume y representa estas correcciones.
+// ============================================================
+const DV_PANEL_BACKEND_URL =
+"https://script.google.com/macros/s/AKfycbz0n4ZlW2p--nP2Wx0SnytyCRt_pL6RFxliEan0j1vUdSSrBrVNCbsTI7VC0JQWl5k9/exec";
+const DV_CORRECCIONES_ACCION = "correccionesReclamosDiaVerde";
+let dvCorreccionesPanel = {};
+
 let data = [];
 let zonasGeo = [];
 let selectedCgm = "";
@@ -1012,12 +1023,202 @@ function popupReclamoMedioAmbiente(d){
     '</div>'+
     '</div>';
 }
+function dvNormalizarPin(v){
+  return String(v ?? "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g,"")
+    .replace(/\\s+/g," ");
+}
+
+function dvNumeroDireccionPin(v){
+  return String(v ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\\.0+$/,"")
+    .trim();
+}
+
+function dvClaveDireccionPin(localidad,zona,calle,numero){
+  return [
+    localidad,
+    zona,
+    calle,
+    dvNumeroDireccionPin(numero)
+  ].map(dvNormalizarPin).join("|");
+}
+
+function dvClaveCalleNumeroPin(calle,numero){
+  return [
+    calle,
+    dvNumeroDireccionPin(numero)
+  ].map(dvNormalizarPin).join("|");
+}
+
+function dvSepararDireccionPin(direccion){
+  const s=String(direccion||"").trim();
+  if(!s) return {calle:"",numero:""};
+  const m=s.match(/^(.*?)[,\\s]+(\\d+[A-Z]?(?:[-/]\\d+)?)$/i);
+  if(m) return {calle:m[1].trim(),numero:m[2].trim()};
+  return {calle:s,numero:""};
+}
+
+function dvClaveReclamoDiaVerde(d){
+  if(!d) return "";
+  return [
+    d.localidad || "",
+    d.zona || "",
+    d.calle || "",
+    dvNumeroDireccionPin(d.numero || "")
+  ].map(dvNormalizarPin).join("|");
+}
+
+async function dvCargarCorreccionesPanel(){
+  try{
+    const r=await fetch(
+      DV_PANEL_BACKEND_URL +
+      "?accion=" + encodeURIComponent(DV_CORRECCIONES_ACCION) +
+      "&t=" + Date.now(),
+      {cache:"no-store"}
+    );
+
+    if(!r.ok) throw new Error("HTTP " + r.status);
+
+    const j=await r.json();
+    const arr=j?.datos?.correcciones;
+
+    if(!Array.isArray(arr)){
+      throw new Error("El Backend no devolvió correcciones.");
+    }
+
+    dvCorreccionesPanel={};
+    const porDireccion={};
+    const porCalleNumero={};
+
+    arr.forEach(c=>{
+      const lat=Number(c?.latitud);
+      const lng=Number(c?.longitud);
+
+      if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const dato={
+        lat:lat,
+        lng:lng,
+        clave:String(c?.clave || ""),
+        usuario:String(c?.usuario || ""),
+        fecha:String(c?.fecha || "")
+      };
+
+      const clave=String(c?.clave || "").trim();
+      if(clave) dvCorreccionesPanel[clave]=dato;
+
+      const dir=dvSepararDireccionPin(c?.direccion || "");
+      const localidad=c?.localidad || "";
+      const zona=c?.zona || "";
+
+      const kDir=dvClaveDireccionPin(
+        localidad,
+        zona,
+        dir.calle,
+        dir.numero
+      );
+
+      const kCalle=dvClaveCalleNumeroPin(
+        dir.calle,
+        dir.numero
+      );
+
+      if(localidad || zona || dir.calle || dir.numero){
+        porDireccion[kDir]=dato;
+      }
+
+      if(dir.calle || dir.numero){
+        porCalleNumero[kCalle]=dato;
+      }
+    });
+
+    let aplicadas=0;
+
+    if(Array.isArray(data) && data.length){
+      data=data.map(d=>{
+        const clave=dvClaveReclamoDiaVerde(d);
+        const kDir=dvClaveDireccionPin(
+          d.localidad,
+          d.zona,
+          d.calle,
+          d.numero
+        );
+        const kCalle=dvClaveCalleNumeroPin(
+          d.calle,
+          d.numero
+        );
+
+        let c=dvCorreccionesPanel[clave] ||
+              dvCorreccionesPanel[d.clave || ""] ||
+              porDireccion[kDir] ||
+              porCalleNumero[kCalle];
+
+        if(c){
+          aplicadas++;
+          return {
+            ...d,
+            lat:Number(c.lat),
+            lng:Number(c.lng),
+            _dvCorreccionPanel:true,
+            _dvCorreccionUsuario:c.usuario,
+            _dvCorreccionFecha:c.fecha
+          };
+        }
+
+        return d;
+      });
+
+      // Importante: después de aplicar una corrección del Panel,
+      // la geocodificación local NO reemplaza esa coordenada.
+      mostrarMarcadoresGeocodificados(data);
+    }
+
+    console.info(
+      "Día Verde · correcciones del Panel:",
+      arr.length,
+      "· pines corregidos:",
+      aplicadas
+    );
+
+    return true;
+  }catch(e){
+    console.warn(
+      "Día Verde · no se pudieron cargar las correcciones del Panel:",
+      e
+    );
+    return false;
+  }
+}
+
 function obtenerLatLngReclamo(d){
+  // PRIMERA PRIORIDAD: coordenada corregida por el Panel de Control.
+  if(d && d._dvCorreccionPanel){
+    const clat=Number(d.lat);
+    const clng=Number(d.lng);
+    if(
+      Number.isFinite(clat) &&
+      Number.isFinite(clng) &&
+      Math.abs(clat)<=90 &&
+      Math.abs(clng)<=180
+    ){
+      return [clat,clng];
+    }
+  }
+
+  // SEGUNDA PRIORIDAD: coordenadas que ya vengan en el dato.
   const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
   const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
+
   if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
     return [lat,lng];
   }
+
   return null;
 }
 function agregarMarcadorReclamo(d){
@@ -1080,6 +1281,11 @@ function claveGeocoding(d){
   );
 }
 async function geocodificarDireccion(d){
+  // Una corrección del Panel es definitiva para Día Verde.
+  if(d && d._dvCorreccionPanel){
+    return obtenerLatLngReclamo(d);
+  }
+
   const directa=obtenerLatLngReclamo(d);
   if(directa) return directa;
   const cache=cargarCacheGeocoding();
@@ -1881,6 +2087,7 @@ actualizarZonasPorCGM();
 actualizarContadores();
 actualizarHora();
 cargarEvidenciasHoy();
+dvCargarCorreccionesPanel();
 }
 function cargarDatos(){
 statusText.textContent="Cargando direcciones...";
