@@ -1120,8 +1120,14 @@ async function mostrarMarcadoresGeocodificados(lista){
 
   const keyLista = claveListaGeocoding(lista);
 
-  // Una actualización de datos idéntica no debe borrar/reiniciar los pines.
-  if(geocodingRunning && keyLista === geocodingQueueKey) return;
+  // Si la lista de direcciones es la misma, NO reconstruimos la capa.
+  // Esto es especialmente importante cuando se actualiza el histórico:
+  // render() vuelve a ejecutarse, pero los pines ya existentes deben quedar
+  // en el mapa. Solo actualizamos su estado (verde/blanco).
+  if(keyLista === geocodingQueueKey){
+    refrescarEstadosMarcadoresReclamos();
+    return;
+  }
 
   geocodingQueueKey = keyLista;
   geocodingGeneration++;
