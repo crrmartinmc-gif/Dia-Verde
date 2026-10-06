@@ -410,10 +410,6 @@ let zonasGeo = [];
 let selectedCgm = "";
 let selectedZone = "";
 let activeLayer = null;
-let reclamosMaestro = [];
-let reclamosMaestroCargando = false;
-let reclamosMaestroCargado = false;
-let reclamosMaestroError = "";
 const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
 function getRouteStorageKey(){
   try{
@@ -1002,7 +998,7 @@ function iconoReclamoMedioAmbiente(estado){
   });
 }
 function popupReclamoMedioAmbiente(d){
-  const direccion = String(d.DIRECCION || d.direccion || d.Direccion || d.domicilio || d.Domicilio || `${d.calle || ""} ${d.numero || ""}`).trim();
+  const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
   const realizado = typeof estaRealizadaHoy === "function"
     ? estaRealizadaHoy(d)
     : false;
@@ -1017,10 +1013,11 @@ function popupReclamoMedioAmbiente(d){
     '</div>';
 }
 function obtenerLatLngReclamo(d){
-  if(!d) return null;
-  const lat=Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud ?? d.LATITUD ?? d.latitud ?? d.LAT);
-  const lng=Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud ?? d.LONGITUD ?? d.longitud ?? d.LNG);
-  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180) return [lat,lng];
+  const lat = Number(d.lat ?? d.Lat ?? d.latitude ?? d.Latitud);
+  const lng = Number(d.lng ?? d.Lng ?? d.lon ?? d.Lon ?? d.longitude ?? d.Longitud);
+  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180){
+    return [lat,lng];
+  }
   return null;
 }
 function agregarMarcadorReclamo(d){
@@ -1065,70 +1062,6 @@ function mostrarMarcadoresReclamos(lista){
   if(!Array.isArray(lista)) return;
   lista.forEach(d => agregarMarcadorReclamo(d));
 }
-function puntoEnAnilloReclamo(lat,lng,anillo){
-  let dentro=false;
-  for(let i=0,j=anillo.length-1;i<anillo.length;j=i++){
-    const xi=Number(anillo[i][0]), yi=Number(anillo[i][1]);
-    const xj=Number(anillo[j][0]), yj=Number(anillo[j][1]);
-    const intersect=((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi+Number.EPSILON)+xi);
-    if(intersect) dentro=!dentro;
-  }
-  return dentro;
-}
-function puntoEnGeometriaReclamo(lat,lng,geometry){
-  if(!geometry||!geometry.coordinates) return false;
-  if(geometry.type==="Polygon"){
-    const rings=geometry.coordinates;
-    if(!rings.length||!puntoEnAnilloReclamo(lat,lng,rings[0])) return false;
-    for(let i=1;i<rings.length;i++) if(puntoEnAnilloReclamo(lat,lng,rings[i])) return false;
-    return true;
-  }
-  if(geometry.type==="MultiPolygon") return geometry.coordinates.some(poly=>puntoEnGeometriaReclamo(lat,lng,{type:"Polygon",coordinates:poly}));
-  return false;
-}
-function reclamoPerteneceAZona(d,feature){
-  const pos=obtenerLatLngReclamo(d);
-  if(!pos) return false;
-  if(feature&&feature.geometry) return puntoEnGeometriaReclamo(pos[0],pos[1],feature.geometry);
-  const z=normalizar(d.ZONA||d.zona||"");
-  const c=normalizar(d.LOCALIDAD||d.localidad||"");
-  return (!selectedCgm||!c||c===normalizar(selectedCgm)) && (!selectedZone||!z||z===normalizar(selectedZone));
-}
-function obtenerFeatureZonaSeleccionada(){
-  const nombre=nombrePoligonoPara(selectedCgm,selectedZone);
-  if(!nombre) return null;
-  return zonasGeo.find(f=>normalizar(f.properties&&f.properties.name)===normalizar(nombre))||null;
-}
-function mostrarReclamosMaestrosEnZona(){
-  if(!Array.isArray(reclamosMaestro)) return;
-  const feature=obtenerFeatureZonaSeleccionada();
-  const visibles=reclamosMaestro.filter(d=>reclamoPerteneceAZona(d,feature));
-  console.log("DIA VERDE — reclamos maestro",{total:reclamosMaestro.length,visibles:visibles.length,cgm:selectedCgm,zona:selectedZone,tienePoligono:!!feature});
-  mostrarMarcadoresReclamos(visibles);
-}
-function cargarReclamosMaestro(){
-  if(reclamosMaestroCargando) return;
-  reclamosMaestroCargando=true;
-  const callback="dvReclamos_"+Date.now();
-  const script=document.createElement("script");
-  script.id=callback;
-  script.src=APPS_SCRIPT_URL+"?accion=reclamos&callback="+encodeURIComponent(callback)+"&t="+Date.now();
-  const limpiar=()=>{reclamosMaestroCargando=false;delete window[callback];script.remove();};
-  window[callback]=function(respuesta){
-    try{
-      if(!respuesta||respuesta.ok===false) throw new Error(respuesta&&respuesta.error?respuesta.error:"El backend no devolvió reclamos.");
-      const lista=Array.isArray(respuesta.reclamos)?respuesta.reclamos:[];
-      reclamosMaestro=lista.filter(d=>obtenerLatLngReclamo(d));
-      reclamosMaestroCargado=true;
-      console.log("DIA VERDE — reclamos cargados",{recibidos:lista.length,conCoordenadas:reclamosMaestro.length,sinCoordenadas:lista.length-reclamosMaestro.length});
-      if(selectedZone) mostrarReclamosMaestrosEnZona();
-    }catch(error){reclamosMaestroError=String(error&&error.message?error.message:error);console.error("DIA VERDE — error cargando reclamos:",error);}
-    finally{limpiar();}
-  };
-  script.onerror=function(){reclamosMaestroError="No se pudo conectar con el backend de reclamos.";console.error(reclamosMaestroError);limpiar();};
-  document.body.appendChild(script);
-}
-
 function cargarCacheGeocoding(){
   try{
     return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
@@ -1187,14 +1120,8 @@ async function mostrarMarcadoresGeocodificados(lista){
 
   const keyLista = claveListaGeocoding(lista);
 
-  // Si la lista de direcciones es la misma, NO reconstruimos la capa.
-  // Esto es especialmente importante cuando se actualiza el histórico:
-  // render() vuelve a ejecutarse, pero los pines ya existentes deben quedar
-  // en el mapa. Solo actualizamos su estado (verde/blanco).
-  if(keyLista === geocodingQueueKey){
-    refrescarEstadosMarcadoresReclamos();
-    return;
-  }
+  // Una actualización de datos idéntica no debe borrar/reiniciar los pines.
+  if(geocodingRunning && keyLista === geocodingQueueKey) return;
 
   geocodingQueueKey = keyLista;
   geocodingGeneration++;
@@ -1341,7 +1268,6 @@ zonasGeo =
 geojson.features || [];
 totalZones.textContent =
 zonasGeo.length;
-if(selectedZone && reclamosMaestroCargado) mostrarReclamosMaestrosEnZona();
 }
 )
 .catch(
@@ -2244,10 +2170,12 @@ refrescarEstadosMarcadoresReclamos();
 )
 .catch(
 error => {
-console.warn(
-"No se pudo actualizar el histórico. Se conservan las evidencias actuales.",
+console.error(error);
+console.log(
+"El histórico no pudo consultarse:",
 error
 );
+evidenciasHoy = [];
 statusText.textContent =
 "Direcciones cargadas";
 if(selectedZone){
@@ -2476,7 +2404,6 @@ return;
 mostrarMapa(
 selectedZone
 );
-if(reclamosMaestroCargado) mostrarReclamosMaestrosEnZona();
 search.disabled =
 false;
 const termino =
@@ -2529,7 +2456,7 @@ direcciones.slice(
 0,
 100
 );
-mostrarReclamosMaestrosEnZona();
+mostrarMarcadoresGeocodificados(todas);
 list.innerHTML =
 currentVisibleDirections
 .map(
@@ -2999,16 +2926,13 @@ refresh.addEventListener(
 "click",
 () => {
 cargarDatos();
-cargarReclamosMaestro();
 }
 );
 cargarMapa();
 cargarDatos();
-cargarReclamosMaestro();
 setInterval(
 () => {
 cargarDatos();
-cargarReclamosMaestro();
 },
 5 * 60 * 1000
 );
