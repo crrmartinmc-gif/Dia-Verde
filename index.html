@@ -444,7 +444,7 @@ function dvPanelGpsUsuario(){
   }
 }
 
-function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
+function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
   const ahora = Date.now();
 
   if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
@@ -461,7 +461,7 @@ function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true){
     rumbo:Number.isFinite(Number(rumbo))
       ? Number(rumbo)
       : null,
-    timestamp:new Date().toISOString()
+    timestamp:timestamp || new Date().toISOString()
   };
 
   dvPanelGpsLastPoint = punto;
@@ -946,12 +946,8 @@ map.on("zoomstart",function(){
     mapaSiguiendoVehiculo=false;
   }
 });
-map.on("click",function(){
-  if(recorridoActivo && !dvNavCameraMoving){
-    mapaUsuarioMovio=true;
-    mapaSiguiendoVehiculo=false;
-  }
-});
+// Un clic sobre el mapa no significa que el usuario haya desplazado la cámara.
+// El seguimiento solo se pausa ante una interacción real de cámara.
 map.on("moveend",function(){
   if(dvNavCameraMoving){
     dvNavCameraMoving=false;
@@ -1553,75 +1549,102 @@ function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false)
   activarSeguimientoVisual(lat,lng,forzarZoom);
 }
 function registrarPuntoRecorrido(position){
+  if(!recorridoActivo || !position || !position.coords) return;
+
   const c=position.coords;
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
   const precision=Number(c.accuracy);
-  if(!Number.isFinite(lat)||!Number.isFinite(lng)){
+  const rumboGps=Number.isFinite(Number(c.heading)) ? Number(c.heading) : null;
+
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  if(lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+
+  // No mover el marcador ni guardar puntos cuya precisión sea demasiado baja.
+  // Evita que una lectura GPS imprecisa produzca un salto visible en el mapa.
+  if(Number.isFinite(precision) && precision > 50){
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>"+
+      "⚠️ GPS con baja precisión: ±"+Math.round(precision)+" m. Esperando una mejor ubicación.",
+      true
+    );
     return;
   }
-  mostrarPosicionRecorrido(lat,lng,precision,Number.isFinite(Number(c.heading)) ? Number(c.heading) : null, recorridoPuntos.length===0);
-  const rumboGps =
-    Number.isFinite(Number(c.heading))
-      ? Number(c.heading)
-      : null;
+
+  // Usar la hora de captura del dispositivo, no la hora de recepción en JavaScript.
+  let horaPunto=Number(position.timestamp);
+  if(Number.isFinite(horaPunto) && horaPunto > 0 && horaPunto < 100000000000){
+    // Algunas implementaciones nativas pueden informar epoch en segundos.
+    horaPunto *= 1000;
+  }
+  if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+    horaPunto=Date.parse(position.timestamp);
+  }
+  if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+    horaPunto=Date.now();
+  }
 
   const punto={
     lat:lat,
     lng:lng,
-    hora:new Date().toISOString(),
+    hora:new Date(horaPunto).toISOString(),
     precision:Number.isFinite(precision)?precision:null,
     heading:rumboGps
   };
+
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
   if(ultimo){
     const distancia=distanciaMetros(ultimo,punto);
-    const ahora=Date.now();
-    const antes=new Date(ultimo.hora).getTime();
-    const segundos=Math.max(1,(ahora-antes)/1000);
-    const velocidad=distancia/segundos;
-    if(distancia<3){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS activo · Puntos: "+recorridoPuntos.length+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
-        true
-      );
+    const horaAnterior=Date.parse(ultimo.hora);
+    const diferenciaMs=horaPunto-horaAnterior;
+
+    // Ignorar lecturas viejas o fuera de orden, que pueden llegar al alternar fuentes GPS.
+    if(Number.isFinite(horaAnterior) && diferenciaMs <= 0){
+      console.warn("GPS descartado: punto fuera de orden",{punto,ultimo});
       return;
     }
-    if(velocidad>50){
+
+    const segundos=Math.max(0.5,diferenciaMs/1000);
+    const velocidad=distancia/segundos;
+
+    if(distancia < 3) return;
+
+    // 50 m/s = 180 km/h. Rechaza saltos imposibles para un recorrido urbano.
+    if(velocidad > 50){
+      console.warn("GPS descartado por salto",{
+        distanciaMetros:Math.round(distancia),
+        segundos:Number(segundos.toFixed(1)),
+        velocidadMps:Number(velocidad.toFixed(1)),
+        precision:precision,
+        punto:punto
+      });
       actualizarEstadoRecorrido(
         "🔴 <strong>Recorrido en curso</strong><br>"+
-        "📍 GPS recibido"+
-        "<br>⚠️ Salto de ubicación descartado"+
-        "<br>📡 Precisión informada: ±"+
-        (Number.isFinite(precision)?Math.round(precision):"?")+" m",
+        "⚠️ Salto GPS descartado. Seguimos esperando una ubicación válida.",
         true
       );
       return;
     }
   }
-  recorridoPuntos.push(punto);
 
-  // Publicar al Panel solo los puntos aceptados por los filtros
-  // del recorrido. La función limita el envío a un punto cada 10 segundos.
-  registrarGPSPanel(
+  // Solo actualizar mapa y guardar DESPUÉS de validar el punto.
+  recorridoPuntos.push(punto);
+  mostrarPosicionRecorrido(
     lat,
     lng,
     precision,
     rumboGps,
-    true
+    recorridoPuntos.length===1
   );
 
+  // La marca temporal enviada a Sheets corresponde a la captura del punto.
+  registrarGPSPanel(lat,lng,precision,rumboGps,true,punto.hora);
   dibujarRecorrido();
   guardarRecorridoLocal();
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS activo · Puntos registrados: "+
-    recorridoPuntos.length+
-    "<br>🌐 Lat: "+lat.toFixed(6)+
-    " · Lng: "+lng.toFixed(6)+
+    "📍 GPS activo · Puntos registrados: "+recorridoPuntos.length+
+    "<br>🌐 Lat: "+lat.toFixed(6)+" · Lng: "+lng.toFixed(6)+
     "<br>📡 Precisión informada: ±"+
     (Number.isFinite(precision)?Math.round(precision):"?")+" m",
     true
@@ -1652,35 +1675,46 @@ function manejarErrorRecorrido(error){
   );
 }
 function iniciarSeguimientoGPS(){
+  // APK: usar exclusivamente el GPS nativo Android para registrar el recorrido.
+  // El puente nativo entrega sus puntos mediante onNativeLocation/dvSetNavigationLocation.
+  const gpsNativoDisponible = !!window.AndroidGPS &&
+    typeof window.AndroidGPS.startTracking === "function";
+
+  if(gpsNativoDisponible){
+    if(recorridoWatchId!==null && navigator.geolocation){
+      navigator.geolocation.clearWatch(recorridoWatchId);
+      recorridoWatchId=null;
+    }
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>📡 GPS nativo de Android activo.",
+      true
+    );
+    return true;
+  }
+
+  // Navegador: usar un solo watchPosition. No combinar getCurrentPosition
+  // con watchPosition, porque ambos pueden entregar lecturas repetidas o desordenadas.
   if(!navigator.geolocation){
     actualizarEstadoRecorrido(
       "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
     );
     return false;
   }
+
   if(recorridoWatchId!==null){
     navigator.geolocation.clearWatch(recorridoWatchId);
     recorridoWatchId=null;
   }
-  navigator.geolocation.getCurrentPosition(
+
+  recorridoWatchId=navigator.geolocation.watchPosition(
     registrarPuntoRecorrido,
     manejarErrorRecorrido,
     {
       enableHighAccuracy:true,
-      timeout:20000,
-      maximumAge:0
+      maximumAge:0,
+      timeout:20000
     }
   );
-  recorridoWatchId=
-    navigator.geolocation.watchPosition(
-      registrarPuntoRecorrido,
-      manejarErrorRecorrido,
-      {
-        enableHighAccuracy:true,
-        maximumAge:0,
-        timeout:20000
-      }
-    );
   return true;
 }
 let dvWakeLock=null;
@@ -3042,6 +3076,12 @@ document.addEventListener("DOMContentLoaded", function(){
   let dvLastNativeLocation = null;
 
   function dvShowCenterButton(){
+    // MapLibre también dispara zoom/rotación/inclinación cuando la cámara
+    // se mueve por código para seguir al vehículo. No confundir eso con
+    // una maniobra manual del usuario, porque apagaría el seguimiento.
+    if(typeof dvNavCameraMoving !== "undefined" && dvNavCameraMoving){
+      return;
+    }
     if(dvCenterButton) dvCenterButton.classList.add("dv-visible");
     dvUserMovedMap = true;
     if(typeof mapaSiguiendoVehiculo !== "undefined"){
@@ -3250,6 +3290,7 @@ document.addEventListener("DOMContentLoaded", function(){
     // Reutilizamos el mismo registrador para conservar recorrido,
     // persistencia, filtros de saltos y actualización visual.
     registrarPuntoRecorrido({
+      timestamp:p.timestamp || Date.now(),
       coords:{
         latitude:lat,
         longitude:lng,
