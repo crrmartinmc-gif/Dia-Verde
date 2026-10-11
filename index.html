@@ -784,6 +784,30 @@ class DVMarker{
     return this;
   }
 
+  // Compatibilidad con la API Leaflet que usa el resto de Día Verde.
+  // Sin estos métodos, agregarMarcadorReclamo fallaba en marker.on(...)
+  // antes de ejecutar marker.addTo(layer), por lo que no aparecía ningún pin.
+  on(eventName, handler){
+    if(!this._popup || typeof handler !== "function") return this;
+    const event = String(eventName || "").toLowerCase();
+    if(event === "popupopen" || event === "open"){
+      this._popup.on("open", () => {
+        try{ handler.call(this, {target:this, popup:this._popup}); }
+        catch(error){ console.warn("Evento popup de reclamo:", error); }
+      });
+    }
+    return this;
+  }
+
+  getPopup(){
+    return this._popup || null;
+  }
+
+  closePopup(){
+    try{ if(this._popup) this._popup.remove(); }catch(error){}
+    return this;
+  }
+
   setZIndexOffset(z){
     this._element.style.zIndex=String(1000+Number(z || 0));
     return this;
@@ -1011,27 +1035,25 @@ function popupReclamoMedioAmbiente(d){
     '<button type="button" class="dv-evidencia-pin-btn" style="margin-top:9px;width:100%;padding:9px 11px;border:0;border-radius:8px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer">📷 Registrar evidencia</button>'+
     '</div>';
 }
-function dvCoordenadaNumerica(valor){
-  if(valor === null || valor === undefined || String(valor).trim() === "") return NaN;
+function dvNumeroCoordenada(valor){
+  if(valor === null || valor === undefined || valor === "") return NaN;
   if(typeof valor === "number") return valor;
-  // Acepta coordenadas recibidas como texto y coma decimal de Google Sheets.
-  const texto=String(valor).trim().replace(/\s/g,"").replace(",",".");
+  let texto=String(valor).trim();
+  // Admite coma decimal cuando no hay punto decimal.
+  if(texto.includes(",") && !texto.includes(".")) texto=texto.replace(",", ".");
+  // Limpia espacios y símbolos que algunas hojas agregan al valor.
+  texto=texto.replace(/\s+/g, "");
   return Number(texto);
 }
 function obtenerLatLngReclamo(d){
   if(!d || typeof d !== "object") return null;
-  const lat=dvCoordenadaNumerica(
-    d.lat ?? d.Lat ?? d.LAT ?? d.latitude ?? d.Latitude ??
-    d.latitud ?? d.Latitud ?? d.LATITUD ?? d["Latitud"] ?? d["LATITUD"]
+  const lat = dvNumeroCoordenada(
+    d.lat ?? d.Lat ?? d.LAT ?? d.latitude ?? d.Latitude ?? d.Latitud ?? d.LATITUD ?? d.latitud ?? d.LATITUDE
   );
-  const lng=dvCoordenadaNumerica(
-    d.lng ?? d.Lng ?? d.LNG ?? d.lon ?? d.Lon ?? d.LON ??
-    d.longitude ?? d.Longitude ?? d.longitud ?? d.Longitud ??
-    d.LONGITUD ?? d["Longitud"] ?? d["LONGITUD"]
+  const lng = dvNumeroCoordenada(
+    d.lng ?? d.Lng ?? d.LNG ?? d.lon ?? d.Lon ?? d.LON ?? d.longitude ?? d.Longitude ?? d.Longitud ?? d.LONGITUD ?? d.longitud ?? d.LONGITUDE
   );
-  if(Number.isFinite(lat) && Number.isFinite(lng) &&
-     Math.abs(lat)<=90 && Math.abs(lng)<=180 &&
-     !(lat===0 && lng===0)){
+  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0 || lng!==0)){
     return [lat,lng];
   }
   return null;
@@ -1045,6 +1067,7 @@ function agregarMarcadorReclamo(d){
     ? estaRealizadaHoy(d)
     : false;
   const estado = realizado ? "Realizado" : "Pendiente";
+  try{
   const marker = L.marker(pos,{
     icon:iconoReclamoMedioAmbiente(estado),
     zIndexOffset:100
@@ -1067,6 +1090,10 @@ function agregarMarcadorReclamo(d){
   });
   marker.addTo(layer);
   return marker;
+  }catch(error){
+    console.error("No se pudo crear pin de reclamo:", error, d);
+    return null;
+  }
 }
 function refrescarEstadosMarcadoresReclamos(){
   if(!reclamosMarkersLayer) return;
