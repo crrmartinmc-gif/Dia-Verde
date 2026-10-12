@@ -429,9 +429,13 @@ let recorridoMarker = null;
 let recorridoWatchId = null;
 let dvPanelGpsLastSentAt = 0;
 let dvPanelGpsLastPoint = null;
-const DV_PANEL_GPS_INTERVAL_MS = 10000;
+const DV_PANEL_GPS_INTERVAL_MS = 1500;
 let dvPanelGpsSendCount = 0;
 let dvPanelGpsLastError = "";
+let dvPanelGpsQueue = [];
+let dvPanelGpsQueueBusy = false;
+let dvPanelGpsQueueTimer = null;
+const DV_PANEL_GPS_QUEUE_KEY = "diaVerdeGpsQueueV1";
 
 function dvPanelGpsUsuario(){
   try{
@@ -444,125 +448,161 @@ function dvPanelGpsUsuario(){
   }
 }
 
-function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
-  const ahora = Date.now();
+function dvPanelGpsGuardarCola(){
+  try{
+    // La cola se conserva localmente para poder continuar sincronizando
+    // después de una interrupción o recarga de la app.
+    localStorage.setItem(
+      DV_PANEL_GPS_QUEUE_KEY,
+      JSON.stringify(dvPanelGpsQueue.slice(0,500))
+    );
+  }catch(e){
+    console.warn("GPS: no se pudo guardar la cola local",e);
+  }
+}
 
+function dvPanelGpsCargarCola(){
+  try{
+    const guardada = JSON.parse(
+      localStorage.getItem(DV_PANEL_GPS_QUEUE_KEY) || "[]"
+    );
+    if(Array.isArray(guardada)){
+      dvPanelGpsQueue = guardada.filter(p =>
+        p && Number.isFinite(Number(p.lat)) &&
+        Number.isFinite(Number(p.lng)) && p.usuario
+      ).slice(0,500);
+    }
+  }catch(e){
+    dvPanelGpsQueue = [];
+  }
+}
+
+function dvPanelGpsProgramarCola(demora=0){
+  if(dvPanelGpsQueueTimer !== null){
+    clearTimeout(dvPanelGpsQueueTimer);
+  }
+  dvPanelGpsQueueTimer = setTimeout(()=>{
+    dvPanelGpsQueueTimer = null;
+    dvPanelGpsProcesarCola();
+  },Math.max(0,demora));
+}
+
+function dvPanelGpsProcesarCola(){
+  if(dvPanelGpsQueueBusy || !dvPanelGpsQueue.length) return;
+
+  const item = dvPanelGpsQueue[0];
+  const params = new URLSearchParams({
+    accion:"registrarGPS",
+    usuario:String(item.usuario || "sin_usuario"),
+    nombre:String(item.nombre || item.usuario || "Chofer"),
+    zona:String(item.zona || ""),
+    latitud:String(item.lat),
+    longitud:String(item.lng),
+    precision:item.precision === null ? "" : String(item.precision),
+    rumbo:item.rumbo === null ? "" : String(item.rumbo),
+    timestamp:String(item.timestamp || new Date().toISOString()),
+    activo:item.activo ? "1" : "0",
+    _ts:String(Date.now())
+  });
+
+  const url = APPS_SCRIPT_URL + "?" + params.toString();
+
+  try{
+    dvPanelGpsQueueBusy = true;
+    const beacon = new Image();
+    beacon.referrerPolicy = "no-referrer";
+
+    // La respuesta del Apps Script es JSON, por lo que el evento error
+    // de Image es normal. En ambos eventos avanzamos la cola después de
+    // una pausa breve; no confundimos esto con confirmación del guardado.
+    let terminado = false;
+    const terminar = ()=>{
+      if(terminado) return;
+      terminado = true;
+      dvPanelGpsQueueBusy = false;
+      if(dvPanelGpsQueue.length){
+        dvPanelGpsQueue.shift();
+        dvPanelGpsGuardarCola();
+        dvPanelGpsSendCount++;
+        dvPanelGpsLastSentAt = Date.now();
+      }
+      if(dvPanelGpsQueue.length){
+        dvPanelGpsProgramarCola(DV_PANEL_GPS_INTERVAL_MS);
+      }
+    };
+
+    beacon.onload = terminar;
+    beacon.onerror = terminar;
+    beacon.src = url;
+
+    // Fallback por si el navegador no dispara ningún evento.
+    setTimeout(terminar,2500);
+  }catch(error){
+    dvPanelGpsQueueBusy = false;
+    dvPanelGpsLastError = String(error && error.message ? error.message : error);
+    console.error("GPS: error al enviar la cola",error);
+    // No quitamos el punto: queda guardado para reintentar.
+    dvPanelGpsProgramarCola(5000);
+  }
+}
+
+function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
   if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
     console.warn("GPS Panel: coordenadas inválidas",lat,lng);
     return false;
   }
 
+  const usuario = dvPanelGpsUsuario();
   const punto = {
     lat:Number(lat),
     lng:Number(lng),
-    precision:Number.isFinite(Number(precision))
-      ? Number(precision)
-      : null,
-    rumbo:Number.isFinite(Number(rumbo))
-      ? Number(rumbo)
-      : null,
+    precision:Number.isFinite(Number(precision)) ? Number(precision) : null,
+    rumbo:Number.isFinite(Number(rumbo)) ? Number(rumbo) : null,
     timestamp:timestamp || new Date().toISOString()
   };
 
   dvPanelGpsLastPoint = punto;
 
-  // Durante un recorrido publicamos como máximo un punto cada 10 segundos.
-  // El primer punto siempre se envía porque el contador se reinicia al iniciar.
-  if(
-    activo &&
-    dvPanelGpsLastSentAt > 0 &&
-    (ahora - dvPanelGpsLastSentAt) < DV_PANEL_GPS_INTERVAL_MS
-  ){
-    return false;
-  }
-
-  const usuario = dvPanelGpsUsuario();
-
-  const params = new URLSearchParams({
-    accion:"registrarGPS",
+  // Guardamos cada punto válido en una cola. No se descartan lecturas
+  // por el intervalo de envío: la cola las transmite de forma ordenada.
+  dvPanelGpsQueue.push({
+    ...punto,
     usuario:String(usuario.usuario || "sin_usuario"),
     nombre:String(usuario.nombre || usuario.usuario || "Chofer"),
     zona:String(recorridoZona || selectedZone || ""),
-    latitud:String(punto.lat),
-    longitud:String(punto.lng),
-    precision:punto.precision === null ? "" : String(punto.precision),
-    rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
-    timestamp:punto.timestamp,
-    activo:activo ? "1" : "0",
-    _ts:String(Date.now())
+    activo:!!activo
   });
 
-  const url = APPS_SCRIPT_URL + "?" + params.toString();
-
-  try{
-    // Apps Script puede redirigir de script.google.com a
-    // script.googleusercontent.com. Un recurso de imagen GET permite
-    // seguir esa redirección sin depender de CORS y sin bloquear la app.
-    const beacon = new Image();
-    beacon.referrerPolicy = "no-referrer";
-    beacon.onload = function(){
-      console.log("GPS Panel enviado correctamente",punto);
-    };
-    beacon.onerror = function(){
-      // La respuesta JSON de Apps Script no es una imagen, por lo que
-      // onerror no significa necesariamente que la escritura haya fallado.
-      console.log("GPS Panel: solicitud enviada",punto);
-    };
-    beacon.src = url;
-
-    // Guardamos el momento de salida solamente después de crear la solicitud.
-    dvPanelGpsLastSentAt = ahora;
-    dvPanelGpsSendCount++;
-    dvPanelGpsLastError = "";
-    return true;
-  }catch(error){
-    dvPanelGpsLastError = String(error && error.message ? error.message : error);
-    console.error("GPS Panel: error al enviar",error);
-    return false;
+  // Límite defensivo para evitar consumir almacenamiento indefinidamente.
+  if(dvPanelGpsQueue.length > 500){
+    dvPanelGpsQueue = dvPanelGpsQueue.slice(-500);
+    console.warn("GPS: cola limitada a los últimos 500 puntos");
   }
+
+  dvPanelGpsGuardarCola();
+  dvPanelGpsProgramarCola(0);
+  return true;
 }
 
 function dvPanelGpsEnviarUltimoPunto(){
   if(!dvPanelGpsLastPoint) return false;
-
   const punto = dvPanelGpsLastPoint;
-  const usuario = dvPanelGpsUsuario();
+  // Se agrega al final de la misma cola para que el estado inactivo no
+  // se adelante a los puntos anteriores del recorrido.
+  return registrarGPSPanel(
+    punto.lat,
+    punto.lng,
+    punto.precision,
+    punto.rumbo,
+    false,
+    new Date().toISOString()
+  );
+}
 
-  const params = new URLSearchParams({
-    accion:"registrarGPS",
-    usuario:String(usuario.usuario || "sin_usuario"),
-    nombre:String(usuario.nombre || usuario.usuario || "Chofer"),
-    zona:String(recorridoZona || selectedZone || ""),
-    latitud:String(punto.lat),
-    longitud:String(punto.lng),
-    precision:punto.precision === null ? "" : String(punto.precision),
-    rumbo:punto.rumbo === null ? "" : String(punto.rumbo),
-    timestamp:new Date().toISOString(),
-    activo:"0",
-    _ts:String(Date.now())
-  });
-
-  const url = APPS_SCRIPT_URL + "?" + params.toString();
-
-  try{
-    const beacon = new Image();
-    beacon.referrerPolicy = "no-referrer";
-    beacon.onload = function(){
-      console.log("GPS Panel final enviado",punto);
-    };
-    beacon.onerror = function(){
-      console.log("GPS Panel final: solicitud enviada",punto);
-    };
-    beacon.src = url;
-    dvPanelGpsLastSentAt = Date.now();
-    dvPanelGpsSendCount++;
-    dvPanelGpsLastError = "";
-    return true;
-  }catch(error){
-    dvPanelGpsLastError = String(error && error.message ? error.message : error);
-    console.error("GPS Panel final: error al enviar",error);
-    return false;
-  }
+// Recuperar los puntos pendientes tras abrir de nuevo la app.
+dvPanelGpsCargarCola();
+if(dvPanelGpsQueue.length){
+  dvPanelGpsProgramarCola(500);
 }
 
 let currentVisibleDirections = [];
