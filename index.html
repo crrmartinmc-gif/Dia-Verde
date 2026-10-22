@@ -1925,68 +1925,107 @@ function finalizarRecorrido(){
   );
   mostrarToast("✅ Recorrido finalizado");
 }
+// Restaura la zona en los selectores cuando los datos de Google Sheets ya estén cargados.
+// Se ejecuta tanto al recuperar la sesión como después de cargar/actualizar los datos.
+function dvRestaurarZonaRecorridoEnSelectores(){
+  try{
+    if(!recorridoZona || !Array.isArray(data) || !data.length) return false;
+    const fila=data.find(item => normalizar(item.zona)===normalizar(recorridoZona));
+    if(!fila) return false;
+    selectedCgm=fila.localidad || selectedCgm || "";
+    selectedZone=recorridoZona;
+    if(cgm){
+      const existeCgm=Array.from(cgm.options).some(o=>normalizar(o.value)===normalizar(selectedCgm));
+      if(existeCgm) cgm.value=selectedCgm;
+    }
+    if(selectedCgm && typeof actualizarZonasPorCGM==="function") actualizarZonasPorCGM();
+    if(zone){
+      const existeZona=Array.from(zone.options).some(o=>normalizar(o.value)===normalizar(recorridoZona));
+      if(existeZona) zone.value=recorridoZona;
+    }
+    selectedZone=recorridoZona;
+    if(typeof render==="function") render();
+    actualizarBotonesRecorrido();
+    return true;
+  }catch(error){
+    console.warn("No se pudo restaurar la zona del recorrido:",error);
+    return false;
+  }
+}
 function recuperarRecorrido(){
   try{
-    const guardado=
-      localStorage.getItem(getRouteStorageKey());
-    if(!guardado)return;
+    const guardado=localStorage.getItem(getRouteStorageKey());
+    if(!guardado) return false;
     const estado=JSON.parse(guardado);
-    if(
-      !estado||
-      !estado.activo||
-      !estado.zona
-    )return;
-    const inicio=
-      estado.inicio
-      ?new Date(estado.inicio)
-      :null;
+    if(!estado || !estado.zona || !Array.isArray(estado.puntos)) return false;
+
+    // La fecha se compara con la fecha local del dispositivo. Un recorrido de otro día
+    // no se reactiva ni se mezcla con el recorrido de hoy.
+    const inicio=estado.inicio ? new Date(estado.inicio) : null;
     const ahora=new Date();
-    if(
-      !inicio||
-      inicio.toDateString()!==ahora.toDateString()
-    ){
+    if(!inicio || Number.isNaN(inicio.getTime()) || inicio.toDateString()!==ahora.toDateString()){
       borrarRecorridoLocal();
-      return;
+      return false;
     }
-    recorridoActivo=true;
-    recorridoZona=estado.zona;
+
+    recorridoZona=String(estado.zona);
     recorridoInicio=estado.inicio;
+    recorridoPuntos=estado.puntos.filter(p=>p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
+      .map(p=>({...p,lat:Number(p.lat),lng:Number(p.lng)}));
+    recorridoActivo=estado.activo===true;
     dvPanelGpsLastSentAt=0;
     dvPanelGpsLastPoint=null;
-    recorridoPuntos=
-      Array.isArray(estado.puntos)
-      ?estado.puntos
-      :[];
+    dvPanelGpsSendCount=0;
+    dvPanelGpsLastError="";
+
+    dvRestaurarZonaRecorridoEnSelectores();
     dibujarRecorrido();
     actualizarBotonesRecorrido();
     if(recorridoPuntos.length){
-      const ultimo=
-        recorridoPuntos[recorridoPuntos.length-1];
-      mostrarPosicionRecorrido(
-        ultimo.lat,
-        ultimo.lng,
-        ultimo.precision
+      const ultimo=recorridoPuntos[recorridoPuntos.length-1];
+      mostrarPosicionRecorrido(ultimo.lat,ultimo.lng,ultimo.precision,ultimo.heading);
+    }
+
+    if(recorridoActivo){
+      actualizarEstadoRecorrido(
+        "🔴 <strong>Recorrido recuperado</strong><br>"+
+        "📍 Se recuperaron "+recorridoPuntos.length+" puntos guardados.<br>"+
+        "El seguimiento GPS se está reanudando.",true
+      );
+      try{
+        if(window.AndroidGPS && typeof AndroidGPS.startTracking==="function") AndroidGPS.startTracking();
+      }catch(e){ console.warn("GPS nativo al recuperar recorrido:",e); }
+      // Evita registrar dos watchPosition si la recuperación se dispara más de una vez.
+      if(recorridoWatchId===null) iniciarSeguimientoGPS();
+      activarPantallaEncendida();
+    }else{
+      actualizarEstadoRecorrido(
+        "✅ <strong>Recorrido del día recuperado</strong><br>"+
+        "Zona: "+esc(recorridoZona)+"<br>"+
+        "📍 Puntos conservados: "+recorridoPuntos.length+
+        "<br>El recorrido está finalizado; podés consultarlo en el mapa."
       );
     }
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Recorrido recuperado: "+
-      recorridoPuntos.length+
-      " puntos.<br>"+
-      "El GPS continúa registrando nuevas posiciones.",
-      true
-    );
-    try{
-      if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
-        AndroidGPS.startTracking();
-      }
-    }catch(e){}
-    iniciarSeguimientoGPS();
+    guardarRecorridoLocal();
+    return true;
   }catch(error){
     console.error("Recuperar recorrido:",error);
-    borrarRecorridoLocal();
+    // No borrar el almacenamiento ante un error temporal: se evita perder datos recuperables.
+    return false;
   }
 }
+
+// Refuerzo de persistencia: guardar el estado al pasar a segundo plano o cerrar la vista.
+// El guardado principal sigue ocurriendo en cada punto GPS; estos eventos son una protección adicional.
+window.addEventListener("pagehide", function(){
+  try{ guardarRecorridoLocal(); }catch(e){}
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState==="hidden"){
+    try{ guardarRecorridoLocal(); }catch(e){}
+  }
+});
+
 function parseCSVGoogle(text){
 const rows=[];
 let row=[],field="",quoted=false;
@@ -2132,6 +2171,9 @@ selectedCgm =
 "";
 cgm.value =
 "";
+}
+if(recorridoZona){
+  dvRestaurarZonaRecorridoEnSelectores();
 }
 }
 function actualizarZonasPorCGM(){
@@ -3276,6 +3318,9 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
+    // Al reabrir la APK o la web con la sesión guardada, también hay que recuperar el recorrido.
+    try{ if(typeof recuperarRecorrido === "function") recuperarRecorrido(); }
+    catch(e){ console.error("Recuperación automática del recorrido:",e); }
   }else{
     dvMostrarLogin();
   }
