@@ -420,21 +420,35 @@ function getRouteStorageKey(){
     return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
   }
 }
-function getMapSelectionStorageKey(){
+// La selección visual del mapa se guarda por usuario y es independiente
+// de la zona del recorrido GPS que ya está en curso.
+function dvMapaSeleccionKey(){
   try{
-    const u=JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
-    const id=u && u.usuario ? u.usuario : "sin_usuario";
-    return "diaVerdeUltimaSeleccionMapaV1_"+id;
-  }catch(e){ return "diaVerdeUltimaSeleccionMapaV1_sin_usuario"; }
+    const u=JSON.parse(localStorage.getItem("diaVerdeUsuarioV1")||"null");
+    return "diaVerdeMapaSeleccionV1_"+String(u&&u.usuario?u.usuario:"sin_usuario");
+  }catch(e){
+    return "diaVerdeMapaSeleccionV1_sin_usuario";
+  }
 }
-function guardarUltimaSeleccionMapa(){
+function dvRecuperarSeleccionMapa(){
   try{
-    localStorage.setItem(getMapSelectionStorageKey(),JSON.stringify({cgm:cgm ? cgm.value : selectedCgm,zona:zone ? zone.value : selectedZone,fecha:new Date().toISOString()}));
-  }catch(e){ console.warn("No se pudo guardar la última selección del mapa:",e); }
+    const estado=JSON.parse(localStorage.getItem(dvMapaSeleccionKey())||"null");
+    if(!estado)return;
+    if(typeof estado.cgm==="string") selectedCgm=estado.cgm;
+    if(typeof estado.zona==="string") selectedZone=estado.zona;
+  }catch(e){
+    console.warn("No se pudo recuperar la selección del mapa:",e);
+  }
 }
-function leerUltimaSeleccionMapa(){
-  try{ return JSON.parse(localStorage.getItem(getMapSelectionStorageKey()) || "null"); }
-  catch(e){ return null; }
+function dvGuardarSeleccionMapa(){
+  try{
+    localStorage.setItem(dvMapaSeleccionKey(),JSON.stringify({
+      cgm:cgm.value||selectedCgm||"",
+      zona:zone.value||selectedZone||""
+    }));
+  }catch(e){
+    console.warn("No se pudo guardar la selección del mapa:",e);
+  }
 }
 let recorridoActivo = false;
 let recorridoZona = "";
@@ -1941,116 +1955,68 @@ function finalizarRecorrido(){
   );
   mostrarToast("✅ Recorrido finalizado");
 }
-// Restaura la zona en los selectores cuando los datos de Google Sheets ya estén cargados.
-// Se ejecuta tanto al recuperar la sesión como después de cargar/actualizar los datos.
-function dvRestaurarZonaRecorridoEnSelectores(){
-  try{
-    if(!Array.isArray(data) || !data.length) return false;
-    const ultima=leerUltimaSeleccionMapa();
-    let cgmObjetivo="", zonaObjetivo="";
-    if(ultima && ultima.cgm){
-      const filaUltima=data.find(item=>normalizar(item.localidad)===normalizar(ultima.cgm) && (!ultima.zona || normalizar(item.zona)===normalizar(ultima.zona)));
-      if(filaUltima){ cgmObjetivo=filaUltima.localidad || ""; zonaObjetivo=ultima.zona || ""; }
-    }
-    if(!cgmObjetivo && recorridoZona){
-      const fila=data.find(item=>normalizar(item.zona)===normalizar(recorridoZona));
-      if(fila){ cgmObjetivo=fila.localidad || ""; zonaObjetivo=recorridoZona; }
-    }
-    if(!cgmObjetivo) return false;
-    selectedCgm=cgmObjetivo;
-    if(cgm){
-      const existeCgm=Array.from(cgm.options).some(o=>normalizar(o.value)===normalizar(selectedCgm));
-      if(existeCgm) cgm.value=selectedCgm;
-    }
-    if(selectedCgm && typeof actualizarZonasPorCGM==="function") actualizarZonasPorCGM();
-    if(zone && zonaObjetivo){
-      const existeZona=Array.from(zone.options).some(o=>normalizar(o.value)===normalizar(zonaObjetivo));
-      if(existeZona) zone.value=zonaObjetivo;
-    }
-    selectedZone=zoneObjetivo;
-    if(typeof render==="function") render();
-    if(zoneObjetivo) guardarUltimaSeleccionMapa();
-    actualizarBotonesRecorrido();
-    return true;
-  }catch(error){
-    console.warn("No se pudo restaurar la selección del mapa:",error);
-    return false;
-  }
-}
 function recuperarRecorrido(){
   try{
-    const guardado=localStorage.getItem(getRouteStorageKey());
-    if(!guardado) return false;
+    const guardado=
+      localStorage.getItem(getRouteStorageKey());
+    if(!guardado)return;
     const estado=JSON.parse(guardado);
-    if(!estado || !estado.zona || !Array.isArray(estado.puntos)) return false;
-
-    // La fecha se compara con la fecha local del dispositivo. Un recorrido de otro día
-    // no se reactiva ni se mezcla con el recorrido de hoy.
-    const inicio=estado.inicio ? new Date(estado.inicio) : null;
+    if(
+      !estado||
+      !estado.activo||
+      !estado.zona
+    )return;
+    const inicio=
+      estado.inicio
+      ?new Date(estado.inicio)
+      :null;
     const ahora=new Date();
-    if(!inicio || Number.isNaN(inicio.getTime()) || inicio.toDateString()!==ahora.toDateString()){
+    if(
+      !inicio||
+      inicio.toDateString()!==ahora.toDateString()
+    ){
       borrarRecorridoLocal();
-      return false;
+      return;
     }
-
-    recorridoZona=String(estado.zona);
+    recorridoActivo=true;
+    recorridoZona=estado.zona;
     recorridoInicio=estado.inicio;
-    recorridoPuntos=estado.puntos.filter(p=>p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
-      .map(p=>({...p,lat:Number(p.lat),lng:Number(p.lng)}));
-    recorridoActivo=estado.activo===true;
     dvPanelGpsLastSentAt=0;
     dvPanelGpsLastPoint=null;
-    dvPanelGpsSendCount=0;
-    dvPanelGpsLastError="";
-
-    dvRestaurarZonaRecorridoEnSelectores();
+    recorridoPuntos=
+      Array.isArray(estado.puntos)
+      ?estado.puntos
+      :[];
     dibujarRecorrido();
     actualizarBotonesRecorrido();
     if(recorridoPuntos.length){
-      const ultimo=recorridoPuntos[recorridoPuntos.length-1];
-      mostrarPosicionRecorrido(ultimo.lat,ultimo.lng,ultimo.precision,ultimo.heading);
-    }
-
-    if(recorridoActivo){
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido recuperado</strong><br>"+
-        "📍 Se recuperaron "+recorridoPuntos.length+" puntos guardados.<br>"+
-        "El seguimiento GPS se está reanudando.",true
-      );
-      try{
-        if(window.AndroidGPS && typeof AndroidGPS.startTracking==="function") AndroidGPS.startTracking();
-      }catch(e){ console.warn("GPS nativo al recuperar recorrido:",e); }
-      // Evita registrar dos watchPosition si la recuperación se dispara más de una vez.
-      if(recorridoWatchId===null) iniciarSeguimientoGPS();
-      activarPantallaEncendida();
-    }else{
-      actualizarEstadoRecorrido(
-        "✅ <strong>Recorrido del día recuperado</strong><br>"+
-        "Zona: "+esc(recorridoZona)+"<br>"+
-        "📍 Puntos conservados: "+recorridoPuntos.length+
-        "<br>El recorrido está finalizado; podés consultarlo en el mapa."
+      const ultimo=
+        recorridoPuntos[recorridoPuntos.length-1];
+      mostrarPosicionRecorrido(
+        ultimo.lat,
+        ultimo.lng,
+        ultimo.precision
       );
     }
-    guardarRecorridoLocal();
-    return true;
+    actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido en curso</strong><br>"+
+      "📍 Recorrido recuperado: "+
+      recorridoPuntos.length+
+      " puntos.<br>"+
+      "El GPS continúa registrando nuevas posiciones.",
+      true
+    );
+    try{
+      if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+        AndroidGPS.startTracking();
+      }
+    }catch(e){}
+    iniciarSeguimientoGPS();
   }catch(error){
     console.error("Recuperar recorrido:",error);
-    // No borrar el almacenamiento ante un error temporal: se evita perder datos recuperables.
-    return false;
+    borrarRecorridoLocal();
   }
 }
-
-// Refuerzo de persistencia: guardar el estado al pasar a segundo plano o cerrar la vista.
-// El guardado principal sigue ocurriendo en cada punto GPS; estos eventos son una protección adicional.
-window.addEventListener("pagehide", function(){
-  try{ guardarRecorridoLocal(); }catch(e){}
-});
-document.addEventListener("visibilitychange", function(){
-  if(document.visibilityState==="hidden"){
-    try{ guardarRecorridoLocal(); }catch(e){}
-  }
-});
-
 function parseCSVGoogle(text){
 const rows=[];
 let row=[],field="",quoted=false;
@@ -2165,6 +2131,8 @@ document.body.appendChild(script);
 }
 
 function cargarCGMs(){
+// Recuperar la última selección guardada, sin imponer la zona del recorrido.
+dvRecuperarSeleccionMapa();
 const cgms =
 [...new Set(
 data.map(item => item.localidad)
@@ -2196,9 +2164,6 @@ selectedCgm =
 "";
 cgm.value =
 "";
-}
-if(recorridoZona){
-  dvRestaurarZonaRecorridoEnSelectores();
 }
 }
 function actualizarZonasPorCGM(){
@@ -3218,7 +3183,7 @@ search.value =
 "";
 actualizarZonasPorCGM();
 render();
-guardarUltimaSeleccionMapa();
+dvGuardarSeleccionMapa();
 }
 );
 zone.addEventListener(
@@ -3230,8 +3195,8 @@ zone.addEventListener(
     recorridoMarker=null;
   }
   render();
-  guardarUltimaSeleccionMapa();
   actualizarBotonesRecorrido();
+  dvGuardarSeleccionMapa();
 }
 );
 search.addEventListener(
@@ -3255,12 +3220,17 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
+if(recorridoActivo) guardarRecorridoLocal();
 if(!document.hidden){
 if(recorridoActivo) activarPantallaEncendida();
 cargarEvidenciasHoy();
 }
 }
 );
+window.addEventListener("pagehide",()=>{
+  if(recorridoActivo) guardarRecorridoLocal();
+  dvGuardarSeleccionMapa();
+});
 </script>
 <script id="diaverde-auth">
 const DV_USUARIOS = [
@@ -3335,9 +3305,11 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
-    // Al reabrir la APK o la web con la sesión guardada, también hay que recuperar el recorrido.
-    try{ if(typeof recuperarRecorrido === "function") recuperarRecorrido(); }
-    catch(e){ console.error("Recuperación automática del recorrido:",e); }
+    try{
+      if(typeof recuperarRecorrido === "function") recuperarRecorrido();
+    }catch(e){
+      console.error("Recuperación de recorrido:",e);
+    }
   }else{
     dvMostrarLogin();
   }
