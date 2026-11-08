@@ -459,7 +459,23 @@ let recorridoMarker = null;
 let recorridoWatchId = null;
 let dvPanelGpsLastSentAt = 0;
 let dvPanelGpsLastPoint = null;
-const DV_PANEL_GPS_INTERVAL_MS = 1500;
+// Captura objetivo: una posición cada 5 segundos cuando el proveedor GPS entrega lecturas.
+// En navegador, watchPosition no garantiza una cadencia exacta; Android nativo debe
+// respetar DV_GPS_CONFIG desde su Foreground Service para garantizar el intervalo.
+const DV_GPS_INTERVAL_MS = 5000;
+const DV_GPS_MAX_ACCURACY_METERS = 60;
+const DV_GPS_DEGRADED_ACCURACY_METERS = 30;
+const DV_GPS_MAX_SPEED_MPS = 55;
+const DV_GPS_MAX_GAP_MS = 30000;
+let dvGpsLastAcceptedAt = 0;
+// Disponible ANTES de llamar AndroidGPS.startTracking().
+window.DV_GPS_CONFIG={
+  intervalMs:DV_GPS_INTERVAL_MS,
+  priority:"balanced",
+  maxAccuracyMeters:DV_GPS_MAX_ACCURACY_METERS,
+  background:true
+};
+const DV_PANEL_GPS_INTERVAL_MS = DV_GPS_INTERVAL_MS;
 let dvPanelGpsSendCount = 0;
 let dvPanelGpsLastError = "";
 let dvPanelGpsQueue = [];
@@ -520,8 +536,7 @@ function dvPanelGpsProgramarCola(demora=0){
 function dvPanelGpsProcesarCola(){
   if(dvPanelGpsQueueBusy || !dvPanelGpsQueue.length) return;
 
-  // Procesar hasta 10 posiciones en una única escritura de Sheets.
-  // Así la cola puede alcanzar al GPS sin hacer una solicitud por punto.
+  // Enviar lotes pequeños para reducir el tamaño de la URL de Apps Script.
   const lote = dvPanelGpsQueue.slice(0,10);
   const payload = lote.map(item => ({
     usuario:String(item.usuario || "sin_usuario"),
@@ -542,43 +557,43 @@ function dvPanelGpsProcesarCola(){
   });
   const url = APPS_SCRIPT_URL + "?" + params.toString();
 
-  try{
-    dvPanelGpsQueueBusy = true;
-    const beacon = new Image();
-    beacon.referrerPolicy = "no-referrer";
-    let terminado = false;
+  if(typeof fetch !== "function"){
+    dvPanelGpsLastError = "Este navegador no permite enviar la cola GPS mediante fetch.";
+    dvPanelGpsProgramarCola(5000);
+    return;
+  }
 
-    const terminar = ()=>{
-      if(terminado) return;
-      terminado = true;
-      dvPanelGpsQueueBusy = false;
+  dvPanelGpsQueueBusy = true;
 
-      // El endpoint procesa el lote como una sola operación.
-      // Image no expone el JSON de respuesta; por eso esto indica que
-      // terminó la solicitud del navegador, no una confirmación verificable.
-      if(dvPanelGpsQueue.length){
-        dvPanelGpsQueue.splice(0, lote.length);
-        dvPanelGpsGuardarCola();
-        dvPanelGpsSendCount += lote.length;
-        dvPanelGpsLastSentAt = Date.now();
-      }
+  // no-cors permite el envío al endpoint aunque Apps Script no habilite CORS.
+  // La respuesta será opaca: un resolve confirma el envío del navegador,
+  // NO una confirmación de escritura en Google Sheets.
+  fetch(url,{
+    method:"GET",
+    mode:"no-cors",
+    cache:"no-store",
+    credentials:"omit",
+    keepalive:true
+  }).then(()=>{
+    dvPanelGpsQueueBusy = false;
 
-      if(dvPanelGpsQueue.length){
-        dvPanelGpsProgramarCola(250);
-      }
-    };
+    // Eliminar únicamente el lote enviado; los puntos nuevos quedan en cola.
+    dvPanelGpsQueue.splice(0,lote.length);
+    dvPanelGpsGuardarCola();
+    dvPanelGpsSendCount += lote.length;
+    dvPanelGpsLastSentAt = Date.now();
+    dvPanelGpsLastError = "";
 
-    beacon.onload = terminar;
-    beacon.onerror = terminar;
-    beacon.src = url;
-    setTimeout(terminar,5000);
-  }catch(error){
+    if(dvPanelGpsQueue.length){
+      dvPanelGpsProgramarCola(250);
+    }
+  }).catch(error=>{
+    // Ante error de transporte NO se elimina ningún punto: se reintenta.
     dvPanelGpsQueueBusy = false;
     dvPanelGpsLastError = String(error && error.message ? error.message : error);
-    console.error("GPS: error al enviar lote",error);
-    // Conservar la cola si no se pudo iniciar la solicitud.
-    dvPanelGpsProgramarCola(3000);
-  }
+    console.error("GPS: error al enviar lote; se conserva la cola",error);
+    dvPanelGpsProgramarCola(5000);
+  });
 }
 
 function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
@@ -1449,275 +1464,84 @@ function distanciaMetros(a,b){
 }
 function dibujarRecorrido(){
   if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
+    try{ map.removeLayer(recorridoLayer); }catch(e){}
     recorridoLayer=null;
   }
   if(recorridoPuntos.length<2)return;
-  recorridoLayer=L.polyline(
-    recorridoPuntos.map(p=>[p.lat,p.lng]),
-    {
+
+  // Una brecha de señal inicia un nuevo segmento visual.
+  const segmentos=[];
+  let actual=[];
+  recorridoPuntos.forEach(p=>{
+    if(p && p.brecha && actual.length){
+      if(actual.length>1) segmentos.push(actual);
+      actual=[];
+    }
+    if(p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng))){
+      actual.push([Number(p.lat),Number(p.lng)]);
+    }
+  });
+  if(actual.length>1) segmentos.push(actual);
+  if(!segmentos.length)return;
+
+  recorridoLayer=L.layerGroup().addTo(map);
+  segmentos.forEach(coords=>{
+    const linea=L.polyline(coords,{
       color:"#087a3d",
       weight:6,
       opacity:.9,
       lineCap:"round",
       lineJoin:"round"
-    }
-  ).addTo(map);
-  recorridoLayer.bringToFront();
-}
-function actualizarEstadoRecorrido(texto,activo=false){
-  routeStatus.innerHTML=texto;
-  routeStatus.classList.toggle("active",activo);
-}
-function actualizarBotonesRecorrido(){
-  const hayZona=!!selectedZone;
-  startRoute.disabled=!hayZona||recorridoActivo;
-  stopRoute.disabled=!recorridoActivo;
-}
-function normalizarRumbo(grados){
-  let r=Number(grados);
-  if(!Number.isFinite(r)) return null;
-  r=((r%360)+360)%360;
-  return r;
-}
-function suavizarRumbo(nuevo){
-  nuevo=normalizarRumbo(nuevo);
-  if(nuevo===null) return recorridoHeading;
-  if(recorridoHeading===null){
-    recorridoHeading=nuevo;
-    return recorridoHeading;
-  }
-  let delta=((nuevo-recorridoHeading+540)%360)-180;
-  if(Math.abs(delta)<4) return recorridoHeading;
-  recorridoHeading=normalizarRumbo(
-    recorridoHeading + delta*0.35
-  );
-  return recorridoHeading;
-}
-function crearIconoVehiculo(rumbo){
-  const rot=normalizarRumbo(rumbo);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="54" height="54" aria-label="Posición del vehículo">'+
-    '<path d="M32 4 L52 54 L32 43 L12 54 Z" fill="#19a85b" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>'+
-    '<path d="M32 10 L44 45 L32 38 L20 45 Z" fill="#39d477"/>'+
-    '</svg>';
-  return L.divIcon({
-    className:"dia-verde-vehiculo-icon",
-    html:'<div class="dv-navigation-arrow" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
-    iconSize:[54,54],
-    iconAnchor:[27,27] 
+    }).addTo(recorridoLayer);
+    try{linea.bringToFront();}catch(e){}
   });
 }
 
-
-let dvNavLastPosition=null;
-let dvNavBearing=null;
-
-function dvNavNormalizeBearing(value){
-  const n=Number(value);
-  if(!Number.isFinite(n)) return null;
-  return ((n%360)+360)%360;
-}
-
-function dvNavBearingBetween(a,b){
-  if(!a||!b) return null;
-  const lat1=Number(a.lat)*Math.PI/180;
-  const lat2=Number(b.lat)*Math.PI/180;
-  const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
-  const y=Math.sin(dLon)*Math.cos(lat2);
-  const x=
-    Math.cos(lat1)*Math.sin(lat2)-
-    Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-  return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
-}
-
-function dvNavSmoothBearing(next){
-  next=dvNavNormalizeBearing(next);
-  if(next===null) return dvNavBearing;
-  if(dvNavBearing===null){
-    dvNavBearing=next;
-    return dvNavBearing;
-  }
-  const delta=((next-dvNavBearing+540)%360)-180;
-  // Suavizado fuerte para que el mapa no tiemble con el GPS.
-  dvNavBearing=dvNavNormalizeBearing(
-    dvNavBearing + delta*0.22
-  );
-  return dvNavBearing;
-}
-
-function dvNavReset(){
-  dvNavLastPosition=null;
-  dvNavBearing=null;
-}
-
-function activarSeguimientoVisual(lat,lng,forzarZoom=false){
-  if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
-
-  const actual={lat:lat,lng:lng};
-
-  // Primer GPS del recorrido: entrar de verdad en modo navegación.
-  if(forzarZoom){
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-    dvNavLastPosition=actual;
-
-    const gpsHeading=Number(recorridoHeading);
-    dvNavBearing=
-      Number.isFinite(gpsHeading)
-        ? dvNavNormalizeBearing(gpsHeading)
-        : 0;
-
-    try{
-      // Una sola operación de MapLibre establece TODO el estado de navegación.
-      map.stop();
-      dvNavCameraMoving=true;
-      map.easeTo({
-        center:[lng,lat],
-        zoom:17,
-        pitch:35,
-        bearing:dvNavBearing,
-        offset:[0,120],
-        duration:700,
-        essential:true
-      });
-    }catch(e){
-      try{
-        map.setView([lat,lng],17,{animate:true});
-        map.setPitch(35);
-        map.setBearing(dvNavBearing||0);
-      }catch(e2){}
-    }
-    return;
-  }
-
-  if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
-    return;
-
-  // El rumbo se obtiene primero del movimiento real entre puntos.
-  // Esto funciona aunque el teléfono no entregue coords.heading.
-  let movimiento=null;
-  if(dvNavLastPosition){
-    const d=distanciaMetros(dvNavLastPosition,actual);
-    if(d >= 3){
-      movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
-    }
-  }
-
-  dvNavLastPosition=actual;
-
-  if(movimiento!==null){
-    dvNavSmoothBearing(movimiento);
-  }else if(dvNavBearing===null){
-    const gpsHeading=Number(recorridoHeading);
-    if(Number.isFinite(gpsHeading))
-      dvNavBearing=dvNavNormalizeBearing(gpsHeading);
-  }
-
-  const bearing=
-    dvNavBearing!==null
-      ? dvNavBearing
-      : 0;
-
-  try{
-    // Modo navegación: centro adelantado, inclinación 35° y giro
-    // siguiendo el sentido de marcha.
-    dvNavCameraMoving=true;
-    map.easeTo({
-      center:[lng,lat],
-      zoom:17,
-      pitch:35,
-      bearing:bearing,
-      offset:[0,120],
-      duration:450,
-      essential:true
-    });
-  }catch(e){
-    // Fallback seguro: el seguimiento que ya estaba probado.
-    try{
-      map.panTo([lat,lng],{
-        animate:true,
-        duration:.45
-      });
-      map.setPitch(35);
-    }catch(e2){}
-  }
-}
-
-function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
-  if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-  const heading=suavizarRumbo(rumbo);
-  if(recorridoMarker) recorridoMarker._heading=heading;
-  if(!recorridoMarker){
-    recorridoMarker=L.marker(
-      [lat,lng],
-      {
-        icon:crearIconoVehiculo(heading),
-        zIndexOffset:1000
-      }
-    ).addTo(map);
-    recorridoMarker.bindTooltip(
-      "📍 Posición del vehículo",
-      {permanent:false}
-    );
-    recorridoMarker._heading=heading;
-    recorridoMarker.updateScreenRotation();
-  }else{
-    recorridoMarker.setLatLng([lat,lng]);
-    if(heading!==null){
-      recorridoMarker.setIcon(crearIconoVehiculo(heading));
-    }
-    recorridoMarker.setZIndexOffset(1000);
-    recorridoMarker.bringToFront();
-    recorridoMarker.updateScreenRotation();
-  }
-  recorridoMarker.bindPopup(
-    "📍 <strong>Posición del vehículo</strong><br>"+
-    "📍 Ubicación GPS del teléfono<br>"+
-    "🌐 Lat: "+lat.toFixed(6)+"<br>"+
-    "🌐 Lng: "+lng.toFixed(6)+
-    (Number.isFinite(precision)
-      ? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
-      : "")+
-    (heading!==null
-      ? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
-      : "")
-  );
-  activarSeguimientoVisual(lat,lng,forzarZoom);
-}
 function registrarPuntoRecorrido(position){
   if(!recorridoActivo || !position || !position.coords) return;
 
   const c=position.coords;
   const lat=Number(c.latitude);
   const lng=Number(c.longitude);
-  const precision=Number(c.accuracy);
-  const rumboGps=Number.isFinite(Number(c.heading)) ? Number(c.heading) : null;
+  const precision=(c.accuracy==null || c.accuracy==="")
+    ? null
+    : Number(c.accuracy);
+  const rumboGps=(c.heading==null || c.heading==="")
+    ? null
+    : Number(c.heading);
 
   if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
   if(lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
 
-  // No mover el marcador ni guardar puntos cuya precisión sea demasiado baja.
-  // Evita que una lectura GPS imprecisa produzca un salto visible en el mapa.
-  if(Number.isFinite(precision) && precision > 50){
+  // Se toleran lecturas hasta ±60 m; entre ±30 y ±60 m se conservan
+  // identificadas como degradadas para no perder cobertura innecesariamente.
+  if(Number.isFinite(precision) && precision > DV_GPS_MAX_ACCURACY_METERS){
     actualizarEstadoRecorrido(
       "🔴 <strong>Recorrido en curso</strong><br>"+
-      "⚠️ GPS con baja precisión: ±"+Math.round(precision)+" m. Esperando una mejor ubicación.",
+      "⚠️ GPS con precisión insuficiente: ±"+Math.round(precision)+
+      " m. Esperando una lectura mejor.",
       true
     );
     return;
   }
 
-  // Usar la hora de captura del dispositivo, no la hora de recepción en JavaScript.
+  // Usar el timestamp de captura del proveedor, no el momento de recepción.
   let horaPunto=Number(position.timestamp);
-  if(Number.isFinite(horaPunto) && horaPunto > 0 && horaPunto < 100000000000){
-    // Algunas implementaciones nativas pueden informar epoch en segundos.
-    horaPunto *= 1000;
+  if(Number.isFinite(horaPunto) && horaPunto>0 && horaPunto<100000000000){
+    horaPunto*=1000;
   }
-  if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+  if(!Number.isFinite(horaPunto) || horaPunto<=0){
     horaPunto=Date.parse(position.timestamp);
   }
-  if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+  if(!Number.isFinite(horaPunto) || horaPunto<=0){
     horaPunto=Date.now();
+  }
+
+  // Evitar aceptar más de una posición cada 5 segundos.
+  // watchPosition puede entregar menos lecturas; el navegador no permite
+  // forzar una frecuencia exacta desde JavaScript.
+  if(dvGpsLastAcceptedAt && horaPunto-dvGpsLastAcceptedAt < DV_GPS_INTERVAL_MS){
+    return;
   }
 
   const punto={
@@ -1725,7 +1549,10 @@ function registrarPuntoRecorrido(position){
     lng:lng,
     hora:new Date(horaPunto).toISOString(),
     precision:Number.isFinite(precision)?precision:null,
-    heading:rumboGps
+    heading:Number.isFinite(rumboGps)?rumboGps:null,
+    precisionDegradada:Number.isFinite(precision) &&
+      precision>DV_GPS_DEGRADED_ACCURACY_METERS,
+    brecha:false
   };
 
   const ultimo=recorridoPuntos[recorridoPuntos.length-1];
@@ -1734,8 +1561,8 @@ function registrarPuntoRecorrido(position){
     const horaAnterior=Date.parse(ultimo.hora);
     const diferenciaMs=horaPunto-horaAnterior;
 
-    // Ignorar lecturas viejas o fuera de orden, que pueden llegar al alternar fuentes GPS.
-    if(Number.isFinite(horaAnterior) && diferenciaMs <= 0){
+    // Descartar posiciones antiguas o fuera de orden.
+    if(Number.isFinite(horaAnterior) && diferenciaMs<=0){
       console.warn("GPS descartado: punto fuera de orden",{punto,ultimo});
       return;
     }
@@ -1743,10 +1570,11 @@ function registrarPuntoRecorrido(position){
     const segundos=Math.max(0.5,diferenciaMs/1000);
     const velocidad=distancia/segundos;
 
-    if(distancia < 3) return;
+    // No registrar desplazamientos menores a 3 metros para reducir ruido.
+    if(distancia<3) return;
 
-    // 50 m/s = 180 km/h. Rechaza saltos imposibles para un recorrido urbano.
-    if(velocidad > 50){
+    // Límite defensivo: 55 m/s (~198 km/h), evitando saltos GPS extremos.
+    if(velocidad>DV_GPS_MAX_SPEED_MPS){
       console.warn("GPS descartado por salto",{
         distanciaMetros:Math.round(distancia),
         segundos:Number(segundos.toFixed(1)),
@@ -1761,9 +1589,19 @@ function registrarPuntoRecorrido(position){
       );
       return;
     }
+
+    // Si pasan más de 30 segundos sin una posición válida, cortar el dibujo.
+    if(diferenciaMs>DV_GPS_MAX_GAP_MS){
+      punto.brecha=true;
+      console.warn("GPS: brecha de señal detectada",{
+        segundosSinLectura:Math.round(diferenciaMs/1000)
+      });
+    }
   }
 
-  // Solo actualizar mapa y guardar DESPUÉS de validar el punto.
+  // La marca temporal se actualiza solo al aceptar el punto.
+  dvGpsLastAcceptedAt=horaPunto;
+
   recorridoPuntos.push(punto);
   mostrarPosicionRecorrido(
     lat,
@@ -1773,19 +1611,26 @@ function registrarPuntoRecorrido(position){
     recorridoPuntos.length===1
   );
 
-  // La marca temporal enviada a Sheets corresponde a la captura del punto.
   registrarGPSPanel(lat,lng,precision,rumboGps,true,punto.hora);
   dibujarRecorrido();
   guardarRecorridoLocal();
+
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
     "📍 GPS activo · Puntos registrados: "+recorridoPuntos.length+
     "<br>🌐 Lat: "+lat.toFixed(6)+" · Lng: "+lng.toFixed(6)+
     "<br>📡 Precisión informada: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+" m",
+    (Number.isFinite(precision)?Math.round(precision):"?")+" m"+
+    (punto.precisionDegradada
+      ? "<br>⚠️ Precisión degradada; punto conservado."
+      : "")+
+    (punto.brecha
+      ? "<br>⚠️ Se detectó un corte de señal; el trazado se separó."
+      : ""),
     true
   );
 }
+
 function manejarErrorRecorrido(error){
   console.error("GPS recorrido:",error);
   let mensaje="⚠️ No se pudo obtener la ubicación.";
@@ -1811,6 +1656,15 @@ function manejarErrorRecorrido(error){
   );
 }
 function iniciarSeguimientoGPS(){
+  // Configuración que debe respetar el servicio Android nativo.
+  // El HTML no puede crear ni garantizar por sí solo un servicio en segundo plano.
+  window.DV_GPS_CONFIG={
+    intervalMs:DV_GPS_INTERVAL_MS,
+    priority:"balanced",
+    maxAccuracyMeters:DV_GPS_MAX_ACCURACY_METERS,
+    background:true
+  };
+
   // APK: usar exclusivamente el GPS nativo Android para registrar el recorrido.
   // El puente nativo entrega sus puntos mediante onNativeLocation/dvSetNavigationLocation.
   const gpsNativoDisponible = !!window.AndroidGPS &&
@@ -1846,7 +1700,7 @@ function iniciarSeguimientoGPS(){
     registrarPuntoRecorrido,
     manejarErrorRecorrido,
     {
-      enableHighAccuracy:true,
+      enableHighAccuracy:false,
       maximumAge:0,
       timeout:20000
     }
@@ -1885,6 +1739,7 @@ function iniciarRecorrido(){
   recorridoZona=selectedZone;
   recorridoInicio=new Date().toISOString();
   recorridoPuntos=[];
+  dvGpsLastAcceptedAt=0;
   dvPanelGpsLastSentAt=0;
   dvPanelGpsLastPoint=null;
   dvPanelGpsSendCount=0;
@@ -1933,6 +1788,7 @@ function finalizarRecorrido(){
   dvPanelGpsEnviarUltimoPunto();
 
   recorridoActivo=false;
+  dvGpsLastAcceptedAt=0;
   try{
     if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
       AndroidGPS.stopTracking();
@@ -1987,6 +1843,17 @@ function recuperarRecorrido(){
       Array.isArray(estado.puntos)
       ?estado.puntos
       :[];
+    const ultimoRecuperado=recorridoPuntos[recorridoPuntos.length-1];
+    dvGpsLastAcceptedAt=ultimoRecuperado
+      ? Date.parse(ultimoRecuperado.hora)||0
+      : 0;
+    recorridoHeading=ultimoRecuperado &&
+      Number.isFinite(Number(ultimoRecuperado.heading))
+      ? Number(ultimoRecuperado.heading)
+      : null;
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
+    dvNavReset();
     dibujarRecorrido();
     actualizarBotonesRecorrido();
     if(recorridoPuntos.length){
@@ -1995,7 +1862,9 @@ function recuperarRecorrido(){
       mostrarPosicionRecorrido(
         ultimo.lat,
         ultimo.lng,
-        ultimo.precision
+        ultimo.precision,
+        ultimo.heading,
+        true
       );
     }
     actualizarEstadoRecorrido(
@@ -3453,32 +3322,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   };
 
-  // GPS propio de la AppWeb: mantiene disponible la última posición.
-  if(navigator.geolocation){
-    try{
-      navigator.geolocation.watchPosition(
-        function(position){
-          dvLastNativeLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            speed: position.coords.speed,
-            bearing: position.coords.heading
-          };
-        },
-        function(error){
-          console.warn("Geolocalización WebApp:", error);
-        },
-        {
-          enableHighAccuracy:true,
-          maximumAge:3000,
-          timeout:15000
-        }
-      );
-    }catch(e){
-      console.warn("No se pudo iniciar GPS WebApp:", e);
-    }
-  }
+  // No se inicia un segundo watchPosition permanente aquí.
+  // El recorrido usa un único watcher; el botón Centrar solicita una lectura puntual.
 
   function dvWatchMapInteraction(){
     const mapa = (typeof map !== "undefined") ? map : window.map;
