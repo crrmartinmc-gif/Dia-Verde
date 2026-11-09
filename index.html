@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -11,25 +12,24 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 <style>
 :root{--verde:#087a3d;--verde-oscuro:#04552b;--verde-claro:#e9f7ed;--texto:#193329;--gris:#728078;--fondo:#f3f7f4;--borde:#dce9e0;--blanco:#fff;}*{box-sizing:border-box;}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:var(--texto);}header{background:linear-gradient( 135deg, var(--verde-oscuro), var(--verde) );color:white;padding:24px 28px;box-shadow:0 4px 20px #0002;}.header-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px;}.brand{display:flex;align-items:center;gap:15px;}.logo{width:58px;height:58px;border-radius:50%;background:white;display:grid;place-items:center;font-size:29px;}h1{margin:0;font-size:28px;}.sub{margin-top:5px;font-size:15px;}.status{display:flex;align-items:center;gap:10px;font-size:13px;}.status-icon{width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;display:grid;place-items:center;font-size:20px;}main{max-width:1200px;margin:auto;padding:22px;}.layout{display:grid;grid-template-columns:300px 1fr;gap:18px;}.card{background:white;border:1px solid #e5eee8;border-radius:18px;box-shadow:0 8px 30px #163a2614;}.sidebar{padding:20px;}.section-label{color:var(--verde);font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}label{display:block;font-weight:700;margin-bottom:8px;}select, input{width:100%;min-height:48px;border:1px solid #d5e0d9;border-radius:10px;padding:11px 13px;font-size:15px;color:var(--texto);background:white;outline:none;}select:focus, input:focus{border-color:#72bb8b;box-shadow:0 0 0 3px #087a3d1a;}.refresh{width:100%;min-height:48px;margin-top:12px;border:0;border-radius:10px;background:var(--verde);color:white;font-weight:800;cursor:pointer;}.refresh:hover{background:var(--verde-oscuro);}.info-box{margin-top:18px;padding:15px;border:1px solid #c9e7d1;border-radius:12px;background:#f4fbf6;color:#40534a;font-size:13px;line-height:1.55;}.stats{margin-top:25px;}.stat{border:1px solid var(--borde);border-radius:13px;padding:14px;margin-top:9px;display:flex;align-items:center;gap:12px;}.stat-icon{width:42px;height:42px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.stat small{display:block;color:var(--gris);}.stat strong{font-size:22px;}.update{margin-top:24px;font-size:13px;color:#4d5d54;line-height:1.5;}.map-card{padding:18px;}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;}.card-title-icon{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;font-size:20px;}.card-title h2{margin:0;font-size:21px;}.card-title p{margin:3px 0 0;color:var(--gris);font-size:13px;}.map-wrap{position:relative;}#map{height:500px;border-radius:14px;overflow:hidden;}.zone-badge{position:absolute;z-index:1000;left:50%;top:20px;transform:translateX(-50%);background:var(--verde);color:white;padding:9px 16px;border-radius:10px;font-weight:800;box-shadow:0 5px 15px #0003;pointer-events:none;}.results{margin-top:18px;padding:18px;}.results-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;}.count-pill{background:var(--verde-claro);color:var(--verde);padding:8px 13px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;}.search{margin-bottom:12px;}.address-list{display:grid;border:1px solid #e1e9e4;border-radius:13px;overflow:hidden;}.address{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border-bottom:1px solid #e7eee9;background:white;}.address:last-child{border-bottom:0;}.address:hover{background:#fbfdfb;}.address-left{display:flex;align-items:center;gap:12px;min-width:0;}.pin{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:grid;place-items:center;flex:0 0 auto;}.address strong{display:block;font-size:15px;}.address small{display:block;margin-top:4px;color:var(--gris);}.address-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.maps, .evidence-btn{display:inline-block;text-decoration:none;border:1px solid #8bcaa1;color:var(--verde);background:white;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;}.maps:hover, .evidence-btn:hover{background:var(--verde-claro);}.evidence-btn.done{background:var(--verde-claro);border-color:#63b57f;}.empty, .loading{text-align:center;padding:35px;color:var(--gris);}.error{background:#fff0f0;color:#a52222;padding:15px;border-radius:10px;}.modal-backdrop{position:fixed;inset:0;background:#062b17aa;display:none;align-items:center;justify-content:center;padding:18px;z-index:3000;}.modal-backdrop.show{display:flex;}.evidence-modal{width:min(520px,100%);background:white;border-radius:20px;box-shadow:0 20px 60px #0004;padding:22px;}.evidence-modal h3{margin:0 0 5px;font-size:21px;}.evidence-modal p{margin:0 0 18px;color:var(--gris);font-size:13px;}.evidence-preview{width:100%;max-height:280px;object-fit:cover;border-radius:14px;background:#edf3ef;display:none;margin-bottom:15px;}.gps-box{padding:12px;border-radius:12px;background:#f4fbf6;border:1px solid #c9e7d1;font-size:13px;line-height:1.55;margin-bottom:15px;}.modal-actions{display:flex;gap:10px;}.modal-actions button{flex:1;min-height:46px;border-radius:10px;font-weight:800;cursor:pointer;}.cancel-btn{border:1px solid #d5e0d9;background:white;color:#53625a;}.send-btn{border:0;background:var(--verde);color:white;}.send-btn:disabled{opacity:.5;cursor:not-allowed;}.toast{position:fixed;right:20px;bottom:20px;z-index:4000;background:var(--verde-oscuro);color:white;padding:13px 16px;border-radius:12px;box-shadow:0 8px 25px #0003;display:none;font-size:13px;font-weight:700;}.toast.show{display:block;}footer{margin-top:20px;background:var(--verde-oscuro);color:white;padding:22px;}.footer-inner{max-width:1200px;margin:auto;display:flex;justify-content:space-between;gap:15px;align-items:center;}footer span{opacity:.9;font-size:13px;}@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:15px;}.sidebar .stats, .sidebar .update{grid-column:1/-1;margin-top:0;}}@media(max-width:600px){header{padding:18px;}.header-inner{align-items:flex-start;}.status{display:none;}.logo{width:48px;height:48px;font-size:24px;}h1{font-size:23px;}.sub{font-size:13px;}main{padding:12px;}.sidebar{display:block;}.info-box, .stats, .update{margin-top:18px!important;}#map{height:100%;min-height:460px;}.address{align-items:flex-start;flex-direction:column;}.address-actions{width:100%;}.maps, .evidence-btn{flex:1;text-align:center;}.footer-inner{flex-direction:column;text-align:center;}}.route-controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.route-btn{flex:1;min-height:48px;border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer}.route-start{background:#087a3d;color:white}.route-start:hover{background:#04552b}.route-stop{background:#b42318;color:white}.route-stop:hover{background:#8f1d14}.route-btn:disabled{opacity:.5;cursor:not-allowed}.route-status{width:100%;padding:10px 12px;border-radius:10px;background:#f4fbf6;border:1px solid #c9e7d1;color:#40534a;font-size:12px;line-height:1.45}.route-status.active{background:#fff5f5;border-color:#efb5b0;color:#8f1d14}
 
-
 #dvCenterButton{
-  display:block;
-  position:absolute;
-  left:12px;
-  right:auto;
-  bottom:12px;
-  z-index:1000;
-  border:0;
-  border-radius:999px;
-  padding:9px 13px;
-  font-weight:800;
-  font-size:13px;
-  background:#087f3f;
-  color:#fff;
-  box-shadow:0 3px 12px rgba(0,0,0,.28);
-  cursor:pointer;
+display;
+position;
+left:12px;
+right;
+bottom:12px;
+z-index:1000;
+border:0;
+border-radius:999px;
+padding:9px 13px;
+font-weight:800;
+font-size:13px;
+background:#087f3f;
+color:#fff;
+box-shadow:0 3px 12px rgba(0,0,0,.28);
+cursor;
 }
-#dvCenterButton.dv-visible{display:block}
+#dvCenterButton.dv-visible{display}
 
 </style>
 <style id="diaverde-auth-css">
@@ -103,92 +103,6 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 }
 </style>
 
-<style id="diaverde-professional-ui">
-:root{
-  --verde:#087a3d;--verde-oscuro:#064b2b;--verde-claro:#eaf5ed;
-  --texto:#193329;--gris:#66776d;--fondo:#f2f6f3;--borde:#dce7df;
-  --blanco:#fff;--sombra:0 10px 30px rgba(18,54,34,.08);
-}
-html{scroll-behavior:smooth}
-body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fondo);color:var(--texto);-webkit-font-smoothing:antialiased}
-header{padding:18px 26px;background:linear-gradient(120deg,#063f25 0%,#087a3d 62%,#159451 100%);box-shadow:0 5px 22px rgba(6,50,29,.18)}
-.header-inner{max-width:1440px}
-.brand{gap:14px}
-.logo{width:50px;height:50px;border-radius:15px;box-shadow:0 5px 16px rgba(0,0,0,.14);font-size:25px}
-h1{font-size:23px;letter-spacing:.045em;font-weight:800}
-.sub{color:rgba(255,255,255,.78);font-size:13px}
-.status{padding:9px 13px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.09)}
-.status-icon{width:34px;height:34px;background:rgba(255,255,255,.12)}
-#dvUserBar{max-width:1440px;margin:13px auto 0;justify-content:flex-end;color:#fff;font-size:13px}
-#dvLogout{transition:background .18s ease,border-color .18s ease}
-#dvLogout:hover{background:rgba(255,255,255,.14);border-color:#fff}
-main{max-width:1440px;padding:24px 26px 34px}
-.layout{grid-template-columns:minmax(260px,310px) minmax(0,1fr);gap:20px;align-items:start}
-.card{border:1px solid rgba(213,227,217,.9);border-radius:18px;box-shadow:var(--sombra)}
-.sidebar{padding:22px;position:sticky;top:16px}
-.section-label{font-size:11px;letter-spacing:1.1px;color:#587365;margin-bottom:9px}
-label{font-size:13px;margin-bottom:7px}
-select,input{min-height:46px;border-color:#d6e2d9;border-radius:11px;font-size:14px;transition:border-color .18s ease,box-shadow .18s ease}
-select:focus,input:focus{border-color:#57a874;box-shadow:0 0 0 4px rgba(8,122,61,.1)}
-.refresh,.route-btn,.send-btn,#dvLoginBtn{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.refresh:hover,.route-btn:not(:disabled):hover,.send-btn:not(:disabled):hover,#dvLoginBtn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(8,90,46,.18)}
-.refresh{border-radius:11px;background:linear-gradient(135deg,#0b8747,#066b37)}
-.info-box{border-radius:12px;background:#f3f9f4;font-size:12px}
-.stats{margin-top:22px}
-.stat{background:#fbfdfb;border-color:#e3ece5;border-radius:12px;padding:12px}
-.stat-icon{width:38px;height:38px;border-radius:12px}
-.stat strong{font-size:20px;letter-spacing:-.02em}
-.map-card{padding:18px}
-.card-title{margin-bottom:14px}
-.card-title-icon{width:42px;height:42px;border-radius:13px}
-.card-title h2{font-size:19px;letter-spacing:-.02em}
-.card-title p{font-size:12px}
-.map-wrap{border-radius:14px;overflow:hidden}
-#map{border-radius:14px}
-.zone-badge{border-radius:999px;padding:9px 15px;box-shadow:0 5px 18px rgba(0,0,0,.2)}
-.route-controls{gap:10px;margin-top:14px}
-.route-btn{border-radius:11px}
-.route-start{background:linear-gradient(135deg,#0b8747,#066b37)}
-.route-status{border-radius:11px}
-.results{margin-top:18px;padding:18px}
-.results-head{margin-bottom:16px}
-.count-pill{padding:8px 12px}
-.address-list{border-color:#e3ebe5;border-radius:13px}
-.address{padding:13px 15px;transition:background .16s ease}
-.address:hover{background:#f5faf6}
-.pin{border-radius:12px}
-.address strong{font-size:14px}
-.maps,.evidence-btn{border-radius:10px;transition:all .16s ease}
-.maps:hover,.evidence-btn:hover{border-color:#58a877;transform:translateY(-1px)}
-.empty,.loading{padding:42px 20px}
-.evidence-modal{border:1px solid #e5eee8}
-.toast{border-radius:12px}
-footer{background:#073f26}
-@media(max-width:900px){
-  main{padding:18px}
-  .layout{grid-template-columns:1fr}
-  .sidebar{position:static}
-}
-@media(max-width:600px){
-  header{padding:15px 16px}
-  .header-inner{align-items:center}
-  .logo{width:44px;height:44px;border-radius:13px}
-  h1{font-size:19px}
-  .sub{font-size:11px;line-height:1.35}
-  #dvUserBar{margin-top:10px}
-  main{padding:12px 12px 24px}
-  .sidebar{padding:17px}
-  .map-card{padding:11px}
-  .results{padding:14px}
-  .results-head{align-items:flex-start}
-  .address{padding:13px}
-  .maps,.evidence-btn{min-height:42px;display:flex;align-items:center;justify-content:center}
-  .toast{left:14px;right:14px;bottom:14px;text-align:center}
-}
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
-}
-</style>
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
@@ -498,43 +412,13 @@ let selectedZone = "";
 let activeLayer = null;
 const ROUTE_STORAGE_BASE_KEY = "diaVerdeRecorridoV1";
 function getRouteStorageKey(){
-  try{
-    const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
-    const id = u && u.usuario ? u.usuario : "sin_usuario";
-    return ROUTE_STORAGE_BASE_KEY + "_" + id;
-  }catch(e){
-    return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
-  }
+try{
+const u = JSON.parse(localStorage.getItem("diaVerdeUsuarioV1") || "null");
+const id = u && u.usuario ? u.usuario : "sin_usuario";
+return ROUTE_STORAGE_BASE_KEY + "_" + id;
+}catch(e){
+return ROUTE_STORAGE_BASE_KEY + "_sin_usuario";
 }
-// La selección visual del mapa se guarda por usuario y es independiente
-// de la zona del recorrido GPS que ya está en curso.
-function dvMapaSeleccionKey(){
-  try{
-    const u=JSON.parse(localStorage.getItem("diaVerdeUsuarioV1")||"null");
-    return "diaVerdeMapaSeleccionV1_"+String(u&&u.usuario?u.usuario:"sin_usuario");
-  }catch(e){
-    return "diaVerdeMapaSeleccionV1_sin_usuario";
-  }
-}
-function dvRecuperarSeleccionMapa(){
-  try{
-    const estado=JSON.parse(localStorage.getItem(dvMapaSeleccionKey())||"null");
-    if(!estado)return;
-    if(typeof estado.cgm==="string") selectedCgm=estado.cgm;
-    if(typeof estado.zona==="string") selectedZone=estado.zona;
-  }catch(e){
-    console.warn("No se pudo recuperar la selección del mapa:",e);
-  }
-}
-function dvGuardarSeleccionMapa(){
-  try{
-    localStorage.setItem(dvMapaSeleccionKey(),JSON.stringify({
-      cgm:cgm.value||selectedCgm||"",
-      zona:zone.value||selectedZone||""
-    }));
-  }catch(e){
-    console.warn("No se pudo guardar la selección del mapa:",e);
-  }
 }
 let recorridoActivo = false;
 let recorridoZona = "";
@@ -545,23 +429,7 @@ let recorridoMarker = null;
 let recorridoWatchId = null;
 let dvPanelGpsLastSentAt = 0;
 let dvPanelGpsLastPoint = null;
-// Captura objetivo: una posición cada 5 segundos cuando el proveedor GPS entrega lecturas.
-// En navegador, watchPosition no garantiza una cadencia exacta; Android nativo debe
-// respetar DV_GPS_CONFIG desde su Foreground Service para garantizar el intervalo.
-const DV_GPS_INTERVAL_MS = 5000;
-const DV_GPS_MAX_ACCURACY_METERS = 60;
-const DV_GPS_DEGRADED_ACCURACY_METERS = 30;
-const DV_GPS_MAX_SPEED_MPS = 55;
-const DV_GPS_MAX_GAP_MS = 30000;
-let dvGpsLastAcceptedAt = 0;
-// Disponible ANTES de llamar AndroidGPS.startTracking().
-window.DV_GPS_CONFIG={
-  intervalMs:DV_GPS_INTERVAL_MS,
-  priority:"balanced",
-  maxAccuracyMeters:DV_GPS_MAX_ACCURACY_METERS,
-  background:true
-};
-const DV_PANEL_GPS_INTERVAL_MS = DV_GPS_INTERVAL_MS;
+const DV_PANEL_GPS_INTERVAL_MS = 1500;
 let dvPanelGpsSendCount = 0;
 let dvPanelGpsLastError = "";
 let dvPanelGpsQueue = [];
@@ -570,175 +438,177 @@ let dvPanelGpsQueueTimer = null;
 const DV_PANEL_GPS_QUEUE_KEY = "diaVerdeGpsQueueV1";
 
 function dvPanelGpsUsuario(){
-  try{
-    const u = JSON.parse(
-      localStorage.getItem("diaVerdeUsuarioV1") || "null"
-    );
-    return u || {};
-  }catch(e){
-    return {};
-  }
+try{
+const u = JSON.parse(
+localStorage.getItem("diaVerdeUsuarioV1") || "null"
+);
+return u || {};
+}catch(e){
+return {};
+}
 }
 
 function dvPanelGpsGuardarCola(){
-  try{
-    // La cola se conserva localmente para poder continuar sincronizando
-    // después de una interrupción o recarga de la app.
-    localStorage.setItem(
-      DV_PANEL_GPS_QUEUE_KEY,
-      JSON.stringify(dvPanelGpsQueue.slice(0,500))
-    );
-  }catch(e){
-    console.warn("GPS: no se pudo guardar la cola local",e);
-  }
+try{
+// La cola se conserva localmente para poder continuar sincronizando
+// después de una interrupción o recarga de la app.
+localStorage.setItem(
+DV_PANEL_GPS_QUEUE_KEY,
+JSON.stringify(dvPanelGpsQueue.slice(0,500))
+);
+}catch(e){
+console.warn("GPS: no se pudo guardar la cola local",e);
+}
 }
 
 function dvPanelGpsCargarCola(){
-  try{
-    const guardada = JSON.parse(
-      localStorage.getItem(DV_PANEL_GPS_QUEUE_KEY) || "[]"
-    );
-    if(Array.isArray(guardada)){
-      dvPanelGpsQueue = guardada.filter(p =>
-        p && Number.isFinite(Number(p.lat)) &&
-        Number.isFinite(Number(p.lng)) && p.usuario
-      ).slice(0,500);
-    }
-  }catch(e){
-    dvPanelGpsQueue = [];
-  }
+try{
+const guardada = JSON.parse(
+localStorage.getItem(DV_PANEL_GPS_QUEUE_KEY) || "[]"
+);
+if(Array.isArray(guardada)){
+dvPanelGpsQueue = guardada.filter(p =>
+p && Number.isFinite(Number(p.lat)) &&
+Number.isFinite(Number(p.lng)) && p.usuario
+).slice(0,500);
+}
+}catch(e){
+dvPanelGpsQueue = [];
+}
 }
 
 function dvPanelGpsProgramarCola(demora=0){
-  if(dvPanelGpsQueueTimer !== null){
-    clearTimeout(dvPanelGpsQueueTimer);
-  }
-  dvPanelGpsQueueTimer = setTimeout(()=>{
-    dvPanelGpsQueueTimer = null;
-    dvPanelGpsProcesarCola();
-  },Math.max(0,demora));
+if(dvPanelGpsQueueTimer !== null){
+clearTimeout(dvPanelGpsQueueTimer);
+}
+dvPanelGpsQueueTimer = setTimeout(()=>{
+dvPanelGpsQueueTimer = null;
+dvPanelGpsProcesarCola();
+},Math.max(0,demora));
 }
 
 function dvPanelGpsProcesarCola(){
-  if(dvPanelGpsQueueBusy || !dvPanelGpsQueue.length) return;
+if(dvPanelGpsQueueBusy || !dvPanelGpsQueue.length) return;
 
-  // Enviar lotes pequeños para reducir el tamaño de la URL de Apps Script.
-  const lote = dvPanelGpsQueue.slice(0,10);
-  const payload = lote.map(item => ({
-    usuario:String(item.usuario || "sin_usuario"),
-    nombre:String(item.nombre || item.usuario || "Chofer"),
-    zona:String(item.zona || ""),
-    latitud:Number(item.lat),
-    longitud:Number(item.lng),
-    precision:item.precision == null ? "" : Number(item.precision),
-    rumbo:item.rumbo == null ? "" : Number(item.rumbo),
-    timestamp:String(item.timestamp || new Date().toISOString()),
-    activo:item.activo ? 1 : 0
-  }));
+// Procesar hasta 10 posiciones en una única escritura de Sheets.
+// Así la cola puede alcanzar al GPS sin hacer una solicitud por punto.
+const lote = dvPanelGpsQueue.slice(0,10);
+const payload = lote.map(item => ({
+usuario(item.usuario || "sin_usuario"),
+nombre(item.nombre || item.usuario || "Chofer"),
+zona(item.zona || ""),
+latitud(item.lat),
+longitud(item.lng),
+precision.precision == null ? "" : Number(item.precision),
+rumbo.rumbo == null ? "" : Number(item.rumbo),
+timestamp(item.timestamp || new Date().toISOString()),
+activo.activo ? 1 : 0
+}));
 
-  const params = new URLSearchParams({
-    accion:"registrarGPSLote",
-    lote:JSON.stringify(payload),
-    _ts:String(Date.now())
-  });
-  const url = APPS_SCRIPT_URL + "?" + params.toString();
+const params = new URLSearchParams({
+accion:"registrarGPSLote",
+lote.stringify(payload),
+_ts(Date.now())
+});
+const url = APPS_SCRIPT_URL + "?" + params.toString();
 
-  if(typeof fetch !== "function"){
-    dvPanelGpsLastError = "Este navegador no permite enviar la cola GPS mediante fetch.";
-    dvPanelGpsProgramarCola(5000);
-    return;
-  }
+try{
+dvPanelGpsQueueBusy = true;
+const beacon = new Image();
+beacon.referrerPolicy = "no-referrer";
+let terminado = false;
 
-  dvPanelGpsQueueBusy = true;
+const terminar = ()=>{
+  if(terminado) return;
+  terminado = true;
+  dvPanelGpsQueueBusy = false;
 
-  // no-cors permite el envío al endpoint aunque Apps Script no habilite CORS.
-  // La respuesta será opaca: un resolve confirma el envío del navegador,
-  // NO una confirmación de escritura en Google Sheets.
-  fetch(url,{
-    method:"GET",
-    mode:"no-cors",
-    cache:"no-store",
-    credentials:"omit",
-    keepalive:true
-  }).then(()=>{
-    dvPanelGpsQueueBusy = false;
-
-    // Eliminar únicamente el lote enviado; los puntos nuevos quedan en cola.
-    dvPanelGpsQueue.splice(0,lote.length);
+  // El endpoint procesa el lote como una sola operación.
+  // Image no expone el JSON de respuesta; por eso esto indica que
+  // terminó la solicitud del navegador, no una confirmación verificable.
+  if(dvPanelGpsQueue.length){
+    dvPanelGpsQueue.splice(0, lote.length);
     dvPanelGpsGuardarCola();
     dvPanelGpsSendCount += lote.length;
     dvPanelGpsLastSentAt = Date.now();
-    dvPanelGpsLastError = "";
+  }
 
-    if(dvPanelGpsQueue.length){
-      dvPanelGpsProgramarCola(250);
-    }
-  }).catch(error=>{
-    // Ante error de transporte NO se elimina ningún punto: se reintenta.
-    dvPanelGpsQueueBusy = false;
-    dvPanelGpsLastError = String(error && error.message ? error.message : error);
-    console.error("GPS: error al enviar lote; se conserva la cola",error);
-    dvPanelGpsProgramarCola(5000);
-  });
+  if(dvPanelGpsQueue.length){
+    dvPanelGpsProgramarCola(250);
+  }
+};
+
+beacon.onload = terminar;
+beacon.onerror = terminar;
+beacon.src = url;
+setTimeout(terminar,5000);
+
+}catch(error){
+dvPanelGpsQueueBusy = false;
+dvPanelGpsLastError = String(error && error.message ? error.message : error);
+console.error("GPS: error al enviar lote",error);
+// Conservar la cola si no se pudo iniciar la solicitud.
+dvPanelGpsProgramarCola(3000);
+}
 }
 
 function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
-  if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
-    console.warn("GPS Panel: coordenadas inválidas",lat,lng);
-    return false;
-  }
+if(!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))){
+console.warn("GPS Panel: coordenadas inválidas",lat,lng);
+return false;
+}
 
-  const usuario = dvPanelGpsUsuario();
-  const punto = {
-    lat:Number(lat),
-    lng:Number(lng),
-    precision:Number.isFinite(Number(precision)) ? Number(precision) : null,
-    rumbo:Number.isFinite(Number(rumbo)) ? Number(rumbo) : null,
-    timestamp:timestamp || new Date().toISOString()
-  };
+const usuario = dvPanelGpsUsuario();
+const punto = {
+lat(lat),
+lng(lng),
+precision.isFinite(Number(precision)) ? Number(precision) : null,
+rumbo.isFinite(Number(rumbo)) ? Number(rumbo) : null,
+timestamp || new Date().toISOString()
+};
 
-  dvPanelGpsLastPoint = punto;
+dvPanelGpsLastPoint = punto;
 
-  // Guardamos cada punto válido en una cola. No se descartan lecturas
-  // por el intervalo de envío: la cola las transmite de forma ordenada.
-  dvPanelGpsQueue.push({
-    ...punto,
-    usuario:String(usuario.usuario || "sin_usuario"),
-    nombre:String(usuario.nombre || usuario.usuario || "Chofer"),
-    zona:String(recorridoZona || selectedZone || ""),
-    activo:!!activo
-  });
+// Guardamos cada punto válido en una cola. No se descartan lecturas
+// por el intervalo de envío: la cola las transmite de forma ordenada.
+dvPanelGpsQueue.push({
+...punto,
+usuario(usuario.usuario || "sin_usuario"),
+nombre(usuario.nombre || usuario.usuario || "Chofer"),
+zona(recorridoZona || selectedZone || ""),
+activo:!!activo
+});
 
-  // Límite defensivo para evitar consumir almacenamiento indefinidamente.
-  if(dvPanelGpsQueue.length > 500){
-    dvPanelGpsQueue = dvPanelGpsQueue.slice(-500);
-    console.warn("GPS: cola limitada a los últimos 500 puntos");
-  }
+// Límite defensivo para evitar consumir almacenamiento indefinidamente.
+if(dvPanelGpsQueue.length > 500){
+dvPanelGpsQueue = dvPanelGpsQueue.slice(-500);
+console.warn("GPS: cola limitada a los últimos 500 puntos");
+}
 
-  dvPanelGpsGuardarCola();
-  dvPanelGpsProgramarCola(0);
-  return true;
+dvPanelGpsGuardarCola();
+dvPanelGpsProgramarCola(0);
+return true;
 }
 
 function dvPanelGpsEnviarUltimoPunto(){
-  if(!dvPanelGpsLastPoint) return false;
-  const punto = dvPanelGpsLastPoint;
-  // Se agrega al final de la misma cola para que el estado inactivo no
-  // se adelante a los puntos anteriores del recorrido.
-  return registrarGPSPanel(
-    punto.lat,
-    punto.lng,
-    punto.precision,
-    punto.rumbo,
-    false,
-    new Date().toISOString()
-  );
+if(!dvPanelGpsLastPoint) return false;
+const punto = dvPanelGpsLastPoint;
+// Se agrega al final de la misma cola para que el estado inactivo no
+// se adelante a los puntos anteriores del recorrido.
+return registrarGPSPanel(
+punto.lat,
+punto.lng,
+punto.precision,
+punto.rumbo,
+false,
+new Date().toISOString()
+);
 }
 
 // Recuperar los puntos pendientes tras abrir de nuevo la app.
 dvPanelGpsCargarCola();
 if(dvPanelGpsQueue.length){
-  dvPanelGpsProgramarCola(500);
+dvPanelGpsProgramarCola(500);
 }
 
 let currentVisibleDirections = [];
@@ -806,537 +676,539 @@ document.getElementById("toast");
 let dvMapReady = false;
 const dvMapPending = [];
 function dvWhenMapReady(fn){
-  if(dvMapReady) fn();
-  else dvMapPending.push(fn);
+if(dvMapReady) fn();
+else dvMapPending.push(fn);
 }
 function dvBoundsFromGeometry(geometry){
-  const coords=[];
-  function walk(v){
-    if(Array.isArray(v) && v.length>=2 && typeof v[0]==="number" && typeof v[1]==="number"){
-      coords.push(v);
-      return;
-    }
-    if(Array.isArray(v)) v.forEach(walk);
-  }
-  if(geometry && geometry.coordinates) walk(geometry.coordinates);
-  if(!coords.length) return null;
-  let minLng=Infinity,minLat=Infinity,maxLng=-Infinity,maxLat=-Infinity;
-  coords.forEach(([lng,lat])=>{
-    minLng=Math.min(minLng,lng); minLat=Math.min(minLat,lat);
-    maxLng=Math.max(maxLng,lng); maxLat=Math.max(maxLat,lat);
-  });
-  return {sw:[minLng,minLat],ne:[maxLng,maxLat]};
+const coords=[];
+function walk(v){
+if(Array.isArray(v) && v.length>=2 && typeof v[0]==="number" && typeof v[1]==="number"){
+coords.push(v);
+return;
+}
+if(Array.isArray(v)) v.forEach(walk);
+}
+if(geometry && geometry.coordinates) walk(geometry.coordinates);
+if(!coords.length) return null;
+let minLng=Infinity,minLat=Infinity,maxLng=-Infinity,maxLat=-Infinity;
+coords.forEach(([lng,lat])=>{
+minLng=Math.min(minLng,lng); minLat=Math.min(minLat,lat);
+maxLng=Math.max(maxLng,lng); maxLat=Math.max(maxLat,lat);
+});
+return {sw:[minLng,minLat],ne:[maxLng,maxLat]};
 }
 class DVLayerGroup{
-  constructor(){ this._layers=[]; this._map=null; }
-  addTo(target){ this._map=target; this._layers.forEach(l=>l.addTo(target)); return this; }
-  addLayer(layer){ if(!this._layers.includes(layer)) this._layers.push(layer); if(this._map) layer.addTo(this._map); return this; }
-  removeLayer(layer){ this._layers=this._layers.filter(x=>x!==layer); if(layer && layer.remove) layer.remove(); return this; }
-  clearLayers(){ this._layers.forEach(l=>{ if(l&&l.remove) l.remove(); }); this._layers=[]; }
-  eachLayer(fn){ this._layers.slice().forEach(fn); }
+constructor(){ this._layers=[]; this._map=null; }
+addTo(target){ this._map=target; this._layers.forEach(l=>l.addTo(target)); return this; }
+addLayer(layer){ if(!this._layers.includes(layer)) this._layers.push(layer); if(this._map) layer.addTo(this._map); return this; }
+removeLayer(layer){ this._layers=this._layers.filter(x=>x!==layer); if(layer && layer.remove) layer.remove(); return this; }
+clearLayers(){ this._layers.forEach(l=>{ if(l&&l.remove) l.remove(); }); this._layers=[]; }
+eachLayer(fn){ this._layers.slice().forEach(fn); }
 }
 class DVMarker{
-  constructor(latlng,options={}){
-    this._latlng=latlng;
-    this.options=options;
-    this.__dvPopupHtml="";
-    this.__dvTooltip="";
-    this._element=document.createElement("div");
-    this._element.className="maplibregl-marker dv-map-marker";
-    this._element.style.pointerEvents="auto";
-    this._element.style.cursor="pointer";
+constructor(latlng,options={}){
+this._latlng=latlng;
+this.options=options;
+this.__dvPopupHtml="";
+this.__dvTooltip="";
+this._element=document.createElement("div");
+this._element.className="maplibregl-marker dv-map-marker";
+this._element.style.pointerEvents="auto";
+this._element.style.cursor="pointer";
 
-    this._setIcon(
-      options.icon || {
-        html:"",
-        className:"",
-        iconSize:[36,36],
-        iconAnchor:[18,18]
-      }
-    );
-
-    const icon=options.icon || {};
-    const size=icon.iconSize || [36,36];
-    const anchorPx=icon.iconAnchor || [size[0]/2,size[1]/2];
-
-    /*
-     * El punto geográfico debe coincidir exactamente con el anclaje
-     * del pin. Los pines de reclamo tienen la punta abajo; el vehículo
-     * usa centro.
-     */
-    let anchor="center";
-    if(
-      Math.abs(anchorPx[0]-(size[0]/2)) < 2 &&
-      anchorPx[1] >= size[1]-2
-    ){
-      anchor="bottom";
-    }
-
-    this._marker=new maplibregl.Marker({
-      element:this._element,
-      anchor:anchor
-    }).setLngLat([latlng[1],latlng[0]]);
+this._setIcon(
+  options.icon || {
+    html:"",
+    className:"",
+    iconSize:[36,36],
+    iconAnchor:[18,18]
   }
+);
 
-  _setIcon(icon){
-    this._icon=icon;
+const icon=options.icon || {};
+const size=icon.iconSize || [36,36];
+const anchorPx=icon.iconAnchor || [size[0]/2,size[1]/2];
 
-    /*
-     * IMPORTANTE:
-     * Nunca reemplazamos la clase "maplibregl-marker".
-     * MapLibre utiliza esa clase para mantener el elemento pegado
-     * a su coordenada geográfica al mover, hacer zoom, rotar o inclinar.
-     */
-    this._element.className =
-      "maplibregl-marker dv-map-marker " +
-      (icon.className || "");
+/*
+ * El punto geográfico debe coincidir exactamente con el anclaje
+ * del pin. Los pines de reclamo tienen la punta abajo; el vehículo
+ * usa centro.
+ */
+let anchor="center";
+if(
+  Math.abs(anchorPx[0]-(size[0]/2)) < 2 &&
+  anchorPx[1] >= size[1]-2
+){
+  anchor="bottom";
+}
 
-    this._element.innerHTML=icon.html || "";
+this._marker=new maplibregl.Marker({
+  element:this._element,
+  anchor:anchor
+}).setLngLat([latlng[1],latlng[0]]);
 
-    if(icon.iconSize){
-      this._element.style.width=icon.iconSize[0]+"px";
-      this._element.style.height=icon.iconSize[1]+"px";
-    }
+}
 
-    this._element.style.pointerEvents="auto";
-  }
+_setIcon(icon){
+this._icon=icon;
 
-  addTo(target){
-    if(target instanceof DVLayerGroup) return target.addLayer(this);
-    const mapObj=target instanceof DVMap ? target : map;
-    this._map=mapObj;
-    this._marker.addTo(mapObj._map);
-    return this;
-  }
+/*
+ * IMPORTANTE:
+ * Nunca reemplazamos la clase "maplibregl-marker".
+ * MapLibre utiliza esa clase para mantener el elemento pegado
+ * a su coordenada geográfica al mover, hacer zoom, rotar o inclinar.
+ */
+this._element.className =
+  "maplibregl-marker dv-map-marker " +
+  (icon.className || "");
 
-  remove(){
-    try{this._marker.remove();}catch(e){}
-    return this;
-  }
+this._element.innerHTML=icon.html || "";
 
-  setLatLng(latlng){
-    this._latlng=latlng;
-    this._marker.setLngLat([latlng[1],latlng[0]]);
-    return this;
-  }
+if(icon.iconSize){
+  this._element.style.width=icon.iconSize[0]+"px";
+  this._element.style.height=icon.iconSize[1]+"px";
+}
 
-  getLatLng(){
-    return {
-      lat:this._latlng[0],
-      lng:this._latlng[1]
-    };
-  }
+this._element.style.pointerEvents="auto";
 
-  setIcon(icon){
-    this._setIcon(icon);
-    this._marker.setLngLat([this._latlng[1],this._latlng[0]]);
-    return this;
-  }
+}
 
-  bindPopup(html){
-    this.__dvPopupHtml=html || "";
-    this._popup=new maplibregl.Popup({
-      offset:28,
-      maxWidth:"300px",
-      closeButton:true
-    }).setHTML(this.__dvPopupHtml);
-    this._marker.setPopup(this._popup);
-    return this;
-  }
+addTo(target){
+if(target instanceof DVLayerGroup) return target.addLayer(this);
+const mapObj=target instanceof DVMap ? target : map;
+this._map=mapObj;
+this._marker.addTo(mapObj._map);
+return this;
+}
 
-  setPopupContent(html){
-    this.__dvPopupHtml=html || "";
-    if(this._popup){
-      this._popup.setHTML(this.__dvPopupHtml);
-    }else{
-      this.bindPopup(this.__dvPopupHtml);
-    }
-    return this;
-  }
+remove(){
+try{this._marker.remove();}catch(e){}
+return this;
+}
 
-  bindTooltip(text){
-    this.__dvTooltip=text || "";
-    this._element.title=String(text || "");
-    return this;
-  }
+setLatLng(latlng){
+this._latlng=latlng;
+this._marker.setLngLat([latlng[1],latlng[0]]);
+return this;
+}
 
-  // Compatibilidad con la API Leaflet que usa el resto de Día Verde.
-  // Sin estos métodos, agregarMarcadorReclamo fallaba en marker.on(...)
-  // antes de ejecutar marker.addTo(layer), por lo que no aparecía ningún pin.
-  on(eventName, handler){
-    if(!this._popup || typeof handler !== "function") return this;
-    const event = String(eventName || "").toLowerCase();
-    if(event === "popupopen" || event === "open"){
-      this._popup.on("open", () => {
-        try{ handler.call(this, {target:this, popup:this._popup}); }
-        catch(error){ console.warn("Evento popup de reclamo:", error); }
-      });
-    }
-    return this;
-  }
+getLatLng(){
+return {
+lat._latlng[0],
+lng._latlng[1]
+};
+}
 
-  getPopup(){
-    return this._popup || null;
-  }
+setIcon(icon){
+this._setIcon(icon);
+this._marker.setLngLat([this._latlng[1],this._latlng[0]]);
+return this;
+}
 
-  closePopup(){
-    try{ if(this._popup) this._popup.remove(); }catch(error){}
-    return this;
-  }
+bindPopup(html){
+this.__dvPopupHtml=html || "";
+this._popup=new maplibregl.Popup({
+offset:28,
+maxWidth:"300px",
+closeButton
+}).setHTML(this.__dvPopupHtml);
+this._marker.setPopup(this._popup);
+return this;
+}
 
-  setZIndexOffset(z){
-    this._element.style.zIndex=String(1000+Number(z || 0));
-    return this;
-  }
+setPopupContent(html){
+this.__dvPopupHtml=html || "";
+if(this._popup){
+this._popup.setHTML(this.__dvPopupHtml);
+}else{
+this.bindPopup(this.__dvPopupHtml);
+}
+return this;
+}
 
-  bringToFront(){
-    this._element.style.zIndex="9999";
-    return this;
-  }
+bindTooltip(text){
+this.__dvTooltip=text || "";
+this._element.title=String(text || "");
+return this;
+}
 
-  updateScreenRotation(){
-    const heading=Number(this._heading);
-    if(Number.isFinite(heading) && map && map._map){
-      const bearing=map._map.getBearing();
-      const inner=this._element.firstElementChild;
-      if(inner){
-        inner.style.transform=
-          "rotate("+(((heading-bearing)%360+360)%360)+"deg)";
-      }
-    }
-  }
+// Compatibilidad con la API Leaflet que usa el resto de Día Verde.
+// Sin estos métodos, agregarMarcadorReclamo fallaba en marker.on(...)
+// antes de ejecutar marker.addTo(layer), por lo que no aparecía ningún pin.
+on(eventName, handler){
+if(!this._popup || typeof handler !== "function") return this;
+const event = String(eventName || "").toLowerCase();
+if(event === "popupopen" || event === "open"){
+this._popup.on("open", () => {
+try{ handler.call(this, {target, popup._popup}); }
+catch(error){ console.warn("Evento popup de reclamo:", error); }
+});
+}
+return this;
+}
+
+getPopup(){
+return this._popup || null;
+}
+
+closePopup(){
+try{ if(this._popup) this._popup.remove(); }catch(error){}
+return this;
+}
+
+setZIndexOffset(z){
+this._element.style.zIndex=String(1000+Number(z || 0));
+return this;
+}
+
+bringToFront(){
+this._element.style.zIndex="9999";
+return this;
+}
+
+updateScreenRotation(){
+const heading=Number(this._heading);
+if(Number.isFinite(heading) && map && map._map){
+const bearing=map._map.getBearing();
+const inner=this._element.firstElementChild;
+if(inner){
+inner.style.transform=
+"rotate("+(((heading-bearing)%360+360)%360)+"deg)";
+}
+}
+}
 }
 class DVPolyline{
-  constructor(points,options={}){
-    this.points=points||[]; this.options=options; this.id="dv-route-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-  }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      if(m.getSource(this.id)) m.removeSource(this.id);
-      if(m.getLayer(this.id)) m.removeLayer(this.id);
-      m.addSource(this.id,{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates:this.points.map(p=>[p[1],p[0]])}}});
-      m.addLayer({id:this.id,type:"line",source:this.id,layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":this.options.color||"#087a3d","line-width":this.options.weight||6,"line-opacity":this.options.opacity==null?.9:this.options.opacity}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  bringToFront(){ return this; }
-  remove(){ if(!this._map) return; const m=this._map._map; try{if(m.getLayer(this.id))m.removeLayer(this.id);if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
+constructor(points,options={}){
+this.points=points||[]; this.options=options; this.id="dv-route-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+}
+addTo(target){
+this._map=target instanceof DVMap ? target : map;
+const add=()=>{
+const m=this._map._map;
+if(m.getSource(this.id)) m.removeSource(this.id);
+if(m.getLayer(this.id)) m.removeLayer(this.id);
+m.addSource(this.id,{type:"geojson",data:{type:"Feature",geometry:{type:"LineString",coordinates.points.map(p=>[p[1],p[0]])}}});
+m.addLayer({id.id,type:"line",source.id,layout:{"line-cap":"round","line-join":"round"},paint:{"line-color".options.color||"#087a3d","line-width".options.weight||6,"line-opacity".options.opacity==null?.9.options.opacity}});
+};
+dvWhenMapReady(add); return this;
+}
+bringToFront(){ return this; }
+remove(){ if(!this._map) return; const m=this._map._map; try{if(m.getLayer(this.id))m.removeLayer(this.id);if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
 }
 class DVGeoJSONLayer{
-  constructor(feature,options={}){ this.feature=feature; this.options=options; this.id="dv-zone-"+Date.now()+"-"+Math.random().toString(36).slice(2); this._bounds=dvBoundsFromGeometry(feature&&feature.geometry); }
-  addTo(target){
-    this._map=target instanceof DVMap ? target : map;
-    const add=()=>{
-      const m=this._map._map;
-      const style=this.options.style||{};
-      const fillId=this.id+"-fill";
-      const lineId=this.id+"-line";
-      m.addSource(this.id,{type:"geojson",data:this.feature});
-      m.addLayer({id:fillId,type:"fill",source:this.id,paint:{"fill-color":style.fillColor||"#7acb91","fill-opacity":style.fillOpacity==null?.30:style.fillOpacity}});
-      m.addLayer({id:lineId,type:"line",source:this.id,paint:{"line-color":style.color||"#087a3d","line-width":style.weight||3,"line-opacity":1}});
-    };
-    dvWhenMapReady(add); return this;
-  }
-  getBounds(){
-    const b=this._bounds;
-    return {isValid:()=>!!b,_dv:b};
-  }
-  remove(){ if(!this._map)return; const m=this._map._map; try{if(m.getLayer(this.id+"-fill"))m.removeLayer(this.id+"-fill");if(m.getLayer(this.id+"-line"))m.removeLayer(this.id+"-line");if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
+constructor(feature,options={}){ this.feature=feature; this.options=options; this.id="dv-zone-"+Date.now()+"-"+Math.random().toString(36).slice(2); this._bounds=dvBoundsFromGeometry(feature&&feature.geometry); }
+addTo(target){
+this._map=target instanceof DVMap ? target : map;
+const add=()=>{
+const m=this._map._map;
+const style=this.options.style||{};
+const fillId=this.id+"-fill";
+const lineId=this.id+"-line";
+m.addSource(this.id,{type:"geojson",data.feature});
+m.addLayer({id,type:"fill",source.id,paint:{"fill-color".fillColor||"#7acb91","fill-opacity".fillOpacity==null?.30.fillOpacity}});
+m.addLayer({id,type:"line",source.id,paint:{"line-color".color||"#087a3d","line-width".weight||3,"line-opacity":1}});
+};
+dvWhenMapReady(add); return this;
+}
+getBounds(){
+const b=this._bounds;
+return {isValid:()=>!!b,_dv};
+}
+remove(){ if(!this._map)return; const m=this._map._map; try{if(m.getLayer(this.id+"-fill"))m.removeLayer(this.id+"-fill");if(m.getLayer(this.id+"-line"))m.removeLayer(this.id+"-line");if(m.getSource(this.id))m.removeSource(this.id);}catch(e){} }
 }
 class DVMap{
-  constructor(){
-    this._map=new maplibregl.Map({
-      container:"map",
-      style:"https://tiles.openfreemap.org/styles/liberty",
-      center:[-58.3809,-34.7777],
-      zoom:13,
-      pitch:0,
-      bearing:0,
-      antialias:true,
-      dragRotate:true,
-      touchZoomRotate:true,
-      touchPitch:true,
-      pitchWithRotate:true,
-      attributionControl:true
-    });
-    this._map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"top-left");
-    this._map.addControl(new DVPitchControl(),"top-left");
-    this._map.on("load",()=>{
-      dvMapReady=true;
-      dvMejorarEtiquetasCalles();
-      while(dvMapPending.length) dvMapPending.shift()();
-    });
-    this._map.on("rotate",()=>{
-      if(recorridoMarker) recorridoMarker.updateScreenRotation();
-    });
-  }
-  on(event,fn){
-    this._map.on(event,fn); return this;
-  }
-  setView(latlng,zoom,options={}){
-    const center=[latlng[1],latlng[0]];
-    const action=options&&options.animate?"easeTo":"jumpTo";
-    this._map[action]({center,zoom}); return this;
-  }
-  panTo(latlng,options={}){
-    this._map.easeTo({center:[latlng[1],latlng[0]],duration:options.duration?options.duration*1000:450}); return this;
-  }
-  fitBounds(bounds,options={}){
-    if(!bounds || !bounds._dv) return this;
-    this._map.fitBounds([bounds._dv.sw,bounds._dv.ne],{padding:options.padding||25,duration:500}); return this;
-  }
-  removeLayer(layer){ if(layer&&typeof layer.remove==="function") layer.remove(); return this; }
-  setBearing(b){ this._map.easeTo({bearing:Number(b)||0,duration:300}); return this; }
-  getBearing(){ return this._map.getBearing(); }
-  setPitch(p){ this._map.easeTo({pitch:Math.max(0,Math.min(70,Number(p)||0)),duration:300}); return this; }
-  getPitch(){ return this._map.getPitch(); }
-  setCenter(center){ this._map.setCenter(center); return this; }
-  setZoom(z){ this._map.setZoom(Number(z)||0); return this; }
-  easeTo(options){ this._map.easeTo(options||{}); return this; }
-  stop(){ this._map.stop(); return this; }
+constructor(){
+this._map=new maplibregl.Map({
+container:"map",
+style:"https://tiles.openfreemap.org/styles/liberty",
+center:[-58.3809,-34.7777],
+zoom:13,
+pitch:0,
+bearing:0,
+antialias,
+dragRotate,
+touchZoomRotate,
+touchPitch,
+pitchWithRotate,
+attributionControl
+});
+this._map.addControl(new maplibregl.NavigationControl({visualizePitch}),"top-left");
+this._map.addControl(new DVPitchControl(),"top-left");
+this._map.on("load",()=>{
+dvMapReady=true;
+dvMejorarEtiquetasCalles();
+while(dvMapPending.length) dvMapPending.shift()();
+});
+this._map.on("rotate",()=>{
+if(recorridoMarker) recorridoMarker.updateScreenRotation();
+});
+}
+on(event,fn){
+this._map.on(event,fn); return this;
+}
+setView(latlng,zoom,options={}){
+const center=[latlng[1],latlng[0]];
+const action=options&&options.animate?"easeTo":"jumpTo";
+this._mapaction; return this;
+}
+panTo(latlng,options={}){
+this._map.easeTo({center:[latlng[1],latlng[0]],duration.duration?options.duration1000:450}); return this;
+}
+fitBounds(bounds,options={}){
+if(!bounds || !bounds._dv) return this;
+this._map.fitBounds([bounds._dv.sw,bounds._dv.ne],{padding.padding||25,duration:500}); return this;
+}
+removeLayer(layer){ if(layer&&typeof layer.remove==="function") layer.remove(); return this; }
+setBearing(b){ this._map.easeTo({bearing(b)||0,duration:300}); return this; }
+getBearing(){ return this._map.getBearing(); }
+setPitch(p){ this._map.easeTo({pitch.max(0,Math.min(70,Number(p)||0)),duration:300}); return this; }
+getPitch(){ return this._map.getPitch(); }
+setCenter(center){ this._map.setCenter(center); return this; }
+setZoom(z){ this._map.setZoom(Number(z)||0); return this; }
+easeTo(options){ this._map.easeTo(options||{}); return this; }
+stop(){ this._map.stop(); return this; }
 }
 class DVPitchControl{
-  onAdd(mapInstance){
-    this._map=mapInstance;
-    const c=document.createElement("div"); c.className="maplibregl-ctrl maplibregl-ctrl-group dv-pitch-control";
-    c.innerHTML='<button type="button" title="Inclinar mapa">▲</button><button type="button" title="Bajar mapa">▼</button><button type="button" title="Vista 3D / Norte">3D</button>';
-    const [up,down,threeD]=c.querySelectorAll("button");
-    up.onclick=()=>this._map.easeTo({pitch:Math.min(70,this._map.getPitch()+10),duration:250});
-    down.onclick=()=>this._map.easeTo({pitch:Math.max(0,this._map.getPitch()-10),duration:250});
-    threeD.onclick=()=>this._map.easeTo({pitch:this._map.getPitch()>5?0:45,duration:350});
-    this._container=c; return c;
-  }
-  onRemove(){this._container?.parentNode?.removeChild(this._container); this._map=undefined;}
+onAdd(mapInstance){
+this._map=mapInstance;
+const c=document.createElement("div"); c.className="maplibregl-ctrl maplibregl-ctrl-group dv-pitch-control";
+c.innerHTML='<button type="button" title="Inclinar mapa">▲</button><button type="button" title="Bajar mapa">▼</button><button type="button" title="Vista 3D / Norte">3D</button>';
+const [up,down,threeD]=c.querySelectorAll("button");
+up.onclick=()=>this._map.easeTo({pitch.min(70,this._map.getPitch()+10),duration:250});
+down.onclick=()=>this._map.easeTo({pitch.max(0,this._map.getPitch()-10),duration:250});
+threeD.onclick=()=>this._map.easeTo({pitch._map.getPitch()>5?0:45,duration:350});
+this._container=c; return c;
+}
+onRemove(){this._container?.parentNode?.removeChild(this._container); this._map=undefined;}
 }
 function dvMejorarEtiquetasCalles(){
-  try{
-    const m=map._map;
-    const layers=(m.getStyle().layers||[]);
-    layers.forEach(layer=>{
-      const id=String(layer.id||"").toLowerCase();
-      if(layer.type!=="symbol" || !layer.layout || !layer.layout["text-field"]) return;
-      if(!(id.includes("road")||id.includes("street")||id.includes("highway")||id.includes("path")||id.includes("transport"))) return;
-      const size=layer.layout["text-size"];
-      if(typeof size==="number") m.setLayoutProperty(layer.id,"text-size",size*1.25);
-      else if(size) m.setLayoutProperty(layer.id,"text-size",["*",size,1.25]);
-    });
-  }catch(e){ console.warn("Etiquetas 25%:",e); }
+try{
+const m=map._map;
+const layers=(m.getStyle().layers||[]);
+layers.forEach(layer=>{
+const id=String(layer.id||"").toLowerCase();
+if(layer.type!=="symbol" || !layer.layout || !layer.layout["text-field"]) return;
+if(!(id.includes("road")||id.includes("street")||id.includes("highway")||id.includes("path")||id.includes("transport"))) return;
+const size=layer.layout["text-size"];
+if(typeof size==="number") m.setLayoutProperty(layer.id,"text-size",size1.25);
+else if(size) m.setLayoutProperty(layer.id,"text-size",["*",size,1.25]);
+});
+}catch(e){ console.warn("Etiquetas 25%:",e); }
 }
 const map = new DVMap();
 const L={
-  layerGroup:()=>new DVLayerGroup(),
-  divIcon:opts=>opts,
-  marker:(pos,opts)=>new DVMarker(pos,opts),
-  polyline:(points,opts)=>new DVPolyline(points,opts),
-  geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
+layerGroup:()=>new DVLayerGroup(),
+divIcon=>opts,
+marker:(pos,opts)=>new DVMarker(pos,opts),
+polyline:(points,opts)=>new DVPolyline(points,opts),
+geoJSON:(feature,opts)=>new DVGeoJSONLayer(feature,opts)
 };
 let dvNavCameraMoving = false;
 
 map.on("dragstart",function(){
-  if(recorridoActivo && !dvNavCameraMoving){
-    mapaUsuarioMovio=true;
-    mapaSiguiendoVehiculo=false;
-  }
+if(recorridoActivo && !dvNavCameraMoving){
+mapaUsuarioMovio=true;
+mapaSiguiendoVehiculo=false;
+}
 });
 map.on("zoomstart",function(){
-  // easeTo() del modo navegación también dispara zoomstart.
-  // No debemos confundirlo con un zoom manual del usuario.
-  if(recorridoActivo && !dvNavCameraMoving){
-    mapaUsuarioMovio=true;
-    mapaSiguiendoVehiculo=false;
-  }
+// easeTo() del modo navegación también dispara zoomstart.
+// No debemos confundirlo con un zoom manual del usuario.
+if(recorridoActivo && !dvNavCameraMoving){
+mapaUsuarioMovio=true;
+mapaSiguiendoVehiculo=false;
+}
 });
 // Un clic sobre el mapa no significa que el usuario haya desplazado la cámara.
 // El seguimiento solo se pausa ante una interacción real de cámara.
 map.on("moveend",function(){
-  if(dvNavCameraMoving){
-    dvNavCameraMoving=false;
-  }
+if(dvNavCameraMoving){
+dvNavCameraMoving=false;
+}
 });
 let reclamosMarkersLayer = null;
 let mapaRotacion = 0;
 let geocodingGeneration = 0;
 const GEOCODE_CACHE_KEY = "diaVerdeGeocodingV1";
 function asegurarCapaReclamos(){
-  if(!map) return null;
-  if(!reclamosMarkersLayer){
-    reclamosMarkersLayer = L.layerGroup().addTo(map);
-  }
-  return reclamosMarkersLayer;
+if(!map) return null;
+if(!reclamosMarkersLayer){
+reclamosMarkersLayer = L.layerGroup().addTo(map);
+}
+return reclamosMarkersLayer;
 }
 function escaparHTML(valor){
-  return String(valor ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+return String(valor ?? "")
+.replace(/&/g,"&")
+.replace(/</g,"<")
+.replace(/>/g,">")
+.replace(/"/g,""")
+.replace(/'/g,"'");
 }
 function iconoReclamoMedioAmbiente(estado){
-  const s = String(estado || "").toLowerCase();
-  let clase = "pendiente";
-  let simbolo = "♻";
-  if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
-    clase = "realizado";
-  }else if(s.includes("suspend")){
-    clase = "suspendido";
-  }else if(s.includes("espera") || s.includes("definir")){
-    clase = "amarillo";
-  }else if(s.includes("rechaz") || s.includes("anulad")){
-    clase = "rojo";
-  }
-  return L.divIcon({
-    className:"dv-reclamo-icon",
-    html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
-    iconSize:[36,44],
-    iconAnchor:[18,43],
-    popupAnchor:[0,-40]
-  });
+const s = String(estado || "").toLowerCase();
+let clase = "pendiente";
+let simbolo = "♻";
+if(s.includes("realiz") || s.includes("resuelt") || s.includes("solucion")){
+clase = "realizado";
+}else if(s.includes("suspend")){
+clase = "suspendido";
+}else if(s.includes("espera") || s.includes("definir")){
+clase = "amarillo";
+}else if(s.includes("rechaz") || s.includes("anulad")){
+clase = "rojo";
+}
+return L.divIcon({
+className:"dv-reclamo-icon",
+html:'<div class="dv-reclamo-pin '+clase+'"><span>'+simbolo+'</span></div>',
+iconSize:[36,44],
+iconAnchor:[18,43],
+popupAnchor:[0,-40]
+});
 }
 function popupReclamoMedioAmbiente(d){
-  const direccion = `${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}`.trim();
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-  const estado = realizado ? "Realizado" : "Pendiente";
-  return '<div class="dv-reclamo-popup">'+
-    '<div class="titulo">♻️ Vecino Reciclador</div>'+
-    '<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
-    '<div class="estado">'+
-      (realizado ? '🟢 ' : '⚪ ')+
-      escaparHTML(estado)+
-    '</div>'+
-    '<button type="button" class="dv-evidencia-pin-btn" style="margin-top:9px;width:100%;padding:9px 11px;border:0;border-radius:8px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer">📷 Registrar evidencia</button>'+
-    '</div>';
+const direccion = ${d.calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || ""} ${d.numero || ""}.trim();
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+const estado = realizado ? "Realizado" : "Pendiente";
+return '<div class="dv-reclamo-popup">'+
+'<div class="titulo">♻️ Vecino Reciclador</div>'+
+'<div>📍 <strong>'+escaparHTML(direccion)+'</strong></div>'+
+'<div class="estado">'+
+(realizado ? '🟢 ' : '⚪ ')+
+escaparHTML(estado)+
+'</div>'+
+'<button type="button" class="dv-evidencia-pin-btn" style="margin-top:9px;width:100%;padding:9px 11px;border:0;border-radius:8px;background:#087a3d;color:#fff;font-weight:800;cursor:pointer">📷 Registrar evidencia</button>'+
+'</div>';
 }
 function dvNumeroCoordenada(valor){
-  if(valor === null || valor === undefined || valor === "") return NaN;
-  if(typeof valor === "number") return valor;
-  let texto=String(valor).trim();
-  // Admite coma decimal cuando no hay punto decimal.
-  if(texto.includes(",") && !texto.includes(".")) texto=texto.replace(",", ".");
-  // Limpia espacios y símbolos que algunas hojas agregan al valor.
-  texto=texto.replace(/\s+/g, "");
-  return Number(texto);
+if(valor === null || valor === undefined || valor === "") return NaN;
+if(typeof valor === "number") return valor;
+let texto=String(valor).trim();
+// Admite coma decimal cuando no hay punto decimal.
+if(texto.includes(",") && !texto.includes(".")) texto=texto.replace(",", ".");
+// Limpia espacios y símbolos que algunas hojas agregan al valor.
+texto=texto.replace(/\s+/g, "");
+return Number(texto);
 }
 function obtenerLatLngReclamo(d){
-  if(!d || typeof d !== "object") return null;
-  const lat = dvNumeroCoordenada(
-    d.lat ?? d.Lat ?? d.LAT ?? d.latitude ?? d.Latitude ?? d.Latitud ?? d.LATITUD ?? d.latitud ?? d.LATITUDE
-  );
-  const lng = dvNumeroCoordenada(
-    d.lng ?? d.Lng ?? d.LNG ?? d.lon ?? d.Lon ?? d.LON ?? d.longitude ?? d.Longitude ?? d.Longitud ?? d.LONGITUD ?? d.longitud ?? d.LONGITUDE
-  );
-  if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0 || lng!==0)){
-    return [lat,lng];
-  }
-  return null;
+if(!d || typeof d !== "object") return null;
+const lat = dvNumeroCoordenada(
+d.lat ?? d.Lat ?? d.LAT ?? d.latitude ?? d.Latitude ?? d.Latitud ?? d.LATITUD ?? d.latitud ?? d.LATITUDE
+);
+const lng = dvNumeroCoordenada(
+d.lng ?? d.Lng ?? d.LNG ?? d.lon ?? d.Lon ?? d.LON ?? d.longitude ?? d.Longitude ?? d.Longitud ?? d.LONGITUD ?? d.longitud ?? d.LONGITUDE
+);
+if(Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0 || lng!==0)){
+return [lat,lng];
+}
+return null;
 }
 function agregarMarcadorReclamo(d){
-  const pos = obtenerLatLngReclamo(d);
-  if(!pos) return null;
-  const layer = asegurarCapaReclamos();
-  if(!layer) return null;
-  const realizado = typeof estaRealizadaHoy === "function"
-    ? estaRealizadaHoy(d)
-    : false;
-  const estado = realizado ? "Realizado" : "Pendiente";
-  try{
-  const marker = L.marker(pos,{
-    icon:iconoReclamoMedioAmbiente(estado),
-    zIndexOffset:100
-  });
-  marker.__dvReclamoData = d;
-  marker.bindPopup(popupReclamoMedioAmbiente(d));
-  marker.on("popupopen", function(){
-    const popupElement = marker.getPopup && marker.getPopup().getElement
-      ? marker.getPopup().getElement()
-      : null;
-    const boton = popupElement && popupElement.querySelector(".dv-evidencia-pin-btn");
-    if(!boton || boton.dataset.dvBound === "1") return;
-    boton.dataset.dvBound = "1";
-    boton.addEventListener("click", function(event){
-      event.preventDefault();
-      event.stopPropagation();
-      abrirEvidenciaDesdePin(d);
-      try{ marker.closePopup(); }catch(error){}
-    });
-  });
-  marker.addTo(layer);
-  return marker;
-  }catch(error){
-    console.error("No se pudo crear pin de reclamo:", error, d);
-    return null;
-  }
+const pos = obtenerLatLngReclamo(d);
+if(!pos) return null;
+const layer = asegurarCapaReclamos();
+if(!layer) return null;
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+const estado = realizado ? "Realizado" : "Pendiente";
+try{
+const marker = L.marker(pos,{
+icon(estado),
+zIndexOffset:100
+});
+marker.__dvReclamoData = d;
+marker.bindPopup(popupReclamoMedioAmbiente(d));
+marker.on("popupopen", function(){
+const popupElement = marker.getPopup && marker.getPopup().getElement
+? marker.getPopup().getElement()
+: null;
+const boton = popupElement && popupElement.querySelector(".dv-evidencia-pin-btn");
+if(!boton || boton.dataset.dvBound === "1") return;
+boton.dataset.dvBound = "1";
+boton.addEventListener("click", function(event){
+event.preventDefault();
+event.stopPropagation();
+abrirEvidenciaDesdePin(d);
+try{ marker.closePopup(); }catch(error){}
+});
+});
+marker.addTo(layer);
+return marker;
+}catch(error){
+console.error("No se pudo crear pin de reclamo:", error, d);
+return null;
+}
 }
 function refrescarEstadosMarcadoresReclamos(){
-  if(!reclamosMarkersLayer) return;
-  reclamosMarkersLayer.eachLayer(marker => {
-    const d = marker.__dvReclamoData;
-    if(!d) return;
-    const realizado = typeof estaRealizadaHoy === "function"
-      ? estaRealizadaHoy(d)
-      : false;
-    marker.setIcon(
-      iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
-    );
-    marker.setPopupContent(popupReclamoMedioAmbiente(d));
-  });
+if(!reclamosMarkersLayer) return;
+reclamosMarkersLayer.eachLayer(marker => {
+const d = marker.__dvReclamoData;
+if(!d) return;
+const realizado = typeof estaRealizadaHoy === "function"
+? estaRealizadaHoy(d)
+: false;
+marker.setIcon(
+iconoReclamoMedioAmbiente(realizado ? "Realizado" : "Pendiente")
+);
+marker.setPopupContent(popupReclamoMedioAmbiente(d));
+});
 }
 function limpiarMarcadoresReclamos(){
-  if(reclamosMarkersLayer){
-    reclamosMarkersLayer.clearLayers();
-  }
+if(reclamosMarkersLayer){
+reclamosMarkersLayer.clearLayers();
+}
 }
 function mostrarMarcadoresReclamos(lista){
-  limpiarMarcadoresReclamos();
-  if(!Array.isArray(lista)) return;
-  lista.forEach(d => agregarMarcadorReclamo(d));
+limpiarMarcadoresReclamos();
+if(!Array.isArray(lista)) return;
+lista.forEach(d => agregarMarcadorReclamo(d));
 }
 function cargarCacheGeocoding(){
-  try{
-    return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
-  }catch(e){
-    return {};
-  }
+try{
+return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}");
+}catch(e){
+return {};
+}
 }
 function guardarCacheGeocoding(cache){
-  try{
-    localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
-  }catch(e){}
+try{
+localStorage.setItem(GEOCODE_CACHE_KEY,JSON.stringify(cache));
+}catch(e){}
 }
 function claveGeocoding(d){
-  return normalizar(
-    `${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`
-  );
+return normalizar(
+${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina
+);
 }
 async function geocodificarDireccion(d){
-  const directa=obtenerLatLngReclamo(d);
-  if(directa) return directa;
-  const cache=cargarCacheGeocoding();
-  const key=claveGeocoding(d);
-  if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
-    return [Number(cache[key].lat),Number(cache[key].lng)];
-  }
-  const q=`${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina`;
-  const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
-  try{
-    const response=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!response.ok) return null;
-    const resultados=await response.json();
-    if(!resultados.length) return null;
-    const lat=Number(resultados[0].lat);
-    const lng=Number(resultados[0].lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
-    cache[key]={lat,lng};
-    guardarCacheGeocoding(cache);
-    return [lat,lng];
-  }catch(error){
-    console.warn("Geocodificación:",q,error);
-    return null;
-  }
+const directa=obtenerLatLngReclamo(d);
+if(directa) return directa;
+const cache=cargarCacheGeocoding();
+const key=claveGeocoding(d);
+if(cache[key] && Number.isFinite(Number(cache[key].lat)) && Number.isFinite(Number(cache[key].lng))){
+return [Number(cache[key].lat),Number(cache[key].lng)];
+}
+const q=${d.calle || ""} ${d.numero || ""}, ${d.localidad || selectedCgm}, Buenos Aires, Argentina;
+const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ar&q="+encodeURIComponent(q);
+try{
+const response=await fetch(url,{headers:{"Accept":"application/json"}});
+if(!response.ok) return null;
+const resultados=await response.json();
+if(!resultados.length) return null;
+const lat=Number(resultados[0].lat);
+const lng=Number(resultados[0].lon);
+if(!Number.isFinite(lat)||!Number.isFinite(lng)) return null;
+cache[key]={lat,lng};
+guardarCacheGeocoding(cache);
+return [lat,lng];
+}catch(error){
+console.warn("Geocodificación:",q,error);
+return null;
+}
 }
 let geocodingQueueKey = "";
 let geocodingRunning = false;
@@ -1344,88 +1216,90 @@ let geocodingPending = [];
 let geocodingIndex = 0;
 
 function claveListaGeocoding(lista){
-  if(!Array.isArray(lista)) return "";
-  return lista.map(d => claveGeocoding(d)).join("||");
+if(!Array.isArray(lista)) return "";
+return lista.map(d => claveGeocoding(d)).join("||");
 }
 
 async function mostrarMarcadoresGeocodificados(lista){
-  if(!Array.isArray(lista)||!lista.length) return;
+if(!Array.isArray(lista)||!lista.length) return;
 
-  const keyLista = claveListaGeocoding(lista);
+const keyLista = claveListaGeocoding(lista);
 
-  // Una actualización de datos idéntica no debe borrar/reiniciar los pines.
-  if(geocodingRunning && keyLista === geocodingQueueKey) return;
+// Una actualización de datos idéntica no debe borrar/reiniciar los pines.
+if(geocodingRunning && keyLista === geocodingQueueKey) return;
 
-  geocodingQueueKey = keyLista;
-  geocodingGeneration++;
-  const generacion = geocodingGeneration;
-  geocodingPending = [];
-  geocodingIndex = 0;
+geocodingQueueKey = keyLista;
+geocodingGeneration++;
+const generacion = geocodingGeneration;
+geocodingPending = [];
+geocodingIndex = 0;
 
-  const capa=asegurarCapaReclamos();
-  if(!capa) return;
+const capa=asegurarCapaReclamos();
+if(!capa) return;
 
-  // Solo se limpia al iniciar una lista realmente nueva.
-  limpiarMarcadoresReclamos();
+// Solo se limpia al iniciar una lista realmente nueva.
+limpiarMarcadoresReclamos();
 
-  const cache=cargarCacheGeocoding();
+const cache=cargarCacheGeocoding();
 
-  for(const d of lista){
-    const pos=obtenerLatLngReclamo(d);
-    if(pos){
-      agregarMarcadorReclamo(d);
-      continue;
-    }
+for(const d of lista){
+const pos=obtenerLatLngReclamo(d);
+if(pos){
+agregarMarcadorReclamo(d);
+continue;
+}
 
-    const key=claveGeocoding(d);
-    const cached=cache[key];
+const key=claveGeocoding(d);
+const cached=cache[key];
 
-    if(cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))){
-      agregarMarcadorReclamo({...d,lat:Number(cached.lat),lng:Number(cached.lng)});
-    }else{
-      geocodingPending.push(d);
-    }
-  }
+if(cached && Number.isFinite(Number(cached.lat)) && Number.isFinite(Number(cached.lng))){
+  agregarMarcadorReclamo({...d,lat:Number(cached.lat),lng:Number(cached.lng)});
+}else{
+  geocodingPending.push(d);
+}
 
-  if(!geocodingPending.length) return;
+}
 
-  geocodingRunning = true;
+if(!geocodingPending.length) return;
 
-  try{
-    while(geocodingIndex < geocodingPending.length){
-      if(generacion !== geocodingGeneration) return;
+geocodingRunning = true;
 
-      const d=geocodingPending[geocodingIndex++];
-      let pos=null;
+try{
+while(geocodingIndex < geocodingPending.length){
+if(generacion !== geocodingGeneration) return;
 
-      // Reintento para errores transitorios de red/servicio.
-      for(let intento=0; intento<2 && !pos; intento++){
-        pos=await geocodificarDireccion(d);
-        if(!pos && intento===0){
-          await new Promise(r=>setTimeout(r,1500));
-        }
-      }
+  const d=geocodingPending[geocodingIndex++];
+  let pos=null;
 
-      if(generacion !== geocodingGeneration) return;
-
-      if(pos){
-        agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
-      }
-
-      await new Promise(r=>setTimeout(r,1100));
-    }
-  }finally{
-    if(generacion === geocodingGeneration){
-      geocodingRunning=false;
-      geocodingPending=[];
-      geocodingIndex=0;
+  // Reintento para errores transitorios de red/servicio.
+  for(let intento=0; intento<2 && !pos; intento++){
+    pos=await geocodificarDireccion(d);
+    if(!pos && intento===0){
+      await new Promise(r=>setTimeout(r,1500));
     }
   }
+
+  if(generacion !== geocodingGeneration) return;
+
+  if(pos){
+    agregarMarcadorReclamo({...d,lat:pos[0],lng:pos[1]});
+  }
+
+  await new Promise(r=>setTimeout(r,1100));
+}
+
+}finally{
+if(generacion === geocodingGeneration){
+geocodingRunning=false;
+geocodingPending=[];
+geocodingIndex=0;
+}
+}
 }
 function resetearRotacionMapa(){
-  if(map && map._map){
-    map._map.easeTo({bearing:0,pitch:0,duration:350});
-  }
+if(map && map._map){
+map._map.easeTo({bearing:0,pitch:0,duration:350});
+}
 }
 function esc(text){
 return String(
@@ -1433,11 +1307,11 @@ text ?? ""
 ).replace(
 /[&<>"']/g,
 m => ({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#039;"
+"&":"&",
+"<":"<",
+">":">",
+'"':""",
+"'":"'"
 }[m])
 );
 }
@@ -1516,462 +1390,649 @@ document.getElementById(
 );
 }
 function guardarRecorridoLocal(){
-  try{
-    localStorage.setItem(
-      getRouteStorageKey(),
-      JSON.stringify({
-        activo:recorridoActivo,
-        zona:recorridoZona,
-        inicio:recorridoInicio,
-        puntos:recorridoPuntos
-      })
-    );
-  }catch(error){
-    console.error("Guardar recorrido:",error);
-  }
+try{
+localStorage.setItem(
+getRouteStorageKey(),
+JSON.stringify({
+activo,
+zona,
+inicio,
+puntos
+})
+);
+}catch(error){
+console.error("Guardar recorrido:",error);
+}
 }
 function borrarRecorridoLocal(){
-  try{
-    localStorage.removeItem(getRouteStorageKey());
-  }catch(error){
-    console.error("Borrar recorrido:",error);
-  }
+try{
+localStorage.removeItem(getRouteStorageKey());
+}catch(error){
+console.error("Borrar recorrido:",error);
+}
 }
 function distanciaMetros(a,b){
-  const R=6371000;
-  const p1=a.lat*Math.PI/180;
-  const p2=b.lat*Math.PI/180;
-  const dp=(b.lat-a.lat)*Math.PI/180;
-  const dl=(b.lng-a.lng)*Math.PI/180;
-  const x=
-    Math.sin(dp/2)**2+
-    Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
-  return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+const R=6371000;
+const p1=a.latMath.PI/180;
+const p2=b.latMath.PI/180;
+const dp=(b.lat-a.lat)*Math.PI/180;
+const dl=(b.lng-a.lng)Math.PI/180;
+const x=
+Math.sin(dp/2)**2+
+Math.cos(p1)Math.cos(p2)Math.sin(dl/2)**2;
+return 2RMath.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 function dibujarRecorrido(){
-  if(recorridoLayer){
-    try{ map.removeLayer(recorridoLayer); }catch(e){}
-    recorridoLayer=null;
-  }
-  if(recorridoPuntos.length<2)return;
-
-  // Una brecha de señal inicia un nuevo segmento visual.
-  const segmentos=[];
-  let actual=[];
-  recorridoPuntos.forEach(p=>{
-    if(p && p.brecha && actual.length){
-      if(actual.length>1) segmentos.push(actual);
-      actual=[];
-    }
-    if(p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng))){
-      actual.push([Number(p.lat),Number(p.lng)]);
-    }
-  });
-  if(actual.length>1) segmentos.push(actual);
-  if(!segmentos.length)return;
-
-  recorridoLayer=L.layerGroup().addTo(map);
-  segmentos.forEach(coords=>{
-    const linea=L.polyline(coords,{
-      color:"#087a3d",
-      weight:6,
-      opacity:.9,
-      lineCap:"round",
-      lineJoin:"round"
-    }).addTo(recorridoLayer);
-    try{linea.bringToFront();}catch(e){}
-  });
+if(recorridoLayer){
+map.removeLayer(recorridoLayer);
+recorridoLayer=null;
+}
+if(recorridoPuntos.length<2)return;
+recorridoLayer=L.polyline(
+recorridoPuntos.map(p=>[p.lat,p.lng]),
+{
+color:"#087a3d",
+weight:6,
+opacity:.9,
+lineCap:"round",
+lineJoin:"round"
+}
+).addTo(map);
+recorridoLayer.bringToFront();
+}
+function actualizarEstadoRecorrido(texto,activo=false){
+routeStatus.innerHTML=texto;
+routeStatus.classList.toggle("active",activo);
+}
+function actualizarBotonesRecorrido(){
+const hayZona=!!selectedZone;
+startRoute.disabled=!hayZona||recorridoActivo;
+stopRoute.disabled=!recorridoActivo;
+}
+function normalizarRumbo(grados){
+let r=Number(grados);
+if(!Number.isFinite(r)) return null;
+r=((r%360)+360)%360;
+return r;
+}
+function suavizarRumbo(nuevo){
+nuevo=normalizarRumbo(nuevo);
+if(nuevo===null) return recorridoHeading;
+if(recorridoHeading===null){
+recorridoHeading=nuevo;
+return recorridoHeading;
+}
+let delta=((nuevo-recorridoHeading+540)%360)-180;
+if(Math.abs(delta)<4) return recorridoHeading;
+recorridoHeading=normalizarRumbo(
+recorridoHeading + delta0.35
+);
+return recorridoHeading;
+}
+function crearIconoVehiculo(rumbo){
+const rot=normalizarRumbo(rumbo);
+const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="54" height="54" aria-label="Posición del vehículo">'+
+'<path d="M32 4 L52 54 L32 43 L12 54 Z" fill="#19a85b" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>'+
+'<path d="M32 10 L44 45 L32 38 L20 45 Z" fill="#39d477"/>'+
+'</svg>';
+return L.divIcon({
+className:"dia-verde-vehiculo-icon",
+html:'<div class="dv-navigation-arrow" style="transform:rotate('+(rot===null?0:rot)+'deg)">'+svg+'</div>',
+iconSize:[54,54],
+iconAnchor:[27,27]
+});
 }
 
+let dvNavLastPosition=null;
+let dvNavBearing=null;
+
+function dvNavNormalizeBearing(value){
+const n=Number(value);
+if(!Number.isFinite(n)) return null;
+return ((n%360)+360)%360;
+}
+
+function dvNavBearingBetween(a,b){
+if(!a||!b) return null;
+const lat1=Number(a.lat)*Math.PI/180;
+const lat2=Number(b.lat)*Math.PI/180;
+const dLon=(Number(b.lng)-Number(a.lng))*Math.PI/180;
+const y=Math.sin(dLon)*Math.cos(lat2);
+const x=
+Math.cos(lat1)*Math.sin(lat2)-
+Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+return dvNavNormalizeBearing(Math.atan2(y,x)*180/Math.PI);
+}
+
+function dvNavSmoothBearing(next){
+next=dvNavNormalizeBearing(next);
+if(next===null) return dvNavBearing;
+if(dvNavBearing===null){
+dvNavBearing=next;
+return dvNavBearing;
+}
+const delta=((next-dvNavBearing+540)%360)-180;
+// Suavizado fuerte para que el mapa no tiemble con el GPS.
+dvNavBearing=dvNavNormalizeBearing(
+dvNavBearing + delta*0.22
+);
+return dvNavBearing;
+}
+
+function dvNavReset(){
+dvNavLastPosition=null;
+dvNavBearing=null;
+}
+
+function activarSeguimientoVisual(lat,lng,forzarZoom=false){
+if(!map || !Number.isFinite(lat)||!Number.isFinite(lng)) return;
+
+const actual={lat,lng};
+
+// Primer GPS del recorrido: entrar de verdad en modo navegación.
+if(forzarZoom){
+mapaSiguiendoVehiculo=true;
+mapaUsuarioMovio=false;
+dvNavLastPosition=actual;
+
+const gpsHeading=Number(recorridoHeading);
+dvNavBearing=
+  Number.isFinite(gpsHeading)
+    ? dvNavNormalizeBearing(gpsHeading)
+    : 0;
+
+try{
+  // Una sola operación de MapLibre establece TODO el estado de navegación.
+  map.stop();
+  dvNavCameraMoving=true;
+  map.easeTo({
+    center:[lng,lat],
+    zoom:17,
+    pitch:35,
+    bearing:dvNavBearing,
+    offset:[0,120],
+    duration:700,
+    essential:true
+  });
+}catch(e){
+  try{
+    map.setView([lat,lng],17,{animate:true});
+    map.setPitch(35);
+    map.setBearing(dvNavBearing||0);
+  }catch(e2){}
+}
+return;
+
+}
+
+if(!recorridoActivo || !mapaSiguiendoVehiculo || mapaUsuarioMovio)
+return;
+
+// El rumbo se obtiene primero del movimiento real entre puntos.
+// Esto funciona aunque el teléfono no entregue coords.heading.
+let movimiento=null;
+if(dvNavLastPosition){
+const d=distanciaMetros(dvNavLastPosition,actual);
+if(d >= 3){
+movimiento=dvNavBearingBetween(dvNavLastPosition,actual);
+}
+}
+
+dvNavLastPosition=actual;
+
+if(movimiento!==null){
+dvNavSmoothBearing(movimiento);
+}else if(dvNavBearing===null){
+const gpsHeading=Number(recorridoHeading);
+if(Number.isFinite(gpsHeading))
+dvNavBearing=dvNavNormalizeBearing(gpsHeading);
+}
+
+const bearing=
+dvNavBearing!==null
+? dvNavBearing
+: 0;
+
+try{
+// Modo navegación: centro adelantado, inclinación 35° y giro
+// siguiendo el sentido de marcha.
+dvNavCameraMoving=true;
+map.easeTo({
+center:[lng,lat],
+zoom:17,
+pitch:35,
+bearing,
+offset:[0,120],
+duration:450,
+essential
+});
+}catch(e){
+// Fallback seguro: el seguimiento que ya estaba probado.
+try{
+map.panTo([lat,lng],{
+animate,
+duration:.45
+});
+map.setPitch(35);
+}catch(e2){}
+}
+}
+
+function mostrarPosicionRecorrido(lat,lng,precision,rumbo=null,forzarZoom=false){
+if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+const heading=suavizarRumbo(rumbo);
+if(recorridoMarker) recorridoMarker._heading=heading;
+if(!recorridoMarker){
+recorridoMarker=L.marker(
+[lat,lng],
+{
+icon(heading),
+zIndexOffset:1000
+}
+).addTo(map);
+recorridoMarker.bindTooltip(
+"📍 Posición del vehículo",
+{permanent}
+);
+recorridoMarker._heading=heading;
+recorridoMarker.updateScreenRotation();
+}else{
+recorridoMarker.setLatLng([lat,lng]);
+if(heading!==null){
+recorridoMarker.setIcon(crearIconoVehiculo(heading));
+}
+recorridoMarker.setZIndexOffset(1000);
+recorridoMarker.bringToFront();
+recorridoMarker.updateScreenRotation();
+}
+recorridoMarker.bindPopup(
+"📍 <strong>Posición del vehículo</strong><br>"+
+"📍 Ubicación GPS del teléfono<br>"+
+"🌐 Lat: "+lat.toFixed(6)+"<br>"+
+"🌐 Lng: "+lng.toFixed(6)+
+(Number.isFinite(precision)
+? "<br>📡 Precisión: ±"+Math.round(precision)+" m"
+: "")+
+(heading!==null
+? "<br>🧭 Rumbo: "+Math.round(heading)+"°"
+: "")
+);
+activarSeguimientoVisual(lat,lng,forzarZoom);
+}
 function registrarPuntoRecorrido(position){
-  if(!recorridoActivo || !position || !position.coords) return;
+if(!recorridoActivo || !position || !position.coords) return;
 
-  const c=position.coords;
-  const lat=Number(c.latitude);
-  const lng=Number(c.longitude);
-  const precision=(c.accuracy==null || c.accuracy==="")
-    ? null
-    : Number(c.accuracy);
-  const rumboGps=(c.heading==null || c.heading==="")
-    ? null
-    : Number(c.heading);
+const c=position.coords;
+const lat=Number(c.latitude);
+const lng=Number(c.longitude);
+const precision=Number(c.accuracy);
+const rumboGps=Number.isFinite(Number(c.heading)) ? Number(c.heading) : null;
 
-  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-  if(lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+if(lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
 
-  // Se toleran lecturas hasta ±60 m; entre ±30 y ±60 m se conservan
-  // identificadas como degradadas para no perder cobertura innecesariamente.
-  if(Number.isFinite(precision) && precision > DV_GPS_MAX_ACCURACY_METERS){
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "⚠️ GPS con precisión insuficiente: ±"+Math.round(precision)+
-      " m. Esperando una lectura mejor.",
-      true
-    );
-    return;
-  }
+// No mover el marcador ni guardar puntos cuya precisión sea demasiado baja.
+// Evita que una lectura GPS imprecisa produzca un salto visible en el mapa.
+if(Number.isFinite(precision) && precision > 50){
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"⚠️ GPS con baja precisión: ±"+Math.round(precision)+" m. Esperando una mejor ubicación.",
+true
+);
+return;
+}
 
-  // Usar el timestamp de captura del proveedor, no el momento de recepción.
-  let horaPunto=Number(position.timestamp);
-  if(Number.isFinite(horaPunto) && horaPunto>0 && horaPunto<100000000000){
-    horaPunto*=1000;
-  }
-  if(!Number.isFinite(horaPunto) || horaPunto<=0){
-    horaPunto=Date.parse(position.timestamp);
-  }
-  if(!Number.isFinite(horaPunto) || horaPunto<=0){
-    horaPunto=Date.now();
-  }
+// Usar la hora de captura del dispositivo, no la hora de recepción en JavaScript.
+let horaPunto=Number(position.timestamp);
+if(Number.isFinite(horaPunto) && horaPunto > 0 && horaPunto < 100000000000){
+// Algunas implementaciones nativas pueden informar epoch en segundos.
+horaPunto *= 1000;
+}
+if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+horaPunto=Date.parse(position.timestamp);
+}
+if(!Number.isFinite(horaPunto) || horaPunto <= 0){
+horaPunto=Date.now();
+}
 
-  // Evitar aceptar más de una posición cada 5 segundos.
-  // watchPosition puede entregar menos lecturas; el navegador no permite
-  // forzar una frecuencia exacta desde JavaScript.
-  if(dvGpsLastAcceptedAt && horaPunto-dvGpsLastAcceptedAt < DV_GPS_INTERVAL_MS){
-    return;
-  }
+const punto={
+lat,
+lng,
+hora Date(horaPunto).toISOString(),
+precision.isFinite(precision)?precision,
+heading
+};
 
-  const punto={
-    lat:lat,
-    lng:lng,
-    hora:new Date(horaPunto).toISOString(),
-    precision:Number.isFinite(precision)?precision:null,
-    heading:Number.isFinite(rumboGps)?rumboGps:null,
-    precisionDegradada:Number.isFinite(precision) &&
-      precision>DV_GPS_DEGRADED_ACCURACY_METERS,
-    brecha:false
-  };
+const ultimo=recorridoPuntos[recorridoPuntos.length-1];
+if(ultimo){
+const distancia=distanciaMetros(ultimo,punto);
+const horaAnterior=Date.parse(ultimo.hora);
+const diferenciaMs=horaPunto-horaAnterior;
 
-  const ultimo=recorridoPuntos[recorridoPuntos.length-1];
-  if(ultimo){
-    const distancia=distanciaMetros(ultimo,punto);
-    const horaAnterior=Date.parse(ultimo.hora);
-    const diferenciaMs=horaPunto-horaAnterior;
+// Ignorar lecturas viejas o fuera de orden, que pueden llegar al alternar fuentes GPS.
+if(Number.isFinite(horaAnterior) && diferenciaMs <= 0){
+  console.warn("GPS descartado: punto fuera de orden",{punto,ultimo});
+  return;
+}
 
-    // Descartar posiciones antiguas o fuera de orden.
-    if(Number.isFinite(horaAnterior) && diferenciaMs<=0){
-      console.warn("GPS descartado: punto fuera de orden",{punto,ultimo});
-      return;
-    }
+const segundos=Math.max(0.5,diferenciaMs/1000);
+const velocidad=distancia/segundos;
 
-    const segundos=Math.max(0.5,diferenciaMs/1000);
-    const velocidad=distancia/segundos;
+if(distancia < 3) return;
 
-    // No registrar desplazamientos menores a 3 metros para reducir ruido.
-    if(distancia<3) return;
-
-    // Límite defensivo: 55 m/s (~198 km/h), evitando saltos GPS extremos.
-    if(velocidad>DV_GPS_MAX_SPEED_MPS){
-      console.warn("GPS descartado por salto",{
-        distanciaMetros:Math.round(distancia),
-        segundos:Number(segundos.toFixed(1)),
-        velocidadMps:Number(velocidad.toFixed(1)),
-        precision:precision,
-        punto:punto
-      });
-      actualizarEstadoRecorrido(
-        "🔴 <strong>Recorrido en curso</strong><br>"+
-        "⚠️ Salto GPS descartado. Seguimos esperando una ubicación válida.",
-        true
-      );
-      return;
-    }
-
-    // Si pasan más de 30 segundos sin una posición válida, cortar el dibujo.
-    if(diferenciaMs>DV_GPS_MAX_GAP_MS){
-      punto.brecha=true;
-      console.warn("GPS: brecha de señal detectada",{
-        segundosSinLectura:Math.round(diferenciaMs/1000)
-      });
-    }
-  }
-
-  // La marca temporal se actualiza solo al aceptar el punto.
-  dvGpsLastAcceptedAt=horaPunto;
-
-  recorridoPuntos.push(punto);
-  mostrarPosicionRecorrido(
-    lat,
-    lng,
-    precision,
-    rumboGps,
-    recorridoPuntos.length===1
-  );
-
-  registrarGPSPanel(lat,lng,precision,rumboGps,true,punto.hora);
-  dibujarRecorrido();
-  guardarRecorridoLocal();
-
+// 50 m/s = 180 km/h. Rechaza saltos imposibles para un recorrido urbano.
+if(velocidad > 50){
+  console.warn("GPS descartado por salto",{
+    distanciaMetros:Math.round(distancia),
+    segundos:Number(segundos.toFixed(1)),
+    velocidadMps:Number(velocidad.toFixed(1)),
+    precision:precision,
+    punto:punto
+  });
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 GPS activo · Puntos registrados: "+recorridoPuntos.length+
-    "<br>🌐 Lat: "+lat.toFixed(6)+" · Lng: "+lng.toFixed(6)+
-    "<br>📡 Precisión informada: ±"+
-    (Number.isFinite(precision)?Math.round(precision):"?")+" m"+
-    (punto.precisionDegradada
-      ? "<br>⚠️ Precisión degradada; punto conservado."
-      : "")+
-    (punto.brecha
-      ? "<br>⚠️ Se detectó un corte de señal; el trazado se separó."
-      : ""),
+    "⚠️ Salto GPS descartado. Seguimos esperando una ubicación válida.",
     true
   );
+  return;
 }
 
+}
+
+// Solo actualizar mapa y guardar DESPUÉS de validar el punto.
+recorridoPuntos.push(punto);
+mostrarPosicionRecorrido(
+lat,
+lng,
+precision,
+rumboGps,
+recorridoPuntos.length===1
+);
+
+// La marca temporal enviada a Sheets corresponde a la captura del punto.
+registrarGPSPanel(lat,lng,precision,rumboGps,true,punto.hora);
+dibujarRecorrido();
+guardarRecorridoLocal();
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 GPS activo · Puntos registrados: "+recorridoPuntos.length+
+"<br>🌐 Lat: "+lat.toFixed(6)+" · Lng: "+lng.toFixed(6)+
+"<br>📡 Precisión informada: ±"+
+(Number.isFinite(precision)?Math.round(precision):"?")+" m",
+true
+);
+}
 function manejarErrorRecorrido(error){
-  console.error("GPS recorrido:",error);
-  let mensaje="⚠️ No se pudo obtener la ubicación.";
-  if(error&&error.code===1){
-    mensaje=
-      "⚠️ Permiso de ubicación denegado."+
-      "<br>Permití la ubicación para DIA VERDE.";
-  }else if(error&&error.code===2){
-    mensaje=
-      "⚠️ El dispositivo no pudo determinar la ubicación."+
-      "<br>Seguimos intentando.";
-  }else if(error&&error.code===3){
-    mensaje=
-      "⚠️ El GPS tardó demasiado en responder."+
-      "<br>Seguimos intentando.";
-  }
-  actualizarEstadoRecorrido(
-    mensaje+
-    (recorridoActivo
-      ? "<br>El recorrido continúa activo."
-      : ""),
-    recorridoActivo
-  );
+console.error("GPS recorrido:",error);
+let mensaje="⚠️ No se pudo obtener la ubicación.";
+if(error&&error.code===1){
+mensaje=
+"⚠️ Permiso de ubicación denegado."+
+"<br>Permití la ubicación para DIA VERDE.";
+}else if(error&&error.code===2){
+mensaje=
+"⚠️ El dispositivo no pudo determinar la ubicación."+
+"<br>Seguimos intentando.";
+}else if(error&&error.code===3){
+mensaje=
+"⚠️ El GPS tardó demasiado en responder."+
+"<br>Seguimos intentando.";
+}
+actualizarEstadoRecorrido(
+mensaje+
+(recorridoActivo
+? "<br>El recorrido continúa activo."
+: ""),
+recorridoActivo
+);
 }
 function iniciarSeguimientoGPS(){
-  // Configuración que debe respetar el servicio Android nativo.
-  // El HTML no puede crear ni garantizar por sí solo un servicio en segundo plano.
-  window.DV_GPS_CONFIG={
-    intervalMs:DV_GPS_INTERVAL_MS,
-    priority:"balanced",
-    maxAccuracyMeters:DV_GPS_MAX_ACCURACY_METERS,
-    background:true
-  };
+// APK: usar exclusivamente el GPS nativo Android para registrar el recorrido.
+// El puente nativo entrega sus puntos mediante onNativeLocation/dvSetNavigationLocation.
+const gpsNativoDisponible = !!window.AndroidGPS &&
+typeof window.AndroidGPS.startTracking === "function";
 
-  // APK: usar exclusivamente el GPS nativo Android para registrar el recorrido.
-  // El puente nativo entrega sus puntos mediante onNativeLocation/dvSetNavigationLocation.
-  const gpsNativoDisponible = !!window.AndroidGPS &&
-    typeof window.AndroidGPS.startTracking === "function";
+if(gpsNativoDisponible){
+if(recorridoWatchId!==null && navigator.geolocation){
+navigator.geolocation.clearWatch(recorridoWatchId);
+recorridoWatchId=null;
+}
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>📡 GPS nativo de Android activo.",
+true
+);
+return true;
+}
 
-  if(gpsNativoDisponible){
-    if(recorridoWatchId!==null && navigator.geolocation){
-      navigator.geolocation.clearWatch(recorridoWatchId);
-      recorridoWatchId=null;
-    }
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>📡 GPS nativo de Android activo.",
-      true
-    );
-    return true;
-  }
+// Navegador: usar un solo watchPosition. No combinar getCurrentPosition
+// con watchPosition, porque ambos pueden entregar lecturas repetidas o desordenadas.
+if(!navigator.geolocation){
+actualizarEstadoRecorrido(
+"❌ Este dispositivo/navegador no permite obtener ubicación GPS."
+);
+return false;
+}
 
-  // Navegador: usar un solo watchPosition. No combinar getCurrentPosition
-  // con watchPosition, porque ambos pueden entregar lecturas repetidas o desordenadas.
-  if(!navigator.geolocation){
-    actualizarEstadoRecorrido(
-      "❌ Este dispositivo/navegador no permite obtener ubicación GPS."
-    );
-    return false;
-  }
+if(recorridoWatchId!==null){
+navigator.geolocation.clearWatch(recorridoWatchId);
+recorridoWatchId=null;
+}
 
-  if(recorridoWatchId!==null){
-    navigator.geolocation.clearWatch(recorridoWatchId);
-    recorridoWatchId=null;
-  }
-
-  recorridoWatchId=navigator.geolocation.watchPosition(
-    registrarPuntoRecorrido,
-    manejarErrorRecorrido,
-    {
-      enableHighAccuracy:false,
-      maximumAge:0,
-      timeout:20000
-    }
-  );
-  return true;
+recorridoWatchId=navigator.geolocation.watchPosition(
+registrarPuntoRecorrido,
+manejarErrorRecorrido,
+{
+enableHighAccuracy,
+maximumAge:0,
+timeout:20000
+}
+);
+return true;
 }
 let dvWakeLock=null;
 async function activarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
-  }catch(e){}
-  try{
-    if("wakeLock" in navigator && !dvWakeLock){
-      dvWakeLock=await navigator.wakeLock.request("screen");
-      dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
-    }
-  }catch(e){ console.warn("Wake Lock:",e); }
+try{
+if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
+}catch(e){}
+try{
+if("wakeLock" in navigator && !dvWakeLock){
+dvWakeLock=await navigator.wakeLock.request("screen");
+dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
+}
+}catch(e){ console.warn("Wake Lock:",e); }
 }
 async function liberarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
-  }catch(e){}
-  try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
+try{
+if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
+}catch(e){}
+try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
 }
 function iniciarRecorrido(){
-  dvNavReset();
-  if(!selectedZone){
-    alert("Primero seleccioná una zona.");
-    return;
-  }
-  if(recorridoActivo)return;
-  recorridoActivo=true;
-  recorridoHeading=null;
-  mapaSiguiendoVehiculo=true;
-  mapaUsuarioMovio=false;
-  recorridoZona=selectedZone;
-  recorridoInicio=new Date().toISOString();
-  recorridoPuntos=[];
-  dvGpsLastAcceptedAt=0;
-  dvPanelGpsLastSentAt=0;
-  dvPanelGpsLastPoint=null;
-  dvPanelGpsSendCount=0;
-  dvPanelGpsLastError="";
-  activarPantallaEncendida();
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
-      AndroidGPS.startTracking();
-    }
-  }catch(e){
-    console.warn("GPS nativo no disponible:",e);
-  }
-  if(recorridoLayer){
-    map.removeLayer(recorridoLayer);
-    recorridoLayer=null;
-  }
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  actualizarBotonesRecorrido();
-  actualizarEstadoRecorrido(
-    "🔴 <strong>Recorrido en curso</strong><br>"+
-    "📍 Solicitando ubicación GPS del teléfono...",
-    true
-  );
-  if(!iniciarSeguimientoGPS()){
-    recorridoActivo=false;
-    actualizarBotonesRecorrido();
-    return;
-  }
-  guardarRecorridoLocal();
-  mostrarToast("🚛 Recorrido iniciado");
+dvNavReset();
+if(!selectedZone){
+alert("Primero seleccioná una zona.");
+return;
+}
+if(recorridoActivo)return;
+recorridoActivo=true;
+recorridoHeading=null;
+mapaSiguiendoVehiculo=true;
+mapaUsuarioMovio=false;
+recorridoZona=selectedZone;
+recorridoInicio=new Date().toISOString();
+recorridoPuntos=[];
+dvPanelGpsLastSentAt=0;
+dvPanelGpsLastPoint=null;
+dvPanelGpsSendCount=0;
+dvPanelGpsLastError="";
+activarPantallaEncendida();
+try{
+if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
+AndroidGPS.startTracking();
+}
+}catch(e){
+console.warn("GPS nativo no disponible:",e);
+}
+if(recorridoLayer){
+map.removeLayer(recorridoLayer);
+recorridoLayer=null;
+}
+if(recorridoMarker){
+map.removeLayer(recorridoMarker);
+recorridoMarker=null;
+}
+actualizarBotonesRecorrido();
+actualizarEstadoRecorrido(
+"🔴 <strong>Recorrido en curso</strong><br>"+
+"📍 Solicitando ubicación GPS del teléfono...",
+true
+);
+if(!iniciarSeguimientoGPS()){
+recorridoActivo=false;
+actualizarBotonesRecorrido();
+return;
+}
+guardarRecorridoLocal();
+mostrarToast("🚛 Recorrido iniciado");
 }
 function finalizarRecorrido(){
-  dvNavReset();
-  if(!recorridoActivo)return;
-  if(recorridoWatchId!==null){
-    navigator.geolocation.clearWatch(recorridoWatchId);
-    recorridoWatchId=null;
-  }
-  const cantidad=recorridoPuntos.length;
-  const zonaFinal=recorridoZona;
+dvNavReset();
+if(!recorridoActivo)return;
+if(recorridoWatchId!==null){
+navigator.geolocation.clearWatch(recorridoWatchId);
+recorridoWatchId=null;
+}
+const cantidad=recorridoPuntos.length;
+const zonaFinal=recorridoZona;
 
-  // Último punto: marca el recorrido como inactivo en el Panel.
-  dvPanelGpsEnviarUltimoPunto();
+// Último punto: marca el recorrido como inactivo en el Panel.
+dvPanelGpsEnviarUltimoPunto();
 
-  recorridoActivo=false;
-  dvGpsLastAcceptedAt=0;
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
-      AndroidGPS.stopTracking();
-    }
-  }catch(e){
-    console.warn("No se pudo detener GPS nativo:",e);
-  }
-  liberarPantallaEncendida();
-  if(recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  guardarRecorridoLocal();
-  actualizarBotonesRecorrido();
-  actualizarEstadoRecorrido(
-    "✅ <strong>Recorrido finalizado</strong><br>"+
-    "Zona: "+esc(zonaFinal)+
-    "<br>📍 Puntos registrados: "+cantidad+
-    "<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
-  );
-  mostrarToast("✅ Recorrido finalizado");
+recorridoActivo=false;
+try{
+if(window.AndroidGPS && typeof AndroidGPS.stopTracking === "function"){
+AndroidGPS.stopTracking();
+}
+}catch(e){
+console.warn("No se pudo detener GPS nativo:",e);
+}
+liberarPantallaEncendida();
+if(recorridoMarker){
+map.removeLayer(recorridoMarker);
+recorridoMarker=null;
+}
+guardarRecorridoLocal();
+actualizarBotonesRecorrido();
+actualizarEstadoRecorrido(
+"✅ <strong>Recorrido finalizado</strong><br>"+
+"Zona: "+esc(zonaFinal)+
+"<br>📍 Puntos registrados: "+cantidad+
+"<br><br>Podés iniciar un nuevo recorrido cuando selecciones otra zona."
+);
+mostrarToast("✅ Recorrido finalizado");
+}
+// Restaura la zona en los selectores cuando los datos de Google Sheets ya estén cargados.
+// Se ejecuta tanto al recuperar la sesión como después de cargar/actualizar los datos.
+function dvRestaurarZonaRecorridoEnSelectores(){
+try{
+if(!recorridoZona || !Array.isArray(data) || !data.length) return false;
+const fila=data.find(item => normalizar(item.zona)===normalizar(recorridoZona));
+if(!fila) return false;
+selectedCgm=fila.localidad || selectedCgm || "";
+selectedZone=recorridoZona;
+if(cgm){
+const existeCgm=Array.from(cgm.options).some(o=>normalizar(o.value)===normalizar(selectedCgm));
+if(existeCgm) cgm.value=selectedCgm;
+}
+if(selectedCgm && typeof actualizarZonasPorCGM==="function") actualizarZonasPorCGM();
+if(zone){
+const existeZona=Array.from(zone.options).some(o=>normalizar(o.value)===normalizar(recorridoZona));
+if(existeZona) zone.value=recorridoZona;
+}
+selectedZone=recorridoZona;
+if(typeof render==="function") render();
+actualizarBotonesRecorrido();
+return true;
+}catch(error){
+console.warn("No se pudo restaurar la zona del recorrido:",error);
+return false;
+}
 }
 function recuperarRecorrido(){
-  try{
-    const guardado=
-      localStorage.getItem(getRouteStorageKey());
-    if(!guardado)return;
-    const estado=JSON.parse(guardado);
-    if(
-      !estado||
-      !estado.activo||
-      !estado.zona
-    )return;
-    const inicio=
-      estado.inicio
-      ?new Date(estado.inicio)
-      :null;
-    const ahora=new Date();
-    if(
-      !inicio||
-      inicio.toDateString()!==ahora.toDateString()
-    ){
-      borrarRecorridoLocal();
-      return;
-    }
-    recorridoActivo=true;
-    recorridoZona=estado.zona;
-    recorridoInicio=estado.inicio;
-    dvPanelGpsLastSentAt=0;
-    dvPanelGpsLastPoint=null;
-    recorridoPuntos=
-      Array.isArray(estado.puntos)
-      ?estado.puntos
-      :[];
-    const ultimoRecuperado=recorridoPuntos[recorridoPuntos.length-1];
-    dvGpsLastAcceptedAt=ultimoRecuperado
-      ? Date.parse(ultimoRecuperado.hora)||0
-      : 0;
-    recorridoHeading=ultimoRecuperado &&
-      Number.isFinite(Number(ultimoRecuperado.heading))
-      ? Number(ultimoRecuperado.heading)
-      : null;
-    mapaSiguiendoVehiculo=true;
-    mapaUsuarioMovio=false;
-    dvNavReset();
-    dibujarRecorrido();
-    actualizarBotonesRecorrido();
-    if(recorridoPuntos.length){
-      const ultimo=
-        recorridoPuntos[recorridoPuntos.length-1];
-      mostrarPosicionRecorrido(
-        ultimo.lat,
-        ultimo.lng,
-        ultimo.precision,
-        ultimo.heading,
-        true
-      );
-    }
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Recorrido recuperado: "+
-      recorridoPuntos.length+
-      " puntos.<br>"+
-      "El GPS continúa registrando nuevas posiciones.",
-      true
-    );
-    try{
-      if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
-        AndroidGPS.startTracking();
-      }
-    }catch(e){}
-    iniciarSeguimientoGPS();
-  }catch(error){
-    console.error("Recuperar recorrido:",error);
-    borrarRecorridoLocal();
-  }
+try{
+const guardado=localStorage.getItem(getRouteStorageKey());
+if(!guardado) return false;
+const estado=JSON.parse(guardado);
+if(!estado || !estado.zona || !Array.isArray(estado.puntos)) return false;
+
+// La fecha se compara con la fecha local del dispositivo. Un recorrido de otro día
+// no se reactiva ni se mezcla con el recorrido de hoy.
+const inicio=estado.inicio ? new Date(estado.inicio) : null;
+const ahora=new Date();
+if(!inicio || Number.isNaN(inicio.getTime()) || inicio.toDateString()!==ahora.toDateString()){
+  borrarRecorridoLocal();
+  return false;
 }
+
+recorridoZona=String(estado.zona);
+recorridoInicio=estado.inicio;
+recorridoPuntos=estado.puntos.filter(p=>p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
+  .map(p=>({...p,lat:Number(p.lat),lng:Number(p.lng)}));
+recorridoActivo=estado.activo===true;
+dvPanelGpsLastSentAt=0;
+dvPanelGpsLastPoint=null;
+dvPanelGpsSendCount=0;
+dvPanelGpsLastError="";
+
+dvRestaurarZonaRecorridoEnSelectores();
+dibujarRecorrido();
+actualizarBotonesRecorrido();
+if(recorridoPuntos.length){
+  const ultimo=recorridoPuntos[recorridoPuntos.length-1];
+  mostrarPosicionRecorrido(ultimo.lat,ultimo.lng,ultimo.precision,ultimo.heading);
+}
+
+if(recorridoActivo){
+  actualizarEstadoRecorrido(
+    "🔴 <strong>Recorrido recuperado</strong><br>"+
+    "📍 Se recuperaron "+recorridoPuntos.length+" puntos guardados.<br>"+
+    "El seguimiento GPS se está reanudando.",true
+  );
+  try{
+    if(window.AndroidGPS && typeof AndroidGPS.startTracking==="function") AndroidGPS.startTracking();
+  }catch(e){ console.warn("GPS nativo al recuperar recorrido:",e); }
+  // Evita registrar dos watchPosition si la recuperación se dispara más de una vez.
+  if(recorridoWatchId===null) iniciarSeguimientoGPS();
+  activarPantallaEncendida();
+}else{
+  actualizarEstadoRecorrido(
+    "✅ <strong>Recorrido del día recuperado</strong><br>"+
+    "Zona: "+esc(recorridoZona)+"<br>"+
+    "📍 Puntos conservados: "+recorridoPuntos.length+
+    "<br>El recorrido está finalizado; podés consultarlo en el mapa."
+  );
+}
+guardarRecorridoLocal();
+return true;
+
+}catch(error){
+console.error("Recuperar recorrido:",error);
+// No borrar el almacenamiento ante un error temporal: se evita perder datos recuperables.
+return false;
+}
+}
+
+// Refuerzo de persistencia: guardar el estado al pasar a segundo plano o cerrar la vista.
+// El guardado principal sigue ocurriendo en cada punto GPS; estos eventos son una protección adicional.
+window.addEventListener("pagehide", function(){
+try{ guardarRecorridoLocal(); }catch(e){}
+});
+document.addEventListener("visibilitychange", function(){
+if(document.visibilityState==="hidden"){
+try{ guardarRecorridoLocal(); }catch(e){}
+}
+});
+
 function parseCSVGoogle(text){
 const rows=[];
 let row=[],field="",quoted=false;
@@ -2019,7 +2080,7 @@ list.innerHTML='<div class="error">No se pudo obtener las direcciones de Google 
 }
 },15000);
 
-fetch(base+"&tqx=out:csv",{cache:"no-store"})
+fetch(base+"&tqx=out",{cache:"no-store"})
 .then(r=>{
 if(!r.ok)throw new Error("HTTP "+r.status);
 return r.text();
@@ -2033,7 +2094,7 @@ const pareceEncabezado=primera.some(v=>
 ["calle","numero","número","zona","llavallol","banfield","temperley","lomas"]
 .some(k=>v.includes(k))
 );
-procesarFilasSheets(pareceEncabezado?rows.slice(1):rows);
+procesarFilasSheets(pareceEncabezado?rows.slice(1));
 terminado=true;
 clearTimeout(timeout);
 statusText.textContent="Datos cargados correctamente";
@@ -2085,269 +2146,6 @@ document.body.appendChild(script);
 });
 }
 
-function cargarCGMs(){
-// Recuperar la última selección guardada, sin imponer la zona del recorrido.
-dvRecuperarSeleccionMapa();
-const cgms =
-[...new Set(
-data.map(item => item.localidad)
-)];
-const anterior =
-selectedCgm;
-cgm.innerHTML =
-'<option value="">— Elegí un CGM —</option>';
-cgms.forEach(
-nombre => {
-const option =
-document.createElement("option");
-option.value =
-nombre;
-option.textContent =
-nombre;
-cgm.appendChild(
-option
-);
-}
-);
-if(
-cgms.includes(anterior)
-){
-cgm.value =
-anterior;
-}else{
-selectedCgm =
-"";
-cgm.value =
-"";
-}
-}
-function actualizarZonasPorCGM(){
-zone.innerHTML =
-'<option value="">— Elegí una zona —</option>';
-zone.disabled =
-!selectedCgm;
-if(!selectedCgm){
-selectedZone =
-"";
-return;
-}
-const zonas =
-[...new Set(
-data
-.filter(
-item =>
-normalizar(item.localidad) ===
-normalizar(selectedCgm)
-)
-.map(
-item => item.zona
-)
-.filter(Boolean)
-)];
-const anterior =
-selectedZone;
-zonas.forEach(
-nombre => {
-const option =
-document.createElement("option");
-option.value =
-nombre;
-option.textContent =
-nombre;
-zone.appendChild(
-option
-);
-}
-);
-if(
-zonas.includes(anterior)
-){
-zone.value =
-anterior;
-}else{
-selectedZone =
-"";
-zone.value =
-"";
-}
-}
-function actualizarContadores(){
-totalAddresses.textContent =
-data.length.toLocaleString(
-"es-AR"
-);
-}
-function nombrePoligonoPara(
-cgmNombre,
-zonaNombre
-){
-const c =
-normalizar(cgmNombre);
-const z =
-normalizar(zonaNombre);
-if(c === "lomas"){
-if(z === "microcentro")
-return "Lomas - Microcentro";
-if(z === "frias/garibaldi")
-return "Lomas - Frias/Garibaldi";
-if(z === "p libertad")
-return "Lomas - P Libertad";
-if(z === "las heras")
-return "Lomas - Las Heras";
-if(z === "este")
-return "Lomas Este";
-}
-if(c === "banfield"){
-if(z === "este")
-return "Banfield Este";
-if(z === "oeste")
-return "Banfield Oeste";
-if(z === "banfield 3")
-return "Banfield 3";
-}
-if(c === "temperley"){
-if(z === "este cerrito")
-return "Temperley Este Cerrito";
-if(z === "este 30 de septiembre")
-return "Temperley Este 30 de Septiembre";
-if(z === "oeste")
-return "Temperley Oeste";
-}
-if(c === "turdera")
-return "Turdera";
-if(c === "llavallol"){
-if(z === "llavallol norte")
-return "Llavallol Norte";
-if(z === "llavallol sur")
-return "Llavallol Sur";
-}
-return "";
-}
-function agregar(
-row,
-calleCol,
-numeroCol,
-zonaCol,
-localidad
-){
-const calle =
-(row[calleCol] || "").trim();
-const numero =
-(row[numeroCol] || "").trim();
-if(!calle && !numero)
-return;
-let zona = "";
-if(zonaCol !== null){
-zona =
-(row[zonaCol] || "").trim();
-}
-if(
-normalizar(localidad) ===
-"turdera"
-){
-zona =
-"Turdera";
-}
-data.push({
-localidad:
-localidad,
-calle:
-calle,
-numero:
-numero,
-zona:
-zona
-});
-}
-function cargarEvidenciasHoy(){
-fetch(
-APPS_SCRIPT_URL +
-"?accion=evidenciasHoy&t="+
-Date.now()
-)
-.then(
-response => {
-if(!response.ok){
-throw new Error(
-"No se pudo consultar el histórico."
-);
-}
-return response.json();
-}
-)
-.then(
-resultado => {
-if(!resultado.ok){
-throw new Error(
-resultado.error ||
-"Error en el histórico."
-);
-}
-evidenciasHoy =
-resultado.evidencias || [];
-statusText.textContent =
-"Actualizado correctamente";
-actualizarHora();
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-refrescarEstadosMarcadoresReclamos();
-}
-)
-.catch(
-error => {
-console.error(error);
-console.log(
-"El histórico no pudo consultarse:",
-error
-);
-evidenciasHoy = [];
-statusText.textContent =
-"Direcciones cargadas";
-if(selectedZone){
-render();
-refrescarEstadosMarcadoresReclamos();
-}
-}
-);
-}
-function claveDireccion(
-zona,
-direccion
-){
-return (
-normalizar(zona) +
-"|" +
-normalizar(direccion)
-);
-}
-function estaRealizadaHoy(
-item
-){
-const direccion =
-`${item.calle} ${item.numero || ""}`;
-const clave =
-claveDireccion(
-selectedZone,
-direccion
-);
-return evidenciasHoy.some(
-e => {
-const zonaHistorico =
-String(
-e.zona || ""
-);
-const direccionHistorico =
-String(
-e.direccion || ""
-);
-return (
-claveDireccion(
-zonaHistorico,
-direccionHistorico
-)
-===
 clave
 );
 }
@@ -2438,14 +2236,14 @@ fillOpacity:.30
 const bounds =
 activeLayer.getBounds();
 if(bounds.isValid()){
-  const zonaKey =
-    normalizar(selectedCgm) + "||" + normalizar(nombreZona);
+const zonaKey =
+normalizar(selectedCgm) + "||" + normalizar(nombreZona);
 
-  // Centrar la zona solo al cambiar la selección.
-  if(dvZonaCentradaKey !== zonaKey){
-    map.fitBounds(bounds,{padding:[25,25]});
-    dvZonaCentradaKey = zonaKey;
-  }
+// Centrar la zona solo al cambiar la selección.
+if(dvZonaCentradaKey !== zonaKey){
+map.fitBounds(bounds,{padding:[25,25]});
+dvZonaCentradaKey = zonaKey;
+}
 }
 title.textContent =
 "Mapa de " +
@@ -2466,6 +2264,10 @@ selectedCgm =
 cgm.value;
 selectedZone =
 zone.value;
+if(recorridoActivo && recorridoZona && selectedZone !== recorridoZona){
+selectedZone=recorridoZona;
+zone.value=recorridoZona;
+}
 actualizarBotonesRecorrido();
 if(!selectedCgm){
 zone.disabled =
@@ -2547,7 +2349,7 @@ item => {
 if(!termino)
 return true;
 return normalizar(
-`${item.calle} ${item.numero} ${item.localidad}`
+${item.calle} ${item.numero} ${item.localidad}
 ).includes(
 termino
 );
@@ -2585,7 +2387,7 @@ currentVisibleDirections
 .map(
 (item,index) => {
 const direccion =
-`${item.calle} ${item.numero || ""}`;
+${item.calle} ${item.numero || ""};
 const realizado =
 estaRealizadaHoy(
 item
@@ -2593,9 +2395,10 @@ item
 const mapsURL =
 "https://www.google.com/maps/search/?api=1&query=" +
 encodeURIComponent(
-`${direccion}, ${item.localidad}, Buenos Aires, Argentina`
+${direccion}, ${item.localidad}, Buenos Aires, Argentina
 );
 return `
+
 <div class="address">
 <div class="address-left">
 <div class="pin">
@@ -2890,178 +2693,178 @@ let dvEvidenceQueueBusy = false;
 let dvEvidenceRetryTimer = null;
 
 function dvAbrirDBEvidencias(){
-  return new Promise((resolve,reject)=>{
-    if(!("indexedDB" in window)){
-      reject(new Error("Este dispositivo no permite guardar evidencias localmente."));
-      return;
-    }
-    const request=indexedDB.open(DV_EVIDENCE_DB_NAME,DV_EVIDENCE_DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const db=request.result;
-      if(!db.objectStoreNames.contains(DV_EVIDENCE_STORE)){
-        db.createObjectStore(DV_EVIDENCE_STORE,{keyPath:"idEvidencia"});
-      }
-    };
-    request.onsuccess=()=>resolve(request.result);
-    request.onerror=()=>reject(request.error||new Error("No se pudo abrir el almacenamiento local."));
-  });
+return new Promise((resolve,reject)=>{
+if(!("indexedDB" in window)){
+reject(new Error("Este dispositivo no permite guardar evidencias localmente."));
+return;
+}
+const request=indexedDB.open(DV_EVIDENCE_DB_NAME,DV_EVIDENCE_DB_VERSION);
+request.onupgradeneeded=()=>{
+const db=request.result;
+if(!db.objectStoreNames.contains(DV_EVIDENCE_STORE)){
+db.createObjectStore(DV_EVIDENCE_STORE,{keyPath:"idEvidencia"});
+}
+};
+request.onsuccess=()=>resolve(request.result);
+request.onerror=()=>reject(request.error||new Error("No se pudo abrir el almacenamiento local."));
+});
 }
 function dvOperacionDBEvidencias(modo,operacion){
-  return dvAbrirDBEvidencias().then(db=>new Promise((resolve,reject)=>{
-    const tx=db.transaction(DV_EVIDENCE_STORE,modo);
-    const store=tx.objectStore(DV_EVIDENCE_STORE);
-    let req;
-    try{req=operacion(store);}catch(e){db.close();reject(e);return;}
-    let resultado;
-    if(req){req.onsuccess=()=>{resultado=req.result;};req.onerror=()=>{db.close();reject(req.error||new Error("Error en la cola local."));};}
-    tx.oncomplete=()=>{db.close();resolve(resultado);};
-    tx.onerror=()=>{db.close();reject(tx.error||new Error("No se pudo guardar la evidencia local."));};
-    tx.onabort=()=>{db.close();reject(tx.error||new Error("Se canceló el guardado local."));};
-  }));
+return dvAbrirDBEvidencias().then(db=>new Promise((resolve,reject)=>{
+const tx=db.transaction(DV_EVIDENCE_STORE,modo);
+const store=tx.objectStore(DV_EVIDENCE_STORE);
+let req;
+try{req=operacion(store);}catch(e){db.close();reject(e);return;}
+let resultado;
+if(req){req.onsuccess=()=>{resultado=req.result;};req.onerror=()=>{db.close();reject(req.error||new Error("Error en la cola local."));};}
+tx.oncomplete=()=>{db.close();resolve(resultado);};
+tx.onerror=()=>{db.close();reject(tx.error||new Error("No se pudo guardar la evidencia local."));};
+tx.onabort=()=>{db.close();reject(tx.error||new Error("Se canceló el guardado local."));};
+}));
 }
 function dvGuardarEvidenciaPendiente(item){
-  return dvOperacionDBEvidencias("readwrite",store=>store.put(item));
+return dvOperacionDBEvidencias("readwrite",store=>store.put(item));
 }
 function dvListarEvidenciasPendientes(){
-  return dvOperacionDBEvidencias("readonly",store=>store.getAll()).then(x=>x||[]);
+return dvOperacionDBEvidencias("readonly",store=>store.getAll()).then(x=>x||[]);
 }
 function dvEliminarEvidenciaPendiente(id){
-  return dvOperacionDBEvidencias("readwrite",store=>store.delete(id));
+return dvOperacionDBEvidencias("readwrite",store=>store.delete(id));
 }
 function dvActualizarEvidenciaPendiente(item){
-  return dvGuardarEvidenciaPendiente(item);
+return dvGuardarEvidenciaPendiente(item);
 }
 function dvEsperar(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function dvClaveTexto(valor){
-  return String(valor||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+return String(valor||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 }
 async function dvVerificarEvidenciaEnServidor(item){
-  // El POST usa no-cors; por eso confirmamos consultando el histórico real.
-  for(let intento=0;intento<5;intento++){
-    try{
-      const respuesta=await fetch(APPS_SCRIPT_URL+"?accion=evidenciasHoy&t="+Date.now(),{cache:"no-store"});
-      if(respuesta.ok){
-        const json=await respuesta.json();
-        if(json&&json.ok&&Array.isArray(json.evidencias)){
-          const porId=json.evidencias.some(e=>String(e.idEvidencia||"")===String(item.idEvidencia));
-          if(porId)return {confirmado:true,duplicado:false};
-          const mismaDireccion=json.evidencias.some(e=>
-            dvClaveTexto(e.zona)===dvClaveTexto(item.zona) &&
-            dvClaveTexto(e.direccion)===dvClaveTexto(item.direccion) &&
-            String(e.estado||"").toLowerCase().includes("realizado")
-          );
-          if(mismaDireccion)return {confirmado:true,duplicado:true};
-        }
-      }
-    }catch(error){console.warn("Aún no se pudo verificar la evidencia:",error);}
-    if(intento<4)await dvEsperar(1600+intento*500);
-  }
-  return {confirmado:false,duplicado:false};
+// El POST usa no-cors; por eso confirmamos consultando el histórico real.
+for(let intento=0;intento<5;intento++){
+try{
+const respuesta=await fetch(APPS_SCRIPT_URL+"?accion=evidenciasHoy&t="+Date.now(),{cache:"no-store"});
+if(respuesta.ok){
+const json=await respuesta.json();
+if(json&&json.ok&&Array.isArray(json.evidencias)){
+const porId=json.evidencias.some(e=>String(e.idEvidencia||"")===String(item.idEvidencia));
+if(porId)return {confirmado,duplicado};
+const mismaDireccion=json.evidencias.some(e=>
+dvClaveTexto(e.zona)===dvClaveTexto(item.zona) &&
+dvClaveTexto(e.direccion)===dvClaveTexto(item.direccion) &&
+String(e.estado||"").toLowerCase().includes("realizado")
+);
+if(mismaDireccion)return {confirmado,duplicado};
+}
+}
+}catch(error){console.warn("Aún no se pudo verificar la evidencia:",error);}
+if(intento<4)await dvEsperar(1600+intento*500);
+}
+return {confirmado,duplicado};
 }
 async function dvProcesarColaEvidencias(){
-  if(dvEvidenceQueueBusy||!navigator.onLine)return;
-  dvEvidenceQueueBusy=true;
-  try{
-    const pendientes=await dvListarEvidenciasPendientes();
-    pendientes.sort((a,b)=>(a.creadoEn||0)-(b.creadoEn||0));
-    for(const item of pendientes){
-      if(!navigator.onLine)break;
-      item.intentos=(Number(item.intentos)||0)+1;
-      item.ultimoIntento=Date.now();
-      item.estadoCola="enviando";
-      await dvActualizarEvidenciaPendiente(item);
-      try{
-        await fetch(APPS_SCRIPT_URL,{
-          method:"POST",
-          mode:"no-cors",
-          headers:{"Content-Type":"text/plain;charset=utf-8"},
-          body:JSON.stringify(item.datos)
-        });
-        const verificacion=await dvVerificarEvidenciaEnServidor(item);
-        if(verificacion.confirmado){
-          await dvEliminarEvidenciaPendiente(item.idEvidencia);
-          if(verificacion.duplicado){
-            mostrarToast("ℹ️ Esa dirección ya figuraba como realizada. Cola sincronizada.");
-          }else{
-            mostrarToast("✅ Evidencia confirmada en el histórico.");
-          }
-          cargarEvidenciasHoy();
-        }else{
-          item.estadoCola="pendiente";
-          item.ultimoError="El servidor no confirmó el registro todavía.";
-          await dvActualizarEvidenciaPendiente(item);
-        }
-      }catch(error){
-        item.estadoCola="pendiente";
-        item.ultimoError=String(error&&error.message||error||"Error de envío");
-        await dvActualizarEvidenciaPendiente(item);
-        console.error("Evidencia retenida en cola para reintento:",error);
-      }
-    }
-  }catch(error){
-    console.error("No se pudo procesar la cola de evidencias:",error);
-  }finally{
-    dvEvidenceQueueBusy=false;
-  }
+if(dvEvidenceQueueBusy||!navigator.onLine)return;
+dvEvidenceQueueBusy=true;
+try{
+const pendientes=await dvListarEvidenciasPendientes();
+pendientes.sort((a,b)=>(a.creadoEn||0)-(b.creadoEn||0));
+for(const item of pendientes){
+if(!navigator.onLine)break;
+item.intentos=(Number(item.intentos)||0)+1;
+item.ultimoIntento=Date.now();
+item.estadoCola="enviando";
+await dvActualizarEvidenciaPendiente(item);
+try{
+await fetch(APPS_SCRIPT_URL,{
+method:"POST",
+mode:"no-cors",
+headers:{"Content-Type":"text/plain;charset=utf-8"},
+body.stringify(item.datos)
+});
+const verificacion=await dvVerificarEvidenciaEnServidor(item);
+if(verificacion.confirmado){
+await dvEliminarEvidenciaPendiente(item.idEvidencia);
+if(verificacion.duplicado){
+mostrarToast("ℹ️ Esa dirección ya figuraba como realizada. Cola sincronizada.");
+}else{
+mostrarToast("✅ Evidencia confirmada en el histórico.");
+}
+cargarEvidenciasHoy();
+}else{
+item.estadoCola="pendiente";
+item.ultimoError="El servidor no confirmó el registro todavía.";
+await dvActualizarEvidenciaPendiente(item);
+}
+}catch(error){
+item.estadoCola="pendiente";
+item.ultimoError=String(error&&error.message||error||"Error de envío");
+await dvActualizarEvidenciaPendiente(item);
+console.error("Evidencia retenida en cola para reintento:",error);
+}
+}
+}catch(error){
+console.error("No se pudo procesar la cola de evidencias:",error);
+}finally{
+dvEvidenceQueueBusy=false;
+}
 }
 function dvProgramarReintentoEvidencias(){
-  if(dvEvidenceRetryTimer)clearTimeout(dvEvidenceRetryTimer);
-  dvEvidenceRetryTimer=setTimeout(async()=>{
-    await dvProcesarColaEvidencias();
-    dvProgramarReintentoEvidencias();
-  },20000);
+if(dvEvidenceRetryTimer)clearTimeout(dvEvidenceRetryTimer);
+dvEvidenceRetryTimer=setTimeout(async()=>{
+await dvProcesarColaEvidencias();
+dvProgramarReintentoEvidencias();
+},20000);
 }
 window.addEventListener("online",()=>{dvProcesarColaEvidencias();});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)dvProcesarColaEvidencias();});
 
 async function enviarEvidencia(){
-  if(!evidenciaActual)return;
-  if(!evidenciaBase64){alert("Primero sacá la fotografía.");return;}
-  if(sendEvidence.dataset.guardando==="1")return;
-  sendEvidence.dataset.guardando="1";
-  sendEvidence.disabled=true;
-  sendEvidence.textContent="Guardando localmente...";
-  try{
-    const ahora=new Date();
-    const fecha=ahora.toLocaleDateString("es-AR");
-    const hora=ahora.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-    const idEvidencia=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("DV-"+Date.now()+"-"+Math.random().toString(36).slice(2,12));
-    const direccion=`${evidenciaActual.calle} ${evidenciaActual.numero||""}`.trim();
-    const datos={
-      idEvidencia:idEvidencia,
-      fecha:fecha,
-      hora:hora,
-      cgm:evidenciaCgmActual||selectedCgm,
-      zona:evidenciaZonaActual||selectedZone,
-      direccion:direccion,
-      latitud:evidenciaLat||evidenciaActual.latitud||"",
-      longitud:evidenciaLng||evidenciaActual.longitud||"",
-      foto:evidenciaBase64
-    };
-    const item={
-      idEvidencia:idEvidencia,
-      creadoEn:Date.now(),
-      intentos:0,
-      estadoCola:"pendiente",
-      datos:datos,
-      zona:datos.zona,
-      direccion:datos.direccion
-    };
-    // Punto crítico: IndexedDB confirma el guardado antes de cerrar el modal.
-    await dvGuardarEvidenciaPendiente(item);
-    cerrarEvidencia();
-    mostrarToast("💾 Evidencia guardada en el teléfono. Se enviará y verificará automáticamente.");
-    // No esperamos al servidor: el operador puede continuar inmediatamente.
-    dvProcesarColaEvidencias();
-    dvProgramarReintentoEvidencias();
-  }catch(error){
-    console.error("No se pudo guardar la evidencia localmente:",error);
-    alert("No se pudo guardar la evidencia en el teléfono. No se cerró el formulario para que puedas volver a intentar. Revisá el espacio disponible y probá nuevamente.");
-  }finally{
-    sendEvidence.disabled=false;
-    sendEvidence.textContent="✓ Registrar";
-    delete sendEvidence.dataset.guardando;
-  }
+if(!evidenciaActual)return;
+if(!evidenciaBase64){alert("Primero sacá la fotografía.");return;}
+if(sendEvidence.dataset.guardando==="1")return;
+sendEvidence.dataset.guardando="1";
+sendEvidence.disabled=true;
+sendEvidence.textContent="Guardando localmente...";
+try{
+const ahora=new Date();
+const fecha=ahora.toLocaleDateString("es-AR");
+const hora=ahora.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const idEvidencia=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("DV-"+Date.now()+"-"+Math.random().toString(36).slice(2,12));
+const direccion=${evidenciaActual.calle} ${evidenciaActual.numero||""}.trim();
+const datos={
+idEvidencia,
+fecha,
+hora,
+cgm||selectedCgm,
+zona||selectedZone,
+direccion,
+latitud||evidenciaActual.latitud||"",
+longitud||evidenciaActual.longitud||"",
+foto
+};
+const item={
+idEvidencia,
+creadoEn.now(),
+intentos:0,
+estadoCola:"pendiente",
+datos,
+zona.zona,
+direccion.direccion
+};
+// Punto crítico: IndexedDB confirma el guardado antes de cerrar el modal.
+await dvGuardarEvidenciaPendiente(item);
+cerrarEvidencia();
+mostrarToast("💾 Evidencia guardada en el teléfono. Se enviará y verificará automáticamente.");
+// No esperamos al servidor: el operador puede continuar inmediatamente.
+dvProcesarColaEvidencias();
+dvProgramarReintentoEvidencias();
+}catch(error){
+console.error("No se pudo guardar la evidencia localmente:",error);
+alert("No se pudo guardar la evidencia en el teléfono. No se cerró el formulario para que puedas volver a intentar. Revisá el espacio disponible y probá nuevamente.");
+}finally{
+sendEvidence.disabled=false;
+sendEvidence.textContent="✓ Registrar";
+delete sendEvidence.dataset.guardando;
+}
 }
 
 list.addEventListener(
@@ -3129,7 +2932,7 @@ stopRoute.addEventListener("click",finalizarRecorrido);
 cgm.addEventListener(
 "change",
 () => {
-  dvZonaCentradaKey=null;
+dvZonaCentradaKey=null;
 selectedCgm =
 cgm.value;
 selectedZone =
@@ -3138,20 +2941,24 @@ search.value =
 "";
 actualizarZonasPorCGM();
 render();
-dvGuardarSeleccionMapa();
 }
 );
 zone.addEventListener(
 "change",
 () => {
-  dvZonaCentradaKey=null;
-  if(!recorridoActivo && recorridoMarker){
-    map.removeLayer(recorridoMarker);
-    recorridoMarker=null;
-  }
-  render();
-  actualizarBotonesRecorrido();
-  dvGuardarSeleccionMapa();
+dvZonaCentradaKey=null;
+if(recorridoActivo && zone.value !== recorridoZona){
+zone.value=recorridoZona;
+selectedZone=recorridoZona;
+alert("Finalizá el recorrido actual antes de cambiar de zona.");
+return;
+}
+if(!recorridoActivo && recorridoMarker){
+map.removeLayer(recorridoMarker);
+recorridoMarker=null;
+}
+render();
+actualizarBotonesRecorrido();
 }
 );
 search.addEventListener(
@@ -3175,18 +2982,14 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
-if(recorridoActivo) guardarRecorridoLocal();
 if(!document.hidden){
 if(recorridoActivo) activarPantallaEncendida();
 cargarEvidenciasHoy();
 }
 }
 );
-window.addEventListener("pagehide",()=>{
-  if(recorridoActivo) guardarRecorridoLocal();
-  dvGuardarSeleccionMapa();
-});
 </script>
+
 <script id="diaverde-auth">
 const DV_USUARIOS = [
   { usuario:"Ale",       password:"boca",          nombre:"Ale" },
@@ -3260,11 +3063,9 @@ function dvComprobarSesion(){
   const usuario = dvUsuarioActual();
   if(sesion === "1" && usuario){
     dvMostrarAplicacion(usuario);
-    try{
-      if(typeof recuperarRecorrido === "function") recuperarRecorrido();
-    }catch(e){
-      console.error("Recuperación de recorrido:",e);
-    }
+    // Al reabrir la APK o la web con la sesión guardada, también hay que recuperar el recorrido.
+    try{ if(typeof recuperarRecorrido === "function") recuperarRecorrido(); }
+    catch(e){ console.error("Recuperación automática del recorrido:",e); }
   }else{
     dvMostrarLogin();
   }
@@ -3408,8 +3209,32 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   };
 
-  // No se inicia un segundo watchPosition permanente aquí.
-  // El recorrido usa un único watcher; el botón Centrar solicita una lectura puntual.
+  // GPS propio de la AppWeb: mantiene disponible la última posición.
+  if(navigator.geolocation){
+    try{
+      navigator.geolocation.watchPosition(
+        function(position){
+          dvLastNativeLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            speed: position.coords.speed,
+            bearing: position.coords.heading
+          };
+        },
+        function(error){
+          console.warn("Geolocalización WebApp:", error);
+        },
+        {
+          enableHighAccuracy:true,
+          maximumAge:3000,
+          timeout:15000
+        }
+      );
+    }catch(e){
+      console.warn("No se pudo iniciar GPS WebApp:", e);
+    }
+  }
 
   function dvWatchMapInteraction(){
     const mapa = (typeof map !== "undefined") ? map : window.map;
@@ -3454,7 +3279,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
 </script>
 
-
 <script id="dv-navigation-location-bridge">
 (function(){
   if(window.__dvNavigationBridgeInstalled)return;
@@ -3497,6 +3321,7 @@ document.addEventListener("DOMContentLoaded", function(){
   };
 })();
 </script>
+
 
 
 
