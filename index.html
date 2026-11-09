@@ -103,6 +103,92 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 }
 </style>
 
+<style id="diaverde-professional-ui">
+:root{
+  --verde:#087a3d;--verde-oscuro:#064b2b;--verde-claro:#eaf5ed;
+  --texto:#193329;--gris:#66776d;--fondo:#f2f6f3;--borde:#dce7df;
+  --blanco:#fff;--sombra:0 10px 30px rgba(18,54,34,.08);
+}
+html{scroll-behavior:smooth}
+body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fondo);color:var(--texto);-webkit-font-smoothing:antialiased}
+header{padding:18px 26px;background:linear-gradient(120deg,#063f25 0%,#087a3d 62%,#159451 100%);box-shadow:0 5px 22px rgba(6,50,29,.18)}
+.header-inner{max-width:1440px}
+.brand{gap:14px}
+.logo{width:50px;height:50px;border-radius:15px;box-shadow:0 5px 16px rgba(0,0,0,.14);font-size:25px}
+h1{font-size:23px;letter-spacing:.045em;font-weight:800}
+.sub{color:rgba(255,255,255,.78);font-size:13px}
+.status{padding:9px 13px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.09)}
+.status-icon{width:34px;height:34px;background:rgba(255,255,255,.12)}
+#dvUserBar{max-width:1440px;margin:13px auto 0;justify-content:flex-end;color:#fff;font-size:13px}
+#dvLogout{transition:background .18s ease,border-color .18s ease}
+#dvLogout:hover{background:rgba(255,255,255,.14);border-color:#fff}
+main{max-width:1440px;padding:24px 26px 34px}
+.layout{grid-template-columns:minmax(260px,310px) minmax(0,1fr);gap:20px;align-items:start}
+.card{border:1px solid rgba(213,227,217,.9);border-radius:18px;box-shadow:var(--sombra)}
+.sidebar{padding:22px;position:sticky;top:16px}
+.section-label{font-size:11px;letter-spacing:1.1px;color:#587365;margin-bottom:9px}
+label{font-size:13px;margin-bottom:7px}
+select,input{min-height:46px;border-color:#d6e2d9;border-radius:11px;font-size:14px;transition:border-color .18s ease,box-shadow .18s ease}
+select:focus,input:focus{border-color:#57a874;box-shadow:0 0 0 4px rgba(8,122,61,.1)}
+.refresh,.route-btn,.send-btn,#dvLoginBtn{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.refresh:hover,.route-btn:not(:disabled):hover,.send-btn:not(:disabled):hover,#dvLoginBtn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(8,90,46,.18)}
+.refresh{border-radius:11px;background:linear-gradient(135deg,#0b8747,#066b37)}
+.info-box{border-radius:12px;background:#f3f9f4;font-size:12px}
+.stats{margin-top:22px}
+.stat{background:#fbfdfb;border-color:#e3ece5;border-radius:12px;padding:12px}
+.stat-icon{width:38px;height:38px;border-radius:12px}
+.stat strong{font-size:20px;letter-spacing:-.02em}
+.map-card{padding:18px}
+.card-title{margin-bottom:14px}
+.card-title-icon{width:42px;height:42px;border-radius:13px}
+.card-title h2{font-size:19px;letter-spacing:-.02em}
+.card-title p{font-size:12px}
+.map-wrap{border-radius:14px;overflow:hidden}
+#map{border-radius:14px}
+.zone-badge{border-radius:999px;padding:9px 15px;box-shadow:0 5px 18px rgba(0,0,0,.2)}
+.route-controls{gap:10px;margin-top:14px}
+.route-btn{border-radius:11px}
+.route-start{background:linear-gradient(135deg,#0b8747,#066b37)}
+.route-status{border-radius:11px}
+.results{margin-top:18px;padding:18px}
+.results-head{margin-bottom:16px}
+.count-pill{padding:8px 12px}
+.address-list{border-color:#e3ebe5;border-radius:13px}
+.address{padding:13px 15px;transition:background .16s ease}
+.address:hover{background:#f5faf6}
+.pin{border-radius:12px}
+.address strong{font-size:14px}
+.maps,.evidence-btn{border-radius:10px;transition:all .16s ease}
+.maps:hover,.evidence-btn:hover{border-color:#58a877;transform:translateY(-1px)}
+.empty,.loading{padding:42px 20px}
+.evidence-modal{border:1px solid #e5eee8}
+.toast{border-radius:12px}
+footer{background:#073f26}
+@media(max-width:900px){
+  main{padding:18px}
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static}
+}
+@media(max-width:600px){
+  header{padding:15px 16px}
+  .header-inner{align-items:center}
+  .logo{width:44px;height:44px;border-radius:13px}
+  h1{font-size:19px}
+  .sub{font-size:11px;line-height:1.35}
+  #dvUserBar{margin-top:10px}
+  main{padding:12px 12px 24px}
+  .sidebar{padding:17px}
+  .map-card{padding:11px}
+  .results{padding:14px}
+  .results-head{align-items:flex-start}
+  .address{padding:13px}
+  .maps,.evidence-btn{min-height:42px;display:flex;align-items:center;justify-content:center}
+  .toast{left:14px;right:14px;bottom:14px;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
+}
+</style>
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
