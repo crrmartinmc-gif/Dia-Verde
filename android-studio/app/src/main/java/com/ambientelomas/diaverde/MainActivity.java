@@ -116,7 +116,7 @@ public final class MainActivity extends Activity {
         if(data==null)data=new JSONObject();
         switch(action){
             case "start":if(validating&&startingId.equals(data.optString("idRecorrido")))break;pendingStart=data;startGeneration++;status.setText("Comprobando sesión y permisos. Esperá la notificación GPS.");ensurePermissions();break;
-            case "stop":startGeneration++;pendingStart=null;startService(new Intent(this,TrackingService.class).setAction(TrackingService.STOP));break;
+            case "stop":updateScreen(false);startGeneration++;pendingStart=null;startService(new Intent(this,TrackingService.class).setAction(TrackingService.STOP));break;
             case "state":owner=data.optString("usuario");sendState();break;
             case "capture":captureId=data.optString("id");ensurePermissions();break;
         }
@@ -165,12 +165,16 @@ public final class MainActivity extends Activity {
             }catch(Exception e){main.post(()->{validating=false;if(destroyed)return;if(generation!=startGeneration){ensurePermissions();return;}reject(e.getMessage()==null?"No se pudo comprobar la sesión.":e.getMessage());});}
         });
     }
-    private void reject(String text){status.setText(text);try{send("start_rejected",new JSONObject().put("message",text));}catch(Exception ignored){}toast(text);}
+    private void reject(String text){updateScreen(false);status.setText(text);try{send("start_rejected",new JSONObject().put("message",text));}catch(Exception ignored){}toast(text);}
     private void send(String kind,JSONObject data){if(destroyed||!trustedCurrent())return;web.evaluateJavascript("window.AndroidGPS&&window.AndroidGPS._receive("+JSONObject.quote(kind)+","+data+");",null);}
+    private void updateScreen(boolean active){
+        if(resumed&&active)getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
     private void sendSync(){
         if(destroyed||io.isShutdown())return;
-        io.execute(()->{try{JSONObject s=new JSONObject().put("running",TrackingService.running).put("pending",RouteStore.get(this).pendingCount())
-                .put("lastConfirmed",getSharedPreferences("native",MODE_PRIVATE).getLong("lastConfirmed",0));main.post(()->{status.setText(TrackingService.running?"GPS nativo activo · funciona con pantalla bloqueada":"GPS nativo listo");send("sync",s);});}catch(Exception ignored){}});
+        io.execute(()->{try{RouteInfo active=RouteStore.get(this).active();boolean keepAwake=TrackingService.running&&active!=null;JSONObject s=new JSONObject().put("running",TrackingService.running).put("pending",RouteStore.get(this).pendingCount())
+                .put("lastConfirmed",getSharedPreferences("native",MODE_PRIVATE).getLong("lastConfirmed",0));main.post(()->{updateScreen(keepAwake&&TrackingService.running);status.setText(TrackingService.running?"GPS nativo activo · funciona con pantalla bloqueada":"GPS nativo listo");send("sync",s);});}catch(Exception ignored){}});
     }
     private void sendState(){
         if(destroyed||io.isShutdown())return;
@@ -216,7 +220,7 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if((request==CAMERA||request==FILE)&&fileCallback!=null){Uri uri=request==CAMERA?photo:data==null?null:data.getData();boolean valid=result==RESULT_OK&&uri!=null&&(request!=CAMERA||photoFile!=null&&photoFile.length()>0);fileCallback.onReceiveValue(valid?new Uri[]{uri}:null);fileCallback=null;}}
     @Override protected void onStart(){super.onStart();IntentFilter filter=new IntentFilter(TrackingService.EVENT);androidx.core.content.ContextCompat.registerReceiver(this,receiver,filter,getPackageName()+".INTERNAL_EVENTS",null,androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);receiverRegistered=true;}
     @Override protected void onResume(){super.onResume();resumed=true;if(web!=null)web.onResume();ensurePermissions();sendState();}
-    @Override protected void onPause(){resumed=false;super.onPause();if(web!=null)web.onPause();}
+    @Override protected void onPause(){resumed=false;updateScreen(false);super.onPause();if(web!=null)web.onPause();}
     @Override protected void onStop(){if(receiverRegistered){unregisterReceiver(receiver);receiverRegistered=false;}super.onStop();}
     @Override protected void onSaveInstanceState(Bundle out){if(web!=null)web.saveState(out);super.onSaveInstanceState(out);}
     @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}

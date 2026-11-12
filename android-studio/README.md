@@ -23,6 +23,10 @@ Los endpoints están en `app/build.gradle` (`WEB_URL` y `BACKEND_URL`). Son las 
 
 El WebView y Chrome del teléfono tienen almacenamiento de sesión independiente: es normal tener que ingresar otra vez en la APK. Mantener Android System WebView/Chrome actualizado; se usa un puente con origen permitido y mensajes del marco principal, sin `addJavascriptInterface` abierto a todos los marcos.
 
+## Pantalla encendida y seguimiento en segundo plano
+
+Durante un recorrido activo, la ventana de Día Verde mantiene la pantalla encendida mientras la aplicación está visible. Al finalizar o salir a otra aplicación se libera esa condición. El botón físico de bloqueo sigue funcionando; al bloquear manualmente o cambiar de aplicación, el servicio GPS continúa con su notificación. La pantalla no se enciende por la fuerza desde el segundo plano.
+
 ## Qué hace con pantalla bloqueada
 
 - El servicio de Android recibe las ubicaciones y aplica precisión máxima de 50 m, rechazo de lecturas viejas/desordenadas y saltos imposibles. Los latidos estacionarios conservan la misma coordenada filtrada.

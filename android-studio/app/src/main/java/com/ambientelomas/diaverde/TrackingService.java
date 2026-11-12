@@ -95,5 +95,5 @@ public final class TrackingService extends Service implements LocationListener {
     @Override public void onProviderEnabled(String p){message="Esperando ubicación precisa";refreshNotification();}
     @Override public void onStatusChanged(String p,int s,Bundle extras){}
     @Override public IBinder onBind(Intent intent){return null;}
-    @Override public void onDestroy(){accepting=false;running=false;try{manager.removeUpdates(this);}catch(Exception ignored){}if(wake!=null&&wake.isHeld())wake.release();sender.shutdownNow();locations.shutdown();super.onDestroy();}
+    @Override public void onDestroy(){accepting=false;running=false;event("state",new JSONObject());try{manager.removeUpdates(this);}catch(Exception ignored){}if(wake!=null&&wake.isHeld())wake.release();sender.shutdownNow();locations.shutdown();super.onDestroy();}
 }
