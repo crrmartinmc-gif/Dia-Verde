@@ -1001,7 +1001,8 @@ class DVMap{
       zoom:13,
       pitch:0,
       bearing:0,
-      antialias:true,
+      antialias:false,
+      pixelRatio:Math.min(window.devicePixelRatio || 1,1.5),
       dragRotate:true,
       touchZoomRotate:true,
       touchPitch:true,
@@ -2152,7 +2153,16 @@ cgm.value =
 "";
 }
 }
+let dvZoneOptionsData=null;
+let dvZoneOptionsCgm=null;
 function actualizarZonasPorCGM(){
+if(dvZoneOptionsData===data && dvZoneOptionsCgm===selectedCgm){
+  zone.disabled=recorridoActivo || !selectedCgm;
+  zone.value=selectedZone;
+  return;
+}
+dvZoneOptionsData=data;
+dvZoneOptionsCgm=selectedCgm;
 zone.innerHTML =
 '<option value="">— Elegí una zona —</option>';
 zone.disabled =
@@ -2306,13 +2316,23 @@ async function cargarEvidenciasHoy(){
     console.warn("Se conserva el último histórico disponible:",error.message);
   } finally {dvEvidenceReadBusy=false;dvActualizarSyncEvidencias();}
 }
+// Cada render consulta el mismo reclamo desde contador, pin, popup y lista.
+// Reutilizar el resultado y filtrar las fechas una sola vez por actualización.
+let dvEvidenceCache=null;
 function dvEvidenciaDeItem(item){
-  const direccion = `${item.calle} ${item.numero || ""}`;
-  const zonaItem = item.zona || selectedZone;
-  return evidenciasHoy.find(e => {
-    if(DVContract.dayKey(e.fecha) !== DVContract.dayKey()) return false;
-    return DVContract.evidenceMatches(item,e,data);
-  });
+  const today=DVContract.dayKey();
+  if(!dvEvidenceCache || dvEvidenceCache.day!==today ||
+      dvEvidenceCache.evidence!==evidenciasHoy || dvEvidenceCache.claims!==data ||
+      dvEvidenceCache.length!==evidenciasHoy.length){
+    dvEvidenceCache={day:today,evidence:evidenciasHoy,claims:data,
+      length:evidenciasHoy.length,results:new WeakMap(),
+      items:evidenciasHoy.filter(e=>DVContract.dayKey(e.fecha)===today)};
+  }
+  if(!dvEvidenceCache.results.has(item)){
+    dvEvidenceCache.results.set(item,dvEvidenceCache.items.find(e=>
+      DVContract.evidenceMatches(item,e,data)) || null);
+  }
+  return dvEvidenceCache.results.get(item);
 }
 function claveDireccion(
 zona,
@@ -2522,14 +2542,7 @@ const termino =
 normalizar(
 search.value
 );
-const todas =
-data.filter(
-item =>
-coincideZona(
-item,
-selectedZone
-)
-);
+const todas = zonaItems;
 const direcciones =
 todas.filter(
 item => {
@@ -2569,7 +2582,7 @@ direcciones.slice(
 100
 );
 
-list.innerHTML =
+const addressHTML =
 currentVisibleDirections
 .map(
 (item,index) => {
@@ -2634,12 +2647,11 @@ ${realizado ? `<button type="button" class="evidence-btn done" onclick="verEvide
 }
 )
 .join("");
-if(direcciones.length > 100){
-list.innerHTML +=
+const extraHTML = direcciones.length > 100 ?
 '<div class="empty">' +
 'Mostrando las primeras 100 direcciones.' +
-'</div>';
-}
+'</div>' : "";
+if(list.innerHTML!==addressHTML+extraHTML)list.innerHTML=addressHTML+extraHTML;
 }
 function abrirEvidenciaDesdePin(d){
   const calle = d.calle || d.Calle || d.direccion || d.Direccion || d.domicilio || d.Domicilio || "Dirección del pin";
@@ -3572,4 +3584,5 @@ window.onDiaVerdeNativeState=function(state){
 
 </body>
 </html>
+
 

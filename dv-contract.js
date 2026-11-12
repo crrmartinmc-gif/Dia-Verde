@@ -6,6 +6,9 @@
 })(typeof globalThis === 'object' ? globalThis : this, function(){
   'use strict';
   const zone = 'America/Argentina/Buenos_Aires';
+  const dayFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'
+  });
   function number(value){
     if(value == null || typeof value === 'boolean') return null;
     if(typeof value !== 'number' && typeof value !== 'string') return null;
@@ -45,7 +48,7 @@
   function dayKey(value = Date.now()){
     const t = timestamp(value);
     if(t === null) return '';
-    const parts = new Intl.DateTimeFormat('en-CA', {timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(t));
+    const parts = dayFormatter.formatToParts(new Date(t));
     const part = key => parts.find(p => p.type === key)?.value;
     return `${part('year')}-${part('month')}-${part('day')}`;
   }
@@ -107,3 +110,4 @@
   }
   return {number,pick,normalize,coords,timestamp,dayKey,date,userKey,active,routeId,distance,gpsSignature,claimKey,completedStatus,address,evidenceMatches,zone};
 });
+
