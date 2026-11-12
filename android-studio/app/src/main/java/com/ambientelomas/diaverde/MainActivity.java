@@ -36,6 +36,8 @@ public final class MainActivity extends Activity {
     private int startGeneration=0;private String startingId="";private Runnable captureTimeout;
     private ValueCallback<Uri[]> fileCallback;private Uri photo;private File photoFile;
     private LocationListener captureListener;
+    private String lastSync="";
+    private final Runnable syncTask=this::readSync;
     private final BroadcastReceiver receiver=new BroadcastReceiver(){@Override public void onReceive(Context c,Intent intent){
         String kind=intent.getStringExtra("kind");
         if("location".equals(kind)){
@@ -172,9 +174,12 @@ public final class MainActivity extends Activity {
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
     private void sendSync(){
+        main.removeCallbacks(syncTask);main.postDelayed(syncTask,150);
+    }
+    private void readSync(){
         if(destroyed||io.isShutdown())return;
         io.execute(()->{try{RouteInfo active=RouteStore.get(this).active();boolean keepAwake=TrackingService.running&&active!=null;JSONObject s=new JSONObject().put("running",TrackingService.running).put("pending",RouteStore.get(this).pendingCount())
-                .put("lastConfirmed",getSharedPreferences("native",MODE_PRIVATE).getLong("lastConfirmed",0));main.post(()->{updateScreen(keepAwake&&TrackingService.running);status.setText(TrackingService.running?"GPS nativo activo · funciona con pantalla bloqueada":"GPS nativo listo");send("sync",s);});}catch(Exception ignored){}});
+                .put("lastConfirmed",getSharedPreferences("native",MODE_PRIVATE).getLong("lastConfirmed",0));main.post(()->{updateScreen(keepAwake&&TrackingService.running);String current=s.toString();if(!current.equals(lastSync)){lastSync=current;status.setText(TrackingService.running?"GPS activo":"Día Verde");send("sync",s);}});}catch(Exception ignored){}});
     }
     private void sendState(){
         if(destroyed||io.isShutdown())return;

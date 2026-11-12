@@ -44,3 +44,7 @@ La notificación es visible durante el seguimiento y permite finalizarlo sin abr
 Las pruebas JVM verifican filtros GPS y confirmaciones por ID. Antes de utilizarla en la flota, probar en el modelo real: empezar un recorrido al aire libre, bloquear la pantalla 5–10 minutos, verificar avance en el Panel, activar/desactivar datos, volver a abrir y finalizar desde la notificación. Las pruebas locales no sustituyen esa prueba física con el GPS y la batería del fabricante.
 
 El servicio usa los endpoints existentes de Día Verde. La validación de sesión se realiza al iniciar; la autorización por token de todas las escrituras del servidor legado no se cambia en este proyecto.
+
+## Versión 1.0.2: interfaz y consumo
+
+La pantalla muestra un solo estado del recorrido. Los estados sin pendientes y los mensajes repetidos se omiten; los fallos de guardado/permisos siguen visibles. La APK conserva el historial en SQLite sin volver a serializarlo en localStorage a cada ubicación. Se reutilizan las capas del mapa y se evitan reconstrucciones de la lista si el servidor devuelve los mismos datos. La consulta de direcciones se realiza cada 60 segundos; entre consultas se actualizan evidencias a los 30 segundos, solo mientras la interfaz está visible. El servicio GPS mantiene su frecuencia de captura y envío en segundo plano. Las notificaciones nativas se actualizan solo cuando cambia su contenido.

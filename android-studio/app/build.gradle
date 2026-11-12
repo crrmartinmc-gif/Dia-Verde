@@ -7,8 +7,8 @@ android {
         applicationId 'com.ambientelomas.diaverde'
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName '1.0.1'
+        versionCode 3
+        versionName '1.0.2'
         buildConfigField 'String', 'WEB_URL', '"https://crrmartinmc-gif.github.io/Dia-Verde/"'
         buildConfigField 'String', 'BACKEND_URL', '"https://script.google.com/macros/s/AKfycbxOlc134pd-I6ziLrymxxw4DNffzGrlm6LHKepkca40gk3y4phDc-gIYvP-_-ExKD9M5A/exec"'
     }

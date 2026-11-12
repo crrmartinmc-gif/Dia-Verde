@@ -44,3 +44,9 @@ header{padding:14px 22px}.sync-strip{display:flex;flex-wrap:wrap;gap:8px 20px;al
 .map-card{isolation:isolate}.route-active .sync-strip{position:sticky;top:0;z-index:1200;box-shadow:0 4px 12px #163b2a12}
 
 .sync-strip>span[hidden]{display:none}.background-help{margin:12px 0 0;font-size:12px;line-height:1.6;color:var(--gris)}
+
+/* Estado compacto: mostrar avisos solo cuando necesitan atención. */
+.sync-strip:has(>span:not([hidden])){padding:8px 12px;gap:8px;box-shadow:none;position:static;font-size:12px}
+.sync-strip:not(:has(>span:not([hidden]))){display:none}
+.dv-native-app .background-help{display:none}
+.route-status{padding:7px 10px;line-height:1.4}

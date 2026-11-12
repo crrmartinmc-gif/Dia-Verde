@@ -22,6 +22,7 @@ public final class TrackingService extends Service implements LocationListener {
     private LocationManager manager;private PowerManager.WakeLock wake;
     private volatile boolean accepting=false;private volatile RouteInfo route;
     private String message="Esperando ubicación precisa";private long lastAttempt=0;
+    private GeoPolicy.Fix previous;private volatile int pendingCount=0;private String lastNotification="";
 
     @Override public void onCreate(){
         super.onCreate();manager=(LocationManager)getSystemService(LOCATION_SERVICE);
@@ -37,7 +38,7 @@ public final class TrackingService extends Service implements LocationListener {
             route=saved!=null?saved:(intent!=null&&intent.hasExtra("route")?new RouteInfo(new JSONObject(intent.getStringExtra("route"))):null);
             if(route==null||!route.valid()||checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){stopSelf();return START_NOT_STICKY;}
             if(Build.VERSION.SDK_INT>=29)startForeground(NOTIFICATION,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);else startForeground(NOTIFICATION,notification());
-            RouteStore.get(this).begin(route);running=true;accepting=true;
+            RouteStore.get(this).begin(route);previous=RouteStore.fix(RouteStore.get(this).last(route.id));running=true;accepting=true;
             requestLocations();renewWake();
             sender.scheduleWithFixedDelay(()->{if(accepting){renewWake();upload();}},0,10,TimeUnit.SECONDS);
             event("state",new JSONObject());
@@ -60,17 +61,17 @@ public final class TrackingService extends Service implements LocationListener {
                 RouteInfo r=route;if(r==null)return;
                 if(copy.getElapsedRealtimeNanos()>0&&(SystemClock.elapsedRealtimeNanos()-copy.getElapsedRealtimeNanos())>60000000000L)return;
                 GeoPolicy.Fix raw=new GeoPolicy.Fix(copy.getLatitude(),copy.getLongitude(),copy.hasAccuracy()?(double)copy.getAccuracy():null,copy.hasBearing()?(double)copy.getBearing():null,copy.getTime());
-                GeoPolicy.Fix accepted=GeoPolicy.accept(raw,RouteStore.fix(RouteStore.get(this).last(r.id)),System.currentTimeMillis());
+                GeoPolicy.Fix accepted=GeoPolicy.accept(raw,previous,System.currentTimeMillis());
                 if(accepted==null){if(copy.hasAccuracy()&&copy.getAccuracy()>50){message="Buscando mejor precisión GPS";refreshNotification();}return;}
                 JSONObject point=RouteStore.get(this).insert(r,accepted,true,copy.getProvider()==null?"GPS":copy.getProvider().toUpperCase(java.util.Locale.ROOT));
-                message="GPS activo · puntos guardados en el teléfono";event("location",point);refreshNotification();
+                previous=accepted;message="GPS activo";event("location",point);refreshNotification();
             }catch(Exception e){message="No se pudo guardar el GPS en el teléfono. Revisá el almacenamiento.";event("error",jsonMessage(message));refreshNotification();}
         });
     }
     private void upload(){
         if(SystemClock.elapsedRealtime()-lastAttempt<9000)return;lastAttempt=SystemClock.elapsedRealtime();
         boolean ok=QueueUploader.drain(this);if(!ok)UploadWorker.schedule(this);
-        event("sync",new JSONObject());refreshNotification();
+        pendingCount=RouteStore.get(this).pendingCount();event("sync",new JSONObject());refreshNotification();
     }
     private void stopRoute(){
         accepting=false;try{manager.removeUpdates(this);}catch(Exception ignored){}
@@ -82,13 +83,13 @@ public final class TrackingService extends Service implements LocationListener {
     private Notification notification(){
         PendingIntent open=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,TrackingService.class).setAction(STOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-        int pending=0;try{pending=RouteStore.get(this).pendingCount();}catch(Exception ignored){}
+        int pending=pendingCount;
         Notification publicView=new Notification.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_location).setContentTitle("Día Verde").setContentText("Recorrido activo").build();
         return new Notification.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_location).setColor(0xff25834f).setContentTitle("Día Verde · Recorrido activo")
                 .setContentText(message+" · "+pending+" por enviar").setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true)
                 .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(publicView).addAction(new Notification.Action.Builder(null,"Finalizar recorrido",stop).build()).build();
     }
-    private void refreshNotification(){if(running)main.post(()->((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION,notification()));}
+    private void refreshNotification(){if(running)main.post(()->{String current=message+"|"+pendingCount;if(!current.equals(lastNotification)){lastNotification=current;((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION,notification());}});}
     private static JSONObject jsonMessage(String text){try{return new JSONObject().put("message",text);}catch(Exception e){return new JSONObject();}}
     private void event(String kind,JSONObject data){sendBroadcast(new Intent(EVENT).setPackage(getPackageName()).putExtra("kind",kind).putExtra("data",data.toString()),getPackageName()+".INTERNAL_EVENTS");}
     @Override public void onProviderDisabled(String p){message="Activá la ubicación del teléfono";refreshNotification();}
