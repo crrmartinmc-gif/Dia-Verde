@@ -347,8 +347,7 @@ alt="Vista previa"
 class="gps-box"
 id="gpsBox"
 >
-Primero sacá la fotografía.
-Luego se obtendrá automáticamente la ubicación GPS.
+Sacá una fotografía para registrar la evidencia.
 </div>
 <input
 id="cameraInput"
@@ -2612,12 +2611,14 @@ evidenciaLng =
 "";
 evidenceAddress.textContent =
 `${item.calle} ${item.numero || ""} — ${evidenciaCgmActual} — ${evidenciaZonaActual}`;
+evidencePreview.onerror=null;
+evidencePreview.onload=null;
 evidencePreview.style.display =
 "none";
 evidencePreview.src =
 "";
 gpsBox.innerHTML =
-"📍 Primero sacá la fotografía. Luego se obtendrá automáticamente la ubicación GPS.";
+"Sacá una fotografía para registrar la evidencia.";
 sendEvidence.disabled =
 true;
 takeEvidence.style.display =
@@ -2639,41 +2640,35 @@ function convertirUrlImagenDrive(url){
   return texto;
 }
 function verEvidencia(item){
-  document.getElementById("evidenceModalTitle").textContent="Evidencia registrada";
   const evidencia=dvEvidenciaDeItem(item);
-  if(!evidencia){
-    alert("No se encontró la evidencia registrada para hoy.");
-    return;
+  if(!evidencia){mostrarToast("No se encontró la evidencia de hoy.");return;}
+  const generation=++evidenciaGeneracion;
+  document.getElementById("evidenceModalTitle").textContent="Evidencia registrada";
+  evidenciaActual=item;evidenciaBase64="";evidenciaLat="";evidenciaLng="";
+  const direccion=`${item.calle} ${item.numero||""}`.trim();
+  evidenceAddress.textContent=`${direccion} — ${item.localidad||selectedCgm} — ${item.zona||selectedZone}`;
+  evidencePreview.onerror=null;evidencePreview.onload=null;
+  evidencePreview.style.display="none";evidencePreview.removeAttribute("src");
+  gpsBox.replaceChildren();const message=document.createElement("span");message.textContent=evidencia.foto ? "Cargando fotografía…" : "Este registro no tiene una foto adjunta.";gpsBox.appendChild(message);
+  const original=String(evidencia.foto||"").trim();
+  if(/^https:\/\//i.test(original)){
+    const link=document.createElement("a");link.href=original;link.target="_blank";link.rel="noopener noreferrer";
+    link.className="maps";link.textContent="Abrir foto original";
+    gpsBox.appendChild(document.createElement("br"));gpsBox.appendChild(link);
   }
-  evidenciaActual = item;
-  evidenciaBase64 = "";
-  evidenciaLat = evidencia.latitud || "";
-  evidenciaLng = evidencia.longitud || "";
-  evidenceAddress.textContent =
-    `${direccion} — ${selectedCgm} — ${selectedZone}`;
-  if(evidencia.foto){
-    evidencePreview.src = convertirUrlImagenDrive(evidencia.foto);
-    evidencePreview.style.display = "block";
-    evidencePreview.onerror = () => {
-      evidencePreview.style.display = "none";
-      mostrarToast("⚠️ No se pudo visualizar la foto desde Drive.");
-    };
-  }else{
-    evidencePreview.style.display = "none";
+  if(original){
+    // Los eventos se registran antes de asignar src, también para imágenes en caché.
+    evidencePreview.onload=()=>{if(generation===evidenciaGeneracion){gpsBox.firstChild.textContent="Fotografía registrada. ";}};
+    evidencePreview.onerror=()=>{if(generation===evidenciaGeneracion){evidencePreview.style.display="none";gpsBox.firstChild.textContent="No se pudo cargar la vista previa. Abrí la foto original con una cuenta autorizada de Drive. ";}};
+    evidencePreview.referrerPolicy="no-referrer";
+    evidencePreview.src=convertirUrlImagenDrive(original);evidencePreview.style.display="block";
   }
-  gpsBox.innerHTML =
-    "✅ Evidencia registrada hoy." +
-    "<br><br>" +
-    (evidencia.latitud && evidencia.longitud
-      ? "📍 Latitud: " + evidencia.latitud +
-        "<br>Longitud: " + evidencia.longitud
-      : "📍 Sin coordenadas registradas.");
-  sendEvidence.style.display = "none";
-  takeEvidence.style.display = "none";
+  sendEvidence.style.display="none";takeEvidence.style.display="none";
   evidenceBackdrop.classList.add("show");
 }
 function cerrarEvidencia(){
 evidenciaGeneracion++;
+evidencePreview.onerror=null;evidencePreview.onload=null;
 evidenceBackdrop.classList.remove(
 "show"
 );
@@ -2760,29 +2755,13 @@ try{
   sendEvidence.disabled=true;
   evidenciaCapturadaEn=new Date().toISOString();
   gpsBox.textContent="Procesando fotografía...";
-  const locationPromise=new Promise(resolve=>{
-    if(typeof window.AndroidGPS?.getCurrentPosition==="function"){
-      window.AndroidGPS.getCurrentPosition().then(resolve,()=>resolve(null));
-    } else if(window.AndroidGPS){
-      const last=recorridoPuntos[recorridoPuntos.length-1];
-      resolve(last && Date.now()-Date.parse(last.hora)<30000 ? {coords:{latitude:last.lat,longitude:last.lng,accuracy:last.precision}} : null);
-    } else if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(resolve,()=>resolve(null),{enableHighAccuracy:true,maximumAge:5000,timeout:8000});
-    } else resolve(null);
-  });
+  evidenciaLat="";evidenciaLng="";evidenciaPrecision=null;
   const base64=await comprimirImagen(file);
   if(generation!==evidenciaGeneracion)return;
   evidenciaBase64=base64;
   evidencePreview.src=base64;
   evidencePreview.style.display="block";
-  gpsBox.textContent="Fotografía lista. Obteniendo ubicación de la toma...";
-  evidenciaLat="";evidenciaLng="";evidenciaPrecision=null;
-  const p=await locationPromise;
-  if(generation!==evidenciaGeneracion)return;
-  const coords=p && DVContract.coords(p.coords);
-  if(coords){evidenciaLat=coords[0];evidenciaLng=coords[1];evidenciaPrecision=DVContract.number(p.coords.accuracy);}
-  gpsBox.textContent=coords ? `Ubicación de la toma registrada${evidenciaPrecision!==null ? " · Precisión ±"+Math.round(evidenciaPrecision)+" m" : ""}.`
-    : "Fotografía lista. No se obtuvo GPS de la toma; se guardará sin ubicación del teléfono.";
+  gpsBox.textContent="Fotografía lista para guardar.";
   sendEvidence.disabled=false;
 }catch(error){
   console.error("Error preparando evidencia:",error);
@@ -2962,7 +2941,7 @@ async function enviarEvidencia(){
       longitud:evidenciaLng,
       precision:evidenciaPrecision,
       timestamp:ahora.toISOString(),
-      origenUbicacion:evidenciaLat!=="" ? "GPS_TOMA" : "SIN_GPS",
+      origenUbicacion:"SIN_GPS",
       claveReclamo:evidenciaActual.clave || DVContract.claimKey(evidenciaActual),
       usuario:dvPanelGpsUsuario().usuario || "",
       nombre:dvPanelGpsUsuario().nombre || "",
