@@ -422,6 +422,49 @@ const GID =
 "1911460821";
 const APPS_SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbxOlc134pd-I6ziLrymxxw4DNffzGrlm6LHKepkca40gk3y4phDc-gIYvP-_-ExKD9M5A/exec";
+// Lecturas Día Verde compartidas. La transición solo se habilita cuando el
+// backend exclusivo confirma que las correcciones fueron verificadas/migradas.
+// Una vez habilitada, un error conserva los datos anteriores; nunca mezcla fuentes.
+function dvCrearClienteExclusivo(url){
+  let activo=false,ultimoIntento=0,pendiente=null;
+  async function solicitar(accion,parametros={}){
+    const query=new URLSearchParams({accion,contratoPanel:'1',...parametros,t:String(Date.now())});
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),20000);
+    try{
+      const r=await fetch(url+'?'+query,{cache:'no-store',signal:controller.signal});
+      if(!r.ok)throw new Error('Día Verde HTTP '+r.status);
+      const j=await r.json();
+      if(!j?.ok || j.servicio!=='DIA_VERDE' || j.contratoPanel!==1 || j.accion!==accion || !j.datos || j.datos.ok===false){
+        throw new Error(j?.error||'Día Verde no confirmó la actualización.');
+      }
+      const d=j.datos;
+      if(accion==='reclamosDiaVerde' && (!Array.isArray(d.reclamos)||!Array.isArray(d.evidencias)||d.evidenciasOk!==true))throw new Error('Reclamos o evidencias incompletos.');
+      if(accion==='correccionesReclamosDiaVerde' && !Array.isArray(d.correcciones))throw new Error('Correcciones incompletas.');
+      if(accion==='zonasDiaVerde' && (d.geojson?.type!=='FeatureCollection'||!Array.isArray(d.geojson.features)))throw new Error('Zonas incompletas.');
+      return j;
+    }finally{clearTimeout(timer);}
+  }
+  async function disponible(){
+    if(activo)return true;
+    if(pendiente)return pendiente;
+    if(ultimoIntento && Date.now()-ultimoIntento<60000)return false;
+    ultimoIntento=Date.now();
+    pendiente=(async()=>{
+      try{
+        const j=await solicitar('estadoIntegracionPanel');
+        activo=j.datos.migracionCompleta===true;
+        if(!activo)console.info('Día Verde: se conserva la conexión actual hasta completar la migración de correcciones.');
+        return activo;
+      }catch(e){console.warn('Día Verde exclusivo pendiente:',e.message);return false;}
+      finally{pendiente=null;}
+    })();
+    return pendiente;
+  }
+  return {disponible,solicitar,activo:()=>activo};
+}
+
+const dvLecturasExclusivas = dvCrearClienteExclusivo(APPS_SCRIPT_URL);
 let data = [];
 let zonasGeo = [];
 let selectedCgm = "";
@@ -448,7 +491,7 @@ let recorridoMarker = null;
 let recorridoWatchId = null;
 let dvPanelGpsLastSentAt = 0;
 let dvPanelGpsLastPoint = null;
-const DV_PANEL_GPS_INTERVAL_MS = 1500;
+const DV_PANEL_GPS_INTERVAL_MS = 15000;
 let dvPanelGpsSendCount = 0;
 let dvPanelGpsLastError = "";
 let dvPanelGpsStorageError = false;
@@ -507,6 +550,7 @@ function dvPanelGpsCargarCola(){
 
 function dvPanelGpsProgramarCola(demora=0){
   if(dvPanelGpsQueueTimer !== null){
+    if(demora>0)return;
     clearTimeout(dvPanelGpsQueueTimer);
   }
   dvPanelGpsQueueTimer = setTimeout(()=>{
@@ -612,7 +656,7 @@ function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timesta
   });
 
   dvPanelGpsGuardarCola();
-  dvPanelGpsProgramarCola(0);
+  dvPanelGpsProgramarCola(!activo || dvPanelGpsQueue.length>=10 ? 0 : DV_PANEL_GPS_INTERVAL_MS);
   return true;
 }
 
@@ -1235,10 +1279,18 @@ toast.classList.remove(
 3500
 );
 }
+let dvZonasExclusivasCargadas=false;
+let dvZonasCargaEnCurso=false;
 function cargarMapa(){
-fetch(
-"zonas.geojson?t="+Date.now()
-)
+if(dvZonasCargaEnCurso)return;
+dvZonasCargaEnCurso=true;
+(async()=>{
+  if(await dvLecturasExclusivas.disponible()){
+    const j=await dvLecturasExclusivas.solicitar("zonasDiaVerde");
+    return new Response(JSON.stringify(j.datos.geojson),{status:200});
+  }
+  return fetch("zonas.geojson?t="+Date.now());
+})()
 .then(
 response => {
 if(!response.ok){
@@ -1253,6 +1305,7 @@ return response.json();
 geojson => {
 zonasGeo =
 geojson.features || [];
+dvZonasExclusivasCargadas=dvLecturasExclusivas.activo();
 totalZones.textContent =
 zonasGeo.length;
 if(selectedZone)render();
@@ -1263,7 +1316,8 @@ error => {
 console.error(error);
 mapSubtitle.textContent="No se pudieron cargar los límites de las zonas. El GPS sigue disponible.";
 }
-);
+)
+.finally(()=>{dvZonasCargaEnCurso=false;});
 }
 function guardarRecorridoLocal(){
   // Android ya confirmó cada punto en SQLite; no serializar otra copia completa.
@@ -1954,10 +2008,14 @@ async function cargarDatos(){
   refresh.disabled = true;
   if(!data.length)statusText.textContent = "Cargando direcciones...";
   try {
-    const response = await fetch(BACKEND_MAESTRO_URL+"?accion=reclamosDiaVerde&t="+Date.now(), {cache:"no-store",signal:typeof AbortSignal.timeout==="function" ? AbortSignal.timeout(20000) : undefined});
+    const exclusivo=await dvLecturasExclusivas.disponible();
+    const response = exclusivo
+      ? new Response(JSON.stringify(await dvLecturasExclusivas.solicitar("reclamosDiaVerde")),{status:200})
+      : await fetch(BACKEND_MAESTRO_URL+"?accion=reclamosDiaVerde&t="+Date.now(), {cache:"no-store",signal:typeof AbortSignal.timeout==="function" ? AbortSignal.timeout(20000) : undefined});
     if(!response.ok) throw new Error("HTTP " + response.status);
     const result = await response.json();
     if(!result.ok || !Array.isArray(result.datos?.reclamos)) throw new Error("No se recibieron las ubicaciones compartidas.");
+    if(exclusivo && !dvZonasExclusivasCargadas){cargarMapa();}
     const signature=JSON.stringify(result.datos.reclamos);
     const changed=signature!==dvDataSignature;
     if(changed){data = result.datos.reclamos;dvDataSignature=signature;
@@ -1976,7 +2034,7 @@ async function cargarDatos(){
     if(!data.length){
       try{data=JSON.parse(localStorage.getItem("diaVerdeReclamosCompartidosV1")||"[]");}catch(e){}
       if(data.length){cargarCGMs();actualizarZonasPorCGM();actualizarContadores();if(selectedCgm)render();}
-      else cargarDatosDesdeSheets();
+      else if(!dvLecturasExclusivas.activo())cargarDatosDesdeSheets();
     }
     document.getElementById("coordinateSource").textContent = "No se pudieron actualizar las ubicaciones compartidas. Se conserva la última información disponible.";
     statusText.textContent = "Ubicaciones pendientes de actualización";
@@ -3084,7 +3142,7 @@ cargarDatos();
 setInterval(
 () => {
 if(document.hidden)return;
-if(Date.now()-dvLastDataRefresh>=60000)cargarDatos();else cargarEvidenciasHoy();
+cargarDatos();
 },
 30 * 1000
 );
@@ -3100,7 +3158,7 @@ if(recorridoActivo){
   iniciarSeguimientoGPS();
   dvPanelGpsProcesarCola();
 }
-cargarEvidenciasHoy();
+cargarDatos();
 }
 }
 );
@@ -3495,3 +3553,4 @@ window.onDiaVerdeNativeState=function(state){
 
 </body>
 </html>
+
