@@ -2654,6 +2654,7 @@ function abrirEvidencia(
 item, cgmContexto, zonaContexto
 ){
 document.getElementById("evidenceModalTitle").textContent="Registrar evidencia";
+takeEvidence.disabled=false;
 evidenciaGeneracion++;
 evidenciaCapturadaEn=null;
 evidenciaPrecision=null;
@@ -2726,6 +2727,7 @@ function verEvidencia(item){
 }
 function cerrarEvidencia(){
 evidenciaGeneracion++;
+takeEvidence.disabled=false;
 evidencePreview.onerror=null;evidencePreview.onload=null;
 evidenceBackdrop.classList.remove(
 "show"
@@ -2748,8 +2750,8 @@ takeEvidence.style.display = "block";
 async function comprimirImagen(file){
   if(typeof Worker!=="undefined"&&typeof OffscreenCanvas!=="undefined"){
     try{return await new Promise((resolve,reject)=>{
-      const worker=new Worker("dv-photo-worker.js");
-      const timer=setTimeout(()=>{worker.terminate();reject(new Error("Tiempo de procesamiento agotado"));},20000);
+      const worker=new Worker("dv-photo-worker.js?v=20261112-foto2");
+      const timer=setTimeout(()=>{worker.terminate();reject(new Error("Tiempo de procesamiento agotado"));},5000);
       const finish=()=>{clearTimeout(timer);worker.terminate();};
       worker.onmessage=event=>{finish();event.data.data?resolve(event.data.data):reject(new Error(event.data.error));};
       worker.onerror=()=>{finish();reject(new Error("Procesamiento alternativo"));};
@@ -2759,61 +2761,46 @@ async function comprimirImagen(file){
   return comprimirImagenCompatible(file);
 }
 function comprimirImagenCompatible(file){
-return new Promise((resolve,reject) => {
-const reader = new FileReader();
-reader.onload = event => {
-const img = new Image();
-img.onload = () => {
-let width = img.naturalWidth || img.width;
-let height = img.naturalHeight || img.height;
-const maxWidth = 1000;
-if(width > maxWidth){
-height = Math.round(
-height * maxWidth / width
-);
-width = maxWidth;
-}
-const canvas = document.createElement("canvas");
-canvas.width = width;
-canvas.height = height;
-const ctx = canvas.getContext("2d");
-if(!ctx){
-reject(new Error("No se pudo procesar la fotografía."));
-return;
-}
-ctx.drawImage(
-img,
-0,
-0,
-width,
-height
-);
-const resultado = canvas.toDataURL(
-"image/jpeg",
-0.65
-);
-canvas.width = 1;
-canvas.height = 1;
-resolve(resultado);
-};
-img.onerror = reject;
-img.src = event.target.result;
-};
-reader.onerror = reject;
-reader.readAsDataURL(file);
-});
+  // Evita convertir la foto original completa a base64 (varios MB en Android).
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    const cleanup=()=>{clearTimeout(timer);URL.revokeObjectURL(url);};
+    const timer=setTimeout(()=>{img.onload=img.onerror=null;img.src="";cleanup();reject(new Error("No se pudo leer la fotografía a tiempo."));},15000);
+    img.onload=()=>{
+      try{
+        const scale=Math.min(1,1000/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+        const canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+        canvas.height=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+        const ctx=canvas.getContext("2d");
+        if(!ctx)throw new Error("No se pudo procesar la fotografía.");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const result=canvas.toDataURL("image/jpeg",0.65);
+        canvas.width=canvas.height=1;
+        cleanup();resolve(result);
+      }catch(error){cleanup();reject(error);}
+    };
+    img.onerror=()=>{cleanup();reject(new Error("No se pudo leer la fotografía."));};
+    img.src=url;
+  });
 }
 async function prepararEvidencia(file){
+let generation;
 try{
   if(!file){
     alert("No se seleccionó ninguna fotografía.");
     return;
   }
-  const generation=++evidenciaGeneracion;
+  generation=++evidenciaGeneracion;
+  evidenciaBase64="";
   sendEvidence.disabled=true;
+  if(typeof takeEvidence!=="undefined")takeEvidence.disabled=true;
   evidenciaCapturadaEn=new Date().toISOString();
   gpsBox.textContent="Procesando fotografía...";
   evidenciaLat="";evidenciaLng="";evidenciaPrecision=null;
+  // Permite pintar el estado antes de comenzar a decodificar la imagen.
+  await new Promise(resolve=>setTimeout(resolve,0));
   const base64=await comprimirImagen(file);
   if(generation!==evidenciaGeneracion)return;
   evidenciaBase64=base64;
@@ -2822,11 +2809,14 @@ try{
   gpsBox.textContent="Fotografía lista para guardar.";
   sendEvidence.disabled=false;
 }catch(error){
+  if(generation!==evidenciaGeneracion)return;
   console.error("Error preparando evidencia:",error);
   gpsBox.innerHTML =
     "❌ No se pudo procesar la fotografía.<br><br>" +
     "Revisá la fotografía e intentá nuevamente.";
   sendEvidence.disabled = true;
+}finally{
+  if(generation===evidenciaGeneracion && typeof takeEvidence!=="undefined")takeEvidence.disabled=false;
 }
 }
 /* =====================================================
@@ -3055,25 +3045,54 @@ item
 }
 }
 );
-cameraInput.addEventListener(
-"change",
-async () => {
-if(
-cameraInput.files &&
-cameraInput.files[0]
-){
-await prepararEvidencia(
-cameraInput.files[0]
-);
+// Algunos WebView entregan el archivo al recuperar el foco, antes o después de change.
+// Una misma captura se procesa una sola vez y nunca se aplica a otro reclamo.
+let dvCapturaPendiente=null;
+function dvRecibirFotografia(){
+  const captura=dvCapturaPendiente;
+  if(!captura)return;
+  if(captura.generacion!==evidenciaGeneracion){dvCapturaPendiente=null;return;}
+  const file=cameraInput.files && cameraInput.files[0];
+  if(!file)return;
+  dvCapturaPendiente=null;
+  prepararEvidencia(file);
 }
+function dvRevisarRegresoCamara(){
+  const captura=dvCapturaPendiente;
+  if(!captura || document.hidden)return;
+  [150,600,1800].forEach(delay=>setTimeout(()=>{
+    if(dvCapturaPendiente!==captura)return;
+    dvRecibirFotografia();
+    if(delay===1800 && dvCapturaPendiente===captura && captura.generacion===evidenciaGeneracion){
+      gpsBox.textContent="Todavía no recibimos la foto de la cámara. Si ya la confirmaste, volvé a tocar Tomar fotografía.";
+      sendEvidence.disabled=!evidenciaBase64;
+    }
+  },delay));
 }
-);
-takeEvidence.addEventListener(
-"click",
-() => {
-cameraInput.click();
-}
-);
+cameraInput.addEventListener("change",dvRecibirFotografia);
+cameraInput.addEventListener("input",dvRecibirFotografia);
+cameraInput.addEventListener("cancel",()=>{
+  const captura=dvCapturaPendiente;
+  if(!captura || captura.generacion!==evidenciaGeneracion)return;
+  dvCapturaPendiente=null;
+  gpsBox.textContent=evidenciaBase64 ? "Fotografía lista para guardar." : "No se recibió una fotografía. Tocá Tomar fotografía para intentar de nuevo.";
+  sendEvidence.disabled=!evidenciaBase64;
+});
+window.addEventListener("focus",dvRevisarRegresoCamara);
+document.addEventListener("visibilitychange",dvRevisarRegresoCamara);
+takeEvidence.addEventListener("click",()=>{
+  if(takeEvidence.disabled)return;
+  // Vaciar el input permite recibir otra foto aunque Android repita el nombre.
+  cameraInput.value="";
+  dvCapturaPendiente={generacion:evidenciaGeneracion};
+  gpsBox.textContent="Abriendo cámara… Confirmá la foto para adjuntarla.";
+  sendEvidence.disabled=true;
+  try{cameraInput.click();}catch(error){
+    dvCapturaPendiente=null;
+    gpsBox.textContent="No se pudo abrir la cámara. Volvé a intentarlo.";
+    sendEvidence.disabled=!evidenciaBase64;
+  }
+});
 sendEvidence.addEventListener(
 "click",
 enviarEvidencia
