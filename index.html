@@ -954,7 +954,13 @@ class DVMap{
     this._map.on("load",()=>{
       dvMapReady=true;
       dvMejorarEtiquetasCalles();
-      while(dvMapPending.length) dvMapPending.shift()();
+      while(dvMapPending.length){
+        try{dvMapPending.shift()();}catch(error){console.warn("Capa pendiente:",error);}
+      }
+      // Reintentar el trazado si la sesión se recuperó antes de cargar el mapa.
+      if(recorridoPuntos.length){
+        try{dibujarRecorrido();}catch(error){console.warn("Redibujar recorrido:",error);}
+      }
     });
     this._map.on("rotate",()=>{
       if(recorridoMarker) recorridoMarker.updateScreenRotation();
@@ -1613,6 +1619,8 @@ function registrarPuntoRecorrido(position){
 
   // Solo actualizar mapa y guardar DESPUÉS de validar el punto.
   recorridoPuntos.push(punto);
+  // Confirmar el punto antes de cualquier operación de mapa o red.
+  guardarRecorridoLocal();
   mostrarPosicionRecorrido(
     lat,
     lng,
@@ -1624,7 +1632,6 @@ function registrarPuntoRecorrido(position){
   // La marca temporal enviada a Sheets corresponde a la captura del punto.
   registrarGPSPanel(lat,lng,precision,rumboGps,true,punto.hora);
   dibujarRecorrido();
-  guardarRecorridoLocal();
   actualizarEstadoRecorrido(
     "🔴 <strong>Recorrido en curso</strong><br>"+
     "📍 GPS activo · Puntos registrados: "+recorridoPuntos.length+
@@ -1806,6 +1813,8 @@ function finalizarRecorrido(){
   mostrarToast("✅ Recorrido finalizado");
 }
 function recuperarRecorrido(){
+  // Login, revalidación y vuelta a primer plano pueden coincidir.
+  if(recorridoActivo)return;
   try{
     const guardado=
       localStorage.getItem(getRouteStorageKey());
@@ -1813,7 +1822,6 @@ function recuperarRecorrido(){
     const estado=JSON.parse(guardado);
     if(
       !estado||
-      !estado.activo||
       !estado.zona
     )return;
     const inicio=
@@ -1825,51 +1833,66 @@ function recuperarRecorrido(){
       !inicio||
       DVContract.dayKey(inicio)!==DVContract.dayKey(ahora)
     ){
-      borrarRecorridoLocal();
       return;
     }
-    recorridoActivo=true;
+    recorridoActivo=estado.activo===true;
     recorridoZona=estado.zona;
-    recorridoCgm=estado.cgm || selectedCgm;
+    recorridoCgm=estado.cgm || data.find(item=>item.zona===estado.zona)?.localidad || selectedCgm;
     recorridoId=estado.idRecorrido || dvNuevoId();
     selectedCgm=recorridoCgm;
     selectedZone=recorridoZona;
-    if(data.length){ cargarCGMs(); actualizarZonasPorCGM(); cgm.value=selectedCgm; zone.value=selectedZone; }
     recorridoInicio=estado.inicio;
     dvPanelGpsLastSentAt=0;
     dvPanelGpsLastPoint=null;
-    recorridoPuntos=
-      Array.isArray(estado.puntos)
-      ?estado.puntos
+    recorridoPuntos=Array.isArray(estado.puntos)
+      ?estado.puntos.filter(p=>p && Number.isFinite(p.lat) && Number.isFinite(p.lng)
+        && Math.abs(p.lat)<=90 && Math.abs(p.lng)<=180)
       :[];
-    dibujarRecorrido();
-    actualizarBotonesRecorrido();
-    if(recorridoPuntos.length){
+    // La recuperación del registro no depende de que el mapa esté listo.
+    try{
+      if(data.length){ cargarCGMs(); actualizarZonasPorCGM(); }
+      cgm.value=recorridoCgm;
+      zone.value=recorridoZona;
+      dibujarRecorrido();
+      if(recorridoPuntos.length){
       const ultimo=
         recorridoPuntos[recorridoPuntos.length-1];
       mostrarPosicionRecorrido(
         ultimo.lat,
         ultimo.lng,
-        ultimo.precision
+        ultimo.precision,
+        ultimo.heading,
+        true
       );
+      }
+    }catch(error){
+      console.warn("Mapa pendiente al recuperar recorrido:",error);
     }
-    actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>"+
-      "📍 Recorrido recuperado: "+
-      recorridoPuntos.length+
-      " puntos.<br>"+
-      "El GPS continúa registrando nuevas posiciones.",
-      true
-    );
+    actualizarBotonesRecorrido();
+    if(!recorridoActivo){
+      actualizarEstadoRecorrido(
+        "✅ <strong>Recorrido del día recuperado</strong><br>"+
+        "📍 "+recorridoPuntos.length+" puntos. El recorrido estaba finalizado."
+      );
+      return;
+    }
+    mapaSiguiendoVehiculo=true;
+    mapaUsuarioMovio=false;
+    activarPantallaEncendida();
     try{
       if(window.AndroidGPS && typeof AndroidGPS.startTracking === "function"){
         AndroidGPS.startTracking();
       }
     }catch(e){}
-    iniciarSeguimientoGPS();
+    const gpsReanudado=iniciarSeguimientoGPS();
+    if(gpsReanudado) actualizarEstadoRecorrido(
+      "🔴 <strong>Recorrido recuperado</strong><br>📍 "+
+      recorridoPuntos.length+" puntos conservados.<br>Esperando nuevas posiciones GPS.",true
+    );
   }catch(error){
     console.error("Recuperar recorrido:",error);
-    borrarRecorridoLocal();
+    // Un error transitorio jamás debe eliminar el registro del chofer.
+    actualizarEstadoRecorrido("⚠️ No se pudo mostrar el recorrido guardado. La copia se conserva.",recorridoActivo);
   }
 }
 function parseCSVGoogle(text){
@@ -3054,12 +3077,16 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
+if(document.hidden && recorridoActivo) guardarRecorridoLocal();
 if(!document.hidden){
 if(recorridoActivo) activarPantallaEncendida();
 cargarEvidenciasHoy();
 }
 }
 );
+window.addEventListener("pagehide",()=>{
+  if(recorridoActivo) guardarRecorridoLocal();
+});
 </script>
 <script id="diaverde-auth">
 const DV_SESSION_KEY = "diaVerdeSesionV1";
