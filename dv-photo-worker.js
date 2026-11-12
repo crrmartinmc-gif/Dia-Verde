@@ -2,8 +2,8 @@
 self.onmessage=async function(event){
   let image;
   try{
-    image=await createImageBitmap(event.data);
-    const scale=Math.min(1,1000/image.width);
+    image=await createImageBitmap(event.data,{resizeWidth:1000,resizeQuality:"medium"});
+    const scale=Math.min(1,1000/Math.max(image.width,image.height));
     const canvas=new OffscreenCanvas(Math.max(1,Math.round(image.width*scale)),Math.max(1,Math.round(image.height*scale)));
     const context=canvas.getContext('2d');
     if(!context)throw new Error('Sin soporte de imagen');
@@ -13,3 +13,4 @@ self.onmessage=async function(event){
   }catch(error){self.postMessage({error:String(error.message||error)});}
   finally{if(image)image.close();}
 };
+
