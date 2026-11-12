@@ -157,6 +157,7 @@ Conectando...
 <div class="sync-strip" role="status" aria-live="polite">
   <span id="gpsSyncText">GPS · Sin recorrido activo</span>
   <span id="evidenceSyncText">Evidencias · Consultando pendientes</span>
+  <span id="screenLockText" hidden></span>
 </div>
 <div class="layout">
 <aside class="card sidebar">
@@ -260,6 +261,7 @@ style="display:none"
 <button type="button" class="route-btn route-start" id="startRoute">Iniciar recorrido</button>
 <button type="button" class="route-btn route-stop" id="stopRoute" disabled>Finalizar recorrido</button>
 <div class="route-status" id="routeStatus">Seleccioná una zona y tocá <strong>Iniciar recorrido</strong> para comenzar a registrar el recorrido del vehículo.</div>
+<p class="background-help">En Chrome, mantené esta página visible durante el recorrido. Si bloqueás el teléfono o cambiás de aplicación, el navegador puede pausar el GPS.</p>
 </div>
 </div>
 <div class="card results">
@@ -385,6 +387,7 @@ id="toast"
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script src="./dv-contract.js"></script>
+<script src="./dv-screen-awake.js"></script>
 <script>
 // ===== V20 SYNC MERGE =====
 function dv20EvidenceKey(e){
@@ -1708,23 +1711,23 @@ function iniciarSeguimientoGPS(){
   );
   return true;
 }
-let dvWakeLock=null;
+function dvEstadoPantalla(state){
+  const el=document.getElementById("screenLockText");
+  if(!el)return;
+  el.hidden=!recorridoActivo;
+  const mensajes={active:"Pantalla · Encendida durante el recorrido",requesting:"Pantalla · Solicitando mantener encendida",hidden:"Pantalla · Página en segundo plano; GPS puede pausarse",unsupported:"Pantalla · No se pudo impedir el apagado automático",denied:"Pantalla · No se pudo mantener encendida; revisá el ahorro de batería",released:"Pantalla · Bloqueo liberado; reintentando",idle:""};
+  el.textContent=mensajes[state]||"";
+  el.classList.toggle("sync-pending",!["active","requesting","idle"].includes(state));
+}
+const dvPantallaActiva=new DVScreenAwake({onState:dvEstadoPantalla});
 async function activarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn === "function") AndroidGPS.keepScreenOn();
-  }catch(e){}
-  try{
-    if("wakeLock" in navigator && !dvWakeLock){
-      dvWakeLock=await navigator.wakeLock.request("screen");
-      dvWakeLock.addEventListener("release",()=>{dvWakeLock=null;});
-    }
-  }catch(e){ console.warn("Wake Lock:",e); }
+  if(!recorridoActivo)return;
+  try{if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn==="function")AndroidGPS.keepScreenOn();}catch(e){}
+  await dvPantallaActiva.start();
 }
 async function liberarPantallaEncendida(){
-  try{
-    if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn === "function") AndroidGPS.releaseScreenOn();
-  }catch(e){}
-  try{ if(dvWakeLock){ await dvWakeLock.release(); dvWakeLock=null; } }catch(e){ dvWakeLock=null; }
+  try{if(window.AndroidGPS && typeof AndroidGPS.releaseScreenOn==="function")AndroidGPS.releaseScreenOn();}catch(e){}
+  await dvPantallaActiva.stop();
 }
 function iniciarRecorrido(){
   dvNavReset();
@@ -1770,6 +1773,7 @@ function iniciarRecorrido(){
   );
   if(!iniciarSeguimientoGPS()){
     recorridoActivo=false;
+    liberarPantallaEncendida();
     actualizarBotonesRecorrido();
     return;
   }
@@ -3077,9 +3081,14 @@ cargarDatos();
 document.addEventListener(
 "visibilitychange",
 () => {
+dvPantallaActiva.visibilityChanged();
 if(document.hidden && recorridoActivo) guardarRecorridoLocal();
 if(!document.hidden){
-if(recorridoActivo) activarPantallaEncendida();
+if(recorridoActivo){
+  activarPantallaEncendida();
+  iniciarSeguimientoGPS();
+  dvPanelGpsProcesarCola();
+}
 cargarEvidenciasHoy();
 }
 }

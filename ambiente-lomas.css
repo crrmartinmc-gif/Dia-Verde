@@ -42,3 +42,5 @@ header{padding:14px 22px}.sync-strip{display:flex;flex-wrap:wrap;gap:8px 20px;al
 .dv-reclamo-dot{width:28px;height:28px;margin:8px;display:grid;place-items:center;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px #163b2a40;color:#fff;font-size:16px;background:#ce9222}.dv-reclamo-dot.realizado{background:#25834f}.dv-evidencia-pin-btn{margin-top:10px;width:100%;min-height:44px;background:var(--verde);color:white;font:inherit;font-size:13px;font-weight:700}
 
 .map-card{isolation:isolate}.route-active .sync-strip{position:sticky;top:0;z-index:1200;box-shadow:0 4px 12px #163b2a12}
+
+.sync-strip>span[hidden]{display:none}.background-help{margin:12px 0 0;font-size:12px;line-height:1.6;color:var(--gris)}
