@@ -1,0 +1,29 @@
+/* Identidad compartida con Logistica-Ambiental: tema Ambiente Lomas claro. */
+:root{color-scheme:light;--verde:#25834f;--verde-oscuro:#185739;--verde-claro:#e7f6ed;--texto:#163b2a;--gris:#5c7768;--fondo:#f6fbf8;--borde:#d5e8dc}
+html,body{min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#fff 0%,#f7fcf9 50%,#e6f5ec 100%);background-attachment:fixed}
+button,input,select{font:inherit}
+header{background:linear-gradient(135deg,#fff 0%,#f3fcf6 55%,#d5f1e0 100%);color:var(--texto);border-bottom:1px solid var(--borde);box-shadow:0 5px 20px rgba(26,91,56,.06);padding:16px 22px}
+.header-inner{flex-wrap:wrap;gap:16px}.brand{gap:16px;min-width:0}h1{font-size:24px;letter-spacing:.2px}.sub{font-size:12px;color:#397652;line-height:1.4}
+.municipal-logo{position:relative;overflow:hidden;width:160px;aspect-ratio:1860/510;flex:0 0 auto;mix-blend-mode:multiply}
+.municipal-logo img{position:absolute;width:107.527%;height:auto;max-width:none;left:-3.226%;top:-76.471%}
+.status{margin-left:auto;font-size:12px;color:var(--gris)}.status-icon{background:#e0f5e8;border:1px solid #b9dfc8;color:#207d49}
+#dvUserBar{margin-left:0;font-size:13px;flex-wrap:wrap}#dvLogout{background:#f1faf5;color:#256c43;border:1px solid #bfdecb;min-height:40px}#dvLogout:hover{background:#e3f5ea}
+main{padding:28px 18px 40px}.card{background:linear-gradient(135deg,#fff,#f4fbf7);border:1px solid #d2e8da;border-radius:22px;box-shadow:0 12px 35px rgba(26,91,56,.08)}
+.sidebar,.map-card,.results{padding:22px}.card-title h2{font-size:19px;color:var(--texto)}.section-label{color:#208750;font-size:11px;letter-spacing:1px}label{font-size:13px;color:#385f49}
+select,input{background:#fff;border:1px solid #bfdcc9;border-radius:14px;min-height:52px;color:var(--texto)}input::placeholder{color:#7d9286}select:focus,input:focus{border-color:#32b76d;box-shadow:0 0 0 4px rgba(24,166,107,.11)}
+.refresh,.route-start,.send-btn,#dvLoginBtn{background:linear-gradient(135deg,#25834f,#41b776);color:#fff;border-radius:15px;box-shadow:0 7px 20px rgba(37,131,79,.17)}
+.refresh:hover,.route-start:hover,.send-btn:hover,#dvLoginBtn:hover{background:linear-gradient(135deg,#206c46,#2c9a60)}
+.info-box,.route-status,.gps-box,.stat{background:#f3faf6;border-color:#d2e8da;color:#52735f}.stat{border-radius:16px}.stat strong{color:var(--texto)}.count-pill{border:1px solid #badeca;color:#237c49}
+.maps,.evidence-btn,.cancel-btn{background:#f1faf5;color:#256c43;border-color:#bfdecb;border-radius:13px}.route-btn{border-radius:15px}.route-stop{background:#c93636}.route-stop:hover{background:#a72f45}
+.evidence-modal{border:1px solid #cce4d5;border-radius:22px}.modal-backdrop{background:rgba(4,31,23,.52)}
+button:focus-visible,a:focus-visible{outline:3px solid #25834f;outline-offset:3px}
+footer{background:#f1faf5;color:#385f49;border-top:1px solid var(--borde)}footer strong{color:var(--verde-oscuro)}
+#dvLoginOverlay{background:linear-gradient(135deg,#fff 0%,#f7fcf9 50%,#e6f5ec 100%);overflow-y:auto}
+#dvLoginBox{width:min(430px,100%);padding:0;border:1px solid #d2e8da;border-radius:26px;overflow:hidden;box-shadow:0 12px 35px rgba(26,91,56,.08);margin:auto}
+.login-head{background:linear-gradient(135deg,#fff,#e1f5e9);padding:32px}.login-head .municipal-logo{width:180px;margin-bottom:26px}
+#dvLoginBox h2{text-align:left;color:var(--texto);font-size:27px;line-height:1.2;margin:0 0 8px}#dvLoginBox p{text-align:left;color:var(--gris);font-size:14px;line-height:1.5;margin:0}
+.login-body{padding:28px;background:#fff}.login-body label{text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.7px}#dvLoginBox input{margin-bottom:18px}#dvLoginBtn{min-height:54px}#dvLoginError{margin-top:12px}
+@media(max-width:900px){.status{display:none}#dvUserBar{margin-left:auto}}
+@media(max-width:600px){header{padding:14px}.header-inner{gap:12px}.brand{gap:10px}.brand .municipal-logo{width:120px}h1{font-size:20px}.sub{font-size:10px;max-width:190px}#dvUserBar{width:100%;justify-content:flex-end;font-size:12px}main{padding:18px 12px 28px}.sidebar,.results{padding:17px}.map-card{padding:10px}.login-head{padding:26px}.login-body{padding:24px}#dvLoginBox h2{font-size:25px}.results-head{gap:8px;flex-wrap:wrap}.modal-actions{flex-wrap:wrap}.modal-actions button{flex:1 1 120px}}
+/* El canvas del mapa no debe imponer su ancho a las columnas. */
+.layout>*{min-width:0}.map-wrap,#map{min-width:0;max-width:100%}

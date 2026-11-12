@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Direcciones DIA VERDE</title>
+<title>Día Verde · Logística Ambiental</title>
+<meta name="theme-color" content="#25834f">
 <link
 rel="stylesheet"
 href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -103,24 +104,30 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 }
 </style>
 
+<link rel="stylesheet" href="./ambiente-lomas.css">
 </head>
 <body class="dv-navigation-active">
 <div id="dvLoginOverlay">
   <div id="dvLoginBox">
-    <h2>🌿 DIA VERDE</h2>
-    <p>Ingresá con tu usuario</p>
-    <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
-    <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña">
-    <button id="dvLoginBtn" type="button">INGRESAR</button>
-    <div id="dvLoginError"></div>
+    <div class="login-head">
+      <div class="municipal-logo"><img src="./ambiente-lomas.png" alt="Ambiente Lomas" width="2000" height="2000"></div>
+      <h2>Bienvenido a Día Verde</h2>
+      <p>Ingresá para consultar tu zona y comenzar el recorrido.</p>
+    </div>
+    <div class="login-body">
+      <label for="dvLoginUser">Usuario</label>
+      <input id="dvLoginUser" type="text" autocomplete="username" placeholder="Usuario">
+      <label for="dvLoginPass">Contraseña</label>
+      <input id="dvLoginPass" type="password" autocomplete="current-password" placeholder="Contraseña">
+      <button id="dvLoginBtn" type="button">INGRESAR</button>
+      <div id="dvLoginError" role="alert" aria-live="polite"></div>
+    </div>
   </div>
 </div>
 <header>
 <div class="header-inner">
 <div class="brand">
-<div class="logo">
-🌿
-</div>
+<div class="municipal-logo"><img src="./ambiente-lomas.png" alt="Ambiente Lomas" width="2000" height="2000"></div>
 <div>
 <h1>DIA VERDE</h1>
 <div class="sub">
@@ -140,10 +147,10 @@ Conectando...
 </span>
 </div>
 </div>
-</div>
 <div id="dvUserBar">
-  <span>👤 <span id="dvUserName"></span></span>
+  <span id="dvUserName"></span>
   <button id="dvLogout" type="button">Salir</button>
+</div>
 </div>
 </header>
 <main>
@@ -3204,19 +3211,6 @@ cargarEvidenciasHoy();
 );
 </script>
 <script id="diaverde-auth">
-const DV_USUARIOS = [
-  { usuario:"Ale",       password:"boca",          nombre:"Ale" },
-  { usuario:"Peque",     password:"banfield09",    nombre:"Dia Verde" },
-  { usuario:"Pablo",     password:"independiente", nombre:"Pablo Vazques" },
-  { usuario:"Luigi",     password:"boca", nombre:"Luis Del Hojo" },
-  { usuario:"Javi",     password:"racing", nombre:"Pablo Vazquez" },
-  { usuario:"Fede",     password:"banfield", nombre:"Federico Montero" },
-  { usuario:"Horacio",     password:"independiente", nombre:"Horacio Fontana" },
-  { usuario:"Franco",    password:"independiente", nombre:"Franco Sorcinelli" },
-  { usuario:"Francocrr", password:"boca",          nombre:"Franco Carrasco" },
-  { usuario:"chofer",    password:"comodin",       nombre:"Comodin" },
-  { usuario:"CarliDT",   password:"banfield",      nombre:"Carli" }
-];
 const DV_SESSION_KEY = "diaVerdeSesionV1";
 const DV_USER_KEY = "diaVerdeUsuarioV1";
 function dvUsuarioActual(){
@@ -3237,31 +3231,69 @@ function dvMostrarLogin(){
   if(overlay) overlay.style.display = "flex";
   if(bar) bar.style.display = "none";
 }
-function dvIniciarSesion(){
+const DV_AUTH_SESSION_KEY = "diaVerdeAuthV2";
+let dvAuthBusy = false;
+let dvAuthGeneration = 0;
+async function dvAuthRequest(accion, datos = {}){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: {"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({accion, ...datos}),
+      redirect: "follow",
+      cache: "no-store",
+      signal: controller.signal
+    });
+    if(!response.ok) throw new Error("No se pudo conectar con el servidor de ingreso.");
+    const result = await response.json();
+    if(result.authVersion !== 2) throw new Error("El servidor de ingreso todavía no está actualizado.");
+    return result;
+  } finally { clearTimeout(timer); }
+}
+async function dvIniciarSesion(){
+  if(dvAuthBusy) return;
   const user = (document.getElementById("dvLoginUser").value || "").trim();
   const pass = document.getElementById("dvLoginPass").value || "";
   const error = document.getElementById("dvLoginError");
-  const encontrado = DV_USUARIOS.find(
-    u => u.usuario.toLowerCase() === user.toLowerCase() && u.password === pass
-  );
-  if(!encontrado){
-    if(error) error.textContent = "Usuario o contraseña incorrectos.";
-    return;
-  }
-  localStorage.setItem(DV_SESSION_KEY, "1");
-  localStorage.setItem(DV_USER_KEY, JSON.stringify({
-    usuario: encontrado.usuario,
-    nombre: encontrado.nombre
-  }));
-  if(error) error.textContent = "";
-  dvMostrarAplicacion(encontrado);
+  const button = document.getElementById("dvLoginBtn");
+  if(!user || !pass){ error.textContent = "Ingresá tu usuario y contraseña."; return; }
+  const generation = ++dvAuthGeneration;
+  dvAuthBusy = true;
+  button.disabled = true;
+  button.textContent = "VERIFICANDO...";
+  error.textContent = "";
   try {
-    if(typeof recuperarRecorrido === "function") recuperarRecorrido();
-  } catch(e) {
-    console.error("Recuperación de recorrido:", e);
+    const result = await dvAuthRequest("diaVerdeLogin", {usuario:user, password:pass});
+    if(generation !== dvAuthGeneration) return;
+    if(!result.ok || !result.token || !result.usuario?.usuario){
+      throw new Error(result.error || "Usuario o contraseña incorrectos.");
+    }
+    localStorage.setItem(DV_AUTH_SESSION_KEY, result.token);
+    localStorage.setItem(DV_SESSION_KEY, "1");
+    localStorage.setItem(DV_USER_KEY, JSON.stringify(result.usuario));
+    document.getElementById("dvLoginPass").value = "";
+    dvMostrarAplicacion(result.usuario);
+    try { if(typeof recuperarRecorrido === "function") recuperarRecorrido(); }
+    catch(e){ console.error("Recuperación de recorrido:", e); }
+  } catch(e){
+    if(generation === dvAuthGeneration) error.textContent = e.name === "AbortError"
+      ? "El servidor tardó demasiado. Volvé a intentar."
+      : (e instanceof TypeError || e instanceof SyntaxError)
+        ? "No se pudo conectar con el servidor de ingreso. Volvé a intentar."
+        : e.message;
+  } finally {
+    dvAuthBusy = false;
+    button.disabled = false;
+    button.textContent = "INGRESAR";
   }
 }
 function dvCerrarSesion(){
+  ++dvAuthGeneration;
+  const token = localStorage.getItem(DV_AUTH_SESSION_KEY);
+  localStorage.removeItem(DV_AUTH_SESSION_KEY);
+  if(token) dvAuthRequest("diaVerdeLogout", {token}).catch(() => {});
   localStorage.removeItem(DV_SESSION_KEY);
   localStorage.removeItem(DV_USER_KEY);
   dvMostrarLogin();
@@ -3271,13 +3303,25 @@ function dvCerrarSesion(){
   if(p) p.value = "";
   if(u) u.focus();
 }
-function dvComprobarSesion(){
-  const sesion = localStorage.getItem(DV_SESSION_KEY);
-  const usuario = dvUsuarioActual();
-  if(sesion === "1" && usuario){
-    dvMostrarAplicacion(usuario);
-  }else{
-    dvMostrarLogin();
+async function dvComprobarSesion(){
+  dvMostrarLogin();
+  const token = localStorage.getItem(DV_AUTH_SESSION_KEY);
+  // Las sesiones antiguas se vuelven a validar con el mismo usuario y clave.
+  localStorage.removeItem(DV_SESSION_KEY);
+  localStorage.removeItem(DV_USER_KEY);
+  if(!token) return;
+  const generation = dvAuthGeneration;
+  try {
+    const result = await dvAuthRequest("diaVerdeSesion", {token});
+    if(generation !== dvAuthGeneration) return;
+    if(result.ok && result.usuario?.usuario){
+      localStorage.setItem(DV_SESSION_KEY, "1");
+      localStorage.setItem(DV_USER_KEY, JSON.stringify(result.usuario));
+      dvMostrarAplicacion(result.usuario);
+    } else { localStorage.removeItem(DV_AUTH_SESSION_KEY); }
+  } catch(e){
+    if(generation === dvAuthGeneration) document.getElementById("dvLoginError").textContent =
+      "No se pudo validar la sesión. Conectate e ingresá nuevamente.";
   }
 }
 document.addEventListener("DOMContentLoaded", function(){
