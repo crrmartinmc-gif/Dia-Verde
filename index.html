@@ -520,6 +520,11 @@ let dvPanelGpsReintentos = 0;
 function dvActualizarSyncGPS(){
   const el = document.getElementById("gpsSyncText");
   if(!el) return;
+  if(window.AndroidGPS?.ownsGpsUploads===true){
+    const pending=Number(window.dvNativeSummary?.pending||0);
+    el.textContent=pending ? `GPS nativo · ${pending} puntos pendientes` : recorridoActivo ? window.dvNativeSummary?.running ? "GPS nativo · Servicio activo · Sin envíos pendientes" : "GPS nativo · Esperando confirmación de Android" : "GPS nativo · Sin recorrido activo";
+    el.classList.toggle("sync-pending",pending>0);return;
+  }
   const pendientes = dvPanelGpsQueue.length;
   el.classList.toggle("sync-pending", pendientes > 0 || !!dvPanelGpsLastError);
   el.textContent = dvPanelGpsStorageError ? "GPS · No se pudo guardar en el teléfono; mantené la app abierta"
@@ -573,6 +578,8 @@ async function dvPanelGpsProcesarCola(){
   }
 }
 function registrarGPSPanel(lat,lng,precision=null,rumbo=null,activo=true,timestamp=null){
+  // La APK guarda y transmite desde SQLite/servicio, incluso sin WebView activo.
+  if(window.AndroidGPS?.ownsGpsUploads===true)return true;
   if(!DVContract.coords({lat,lng})){
     console.warn("GPS Panel: coordenadas inválidas",lat,lng);
     return false;
@@ -1680,7 +1687,7 @@ function iniciarSeguimientoGPS(){
       recorridoWatchId=null;
     }
     actualizarEstadoRecorrido(
-      "🔴 <strong>Recorrido en curso</strong><br>📡 GPS nativo de Android activo.",
+      "🔴 <strong>Recorrido en curso</strong><br>📡 Solicitando servicio GPS de Android. Confirmá los permisos y esperá la notificación.",
       true
     );
     return true;
@@ -1715,13 +1722,14 @@ function dvEstadoPantalla(state){
   const el=document.getElementById("screenLockText");
   if(!el)return;
   el.hidden=!recorridoActivo;
-  const mensajes={active:"Pantalla · Encendida durante el recorrido",requesting:"Pantalla · Solicitando mantener encendida",hidden:"Pantalla · Página en segundo plano; GPS puede pausarse",unsupported:"Pantalla · No se pudo impedir el apagado automático",denied:"Pantalla · No se pudo mantener encendida; revisá el ahorro de batería",released:"Pantalla · Bloqueo liberado; reintentando",idle:""};
+  const mensajes={native_pending:"GPS nativo · Esperá la notificación antes de bloquear",native:"GPS nativo · Podés bloquear la pantalla",active:"Pantalla · Encendida durante el recorrido",requesting:"Pantalla · Solicitando mantener encendida",hidden:"Pantalla · Página en segundo plano; GPS puede pausarse",unsupported:"Pantalla · No se pudo impedir el apagado automático",denied:"Pantalla · No se pudo mantener encendida; revisá el ahorro de batería",released:"Pantalla · Bloqueo liberado; reintentando",idle:""};
   el.textContent=mensajes[state]||"";
-  el.classList.toggle("sync-pending",!["active","requesting","idle"].includes(state));
+  el.classList.toggle("sync-pending",!["active","requesting","idle","native"].includes(state));
 }
 const dvPantallaActiva=new DVScreenAwake({onState:dvEstadoPantalla});
 async function activarPantallaEncendida(){
   if(!recorridoActivo)return;
+  if(window.AndroidGPS?.ownsGpsUploads===true){await dvPantallaActiva.stop();dvEstadoPantalla(window.dvNativeSummary?.running?"native":"native_pending");return;}
   try{if(window.AndroidGPS && typeof AndroidGPS.keepScreenOn==="function")AndroidGPS.keepScreenOn();}catch(e){}
   await dvPantallaActiva.start();
 }
@@ -2736,7 +2744,9 @@ try{
   gpsBox.textContent="Fotografía lista. Obteniendo ubicación de la toma...";
   evidenciaLat="";evidenciaLng="";evidenciaPrecision=null;
   const p=await new Promise(resolve=>{
-    if(window.AndroidGPS){
+    if(typeof window.AndroidGPS?.getCurrentPosition==="function"){
+      window.AndroidGPS.getCurrentPosition().then(resolve,()=>resolve(null));
+    } else if(window.AndroidGPS){
       const last=recorridoPuntos[recorridoPuntos.length-1];
       resolve(last && Date.now()-Date.parse(last.hora)<30000 ? {coords:{latitude:last.lat,longitude:last.lng,accuracy:last.precision}} : null);
     } else if(navigator.geolocation){
@@ -3111,6 +3121,7 @@ function dvMostrarAplicacion(usuario){
   if(overlay) overlay.style.display = "none";
   if(bar) bar.style.display = "flex";
   if(name) name.textContent = usuario.nombre || usuario.usuario;
+  window.AndroidGPS?.requestState?.();
 }
 function dvMostrarLogin(){
   const overlay = document.getElementById("dvLoginOverlay");
@@ -3177,6 +3188,7 @@ async function dvIniciarSesion(){
   }
 }
 function dvCerrarSesion(){
+  if(window.AndroidGPS?.ownsGpsUploads===true&&!recorridoActivo)window.AndroidGPS.stopTracking();
   if(recorridoActivo) finalizarRecorrido();
   ++dvAuthGeneration;
   const token = localStorage.getItem(DV_AUTH_SESSION_KEY);
@@ -3447,6 +3459,38 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+<script id="dv-native-state">
+window.onDiaVerdeNativeStatus=function(kind,state){
+  if(window.AndroidGPS?.ownsGpsUploads!==true)return;
+  if(kind==="sync"){
+    window.dvNativeSummary=state;dvActualizarSyncGPS();
+    if(recorridoActivo&&state.running){dvEstadoPantalla("native");actualizarEstadoRecorrido("<strong>Recorrido activo · GPS nativo</strong><br>Podés bloquear la pantalla. Android conserva y envía los puntos aunque esta página no esté visible.",true);}
+  }else{
+    if(kind==="start_rejected"){recorridoActivo=false;guardarRecorridoLocal();actualizarBotonesRecorrido();liberarPantallaEncendida();}
+    actualizarEstadoRecorrido(esc(state.message||"Revisá el servicio GPS de Android."),recorridoActivo);
+  }
+};
+window.onDiaVerdeNativeState=function(state){
+  if(window.AndroidGPS?.ownsGpsUploads!==true)return;
+  window.dvNativeSummary=state;
+  const r=state.route,u=dvUsuarioActual();
+  if(!r||!u||normalizar(u.usuario)!==normalizar(r.usuario)){dvActualizarSyncGPS();return;}
+  if(!r.activo&&DVContract.dayKey(r.inicio)!==DVContract.dayKey())return;
+  recorridoActivo=!!r.activo;recorridoId=r.idRecorrido;recorridoCgm=r.cgm;recorridoZona=r.zona;
+  recorridoInicio=new Date(r.inicio).toISOString();selectedCgm=r.cgm;selectedZone=r.zona;
+  recorridoPuntos=(state.points||[]).filter(p=>DVContract.coords(p));
+  guardarRecorridoLocal();
+  if(data.length){cargarCGMs();actualizarZonasPorCGM();cgm.value=selectedCgm;zone.value=selectedZone;render();}
+  actualizarBotonesRecorrido();
+  dvWhenMapReady(()=>{
+    dibujarRecorrido();const p=recorridoPuntos[recorridoPuntos.length-1];
+    if(p)mostrarPosicionRecorrido(p.lat,p.lng,p.precision,p.heading,recorridoActivo);
+  });
+  actualizarEstadoRecorrido(recorridoActivo ? "<strong>Recorrido nativo recuperado</strong><br>Los puntos se conservan en Android, independientemente de esta página." : "<strong>Recorrido finalizado</strong><br>Historial recuperado desde Android.",recorridoActivo);
+  if(recorridoActivo){activarPantallaEncendida();if(!state.running)window.AndroidGPS.startTracking();}
+};
+</script>
 
 </body>
 </html>

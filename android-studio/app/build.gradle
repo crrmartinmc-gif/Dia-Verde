@@ -1,0 +1,26 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.ambientelomas.diaverde'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.ambientelomas.diaverde'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        buildConfigField 'String', 'WEB_URL', '"https://crrmartinmc-gif.github.io/Dia-Verde/"'
+        buildConfigField 'String', 'BACKEND_URL', '"https://script.google.com/macros/s/AKfycbxOlc134pd-I6ziLrymxxw4DNffzGrlm6LHKepkca40gk3y4phDc-gIYvP-_-ExKD9M5A/exec"'
+    }
+    buildFeatures { buildConfig true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildTypes { release { minifyEnabled false } }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.15.0'
+    implementation 'androidx.work:work-runtime:2.10.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}
