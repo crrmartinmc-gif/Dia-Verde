@@ -28,8 +28,16 @@
   function coords(o){
     const lat = number(pick(o, ['latitud','LATITUD','Latitud','latitude','Latitude','LATITUDE','lat','Lat','LAT']));
     const lng = number(pick(o, ['longitud','LONGITUD','Longitud','longitude','Longitude','LONGITUDE','lng','Lng','LNG','lon','Lon','LON']));
-    return lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 &&
-      (lat !== 0 || lng !== 0) ? [lat, lng] : null;
+    if(lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 &&
+      (lat !== 0 || lng !== 0)) return [lat, lng];
+    // Ubicación verificada para un reclamo histórico sin coordenadas.
+    // No se geocodifican automáticamente otras direcciones: requieren validación.
+    const localidad = normalize(pick(o, ['localidad','LOCALIDAD','Localidad','cgm','CGM']));
+    const direccion = normalize(pick(o, ['direccion','Direccion','DIRECCION','domicilio']) ||
+      `${pick(o, ['calle','Calle','CALLE']) || ''} ${pick(o, ['numero','Numero','NUMERO']) || ''}`);
+    if(localidad === 'temperley' && direccion.replace(/\\s+/g,' ').trim() === 'bernardo de irigoyen 393')
+      return [-34.766353, -58.3876437];
+    return null;
   }
   function timestamp(value){
     if(value == null || value === '') return null;
